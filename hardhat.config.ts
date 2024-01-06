@@ -57,7 +57,7 @@ const config: HardhatUserConfig = {
     },
     paths: {
         //comment this line when running scripts or compiling, uncomment when writing code
-        //root: './apps/zksync-contracts',
+        //root: './apps/clave-contracts',
     },
 };
 
