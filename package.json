@@ -49,6 +49,7 @@
     "@openzeppelin/contracts": "^4.6.0",
     "@openzeppelin/contracts-upgradeable": "4.6.0",
     "@redstone-finance/evm-connector": "0.2.6",
+    "@nomad-xyz/excessively-safe-call": "github:nomad-xyz/ExcessivelySafeCall",
     "ts-morph": "^19.0.0"
   }
 }
