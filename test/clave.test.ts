@@ -5,16 +5,18 @@
  */
 import { assert, expect } from 'chai';
 import type { ec } from 'elliptic';
-import { constants, type ethers } from 'ethers';
 import {
-    defaultAbiCoder,
-    hexConcat,
+    AbiCoder,
+    WeiPerEther,
+    ZeroAddress,
+    concat,
+    type ethers,
     parseEther,
     parseUnits,
     randomBytes,
-    solidityKeccak256,
-} from 'ethers/lib/utils';
-import { Provider, Wallet, utils } from 'zksync-web3';
+    solidityPackedKeccak256,
+} from 'ethers';
+import { Provider, Wallet, utils } from 'zksync-ethers';
 
 import type {
     AccountFactory,
@@ -46,7 +48,7 @@ import {
     deployTeeValidator,
     deployVerifier,
 } from './utils/deploy';
-import { getOraclePayload } from './utils/oracle';
+//import { getOraclePayload } from './utils/oracle';
 import { encodePublicKey, genKey } from './utils/p256';
 import {
     getERC20PaymasterInput,
@@ -82,32 +84,38 @@ beforeEach(async () => {
 
     batchCaller = await deployBatchCaller(richWallet);
     verifier = await deployVerifier(richWallet);
-    teeValidator = await deployTeeValidator(richWallet, verifier.address);
+    teeValidator = await deployTeeValidator(
+        richWallet,
+        await verifier.getAddress(),
+    );
     implementation = await deployImplementation(
         richWallet,
-        batchCaller.address,
+        await batchCaller.getAddress(),
     );
     registry = await deployRegistry(richWallet);
     factory = await deployFactory(
         richWallet,
-        implementation.address,
-        registry.address,
+        await implementation.getAddress(),
+        await registry.getAddress(),
     );
-
-    await registry.setFactory(factory.address);
+    await registry.setFactory(await factory.getAddress(), {
+        nonce: await richWallet.getNonce(),
+    });
 
     account = await deployAccount(
         richWallet,
+        await richWallet.getNonce(),
         factory,
-        teeValidator.address,
+        await teeValidator.getAddress(),
         publicKey,
     );
 
     // 100 ETH transfered to Account
     await (
         await richWallet.sendTransaction({
-            to: account.address,
+            to: await account.getAddress(),
             value: parseEther('100'),
+            nonce: await richWallet.getNonce(),
         })
     ).wait();
 });
@@ -115,17 +123,17 @@ beforeEach(async () => {
 describe('Account no module no hook TEE validator', function () {
     describe('Should', function () {
         it('Have correct state after deployment', async function () {
-            expect(await provider.getBalance(account.address)).to.eq(
+            expect(await provider.getBalance(await account.getAddress())).to.eq(
                 parseEther('100'),
             );
 
-            const expectedR1Validators = [teeValidator.address];
+            const expectedR1Validators = [await teeValidator.getAddress()];
             const expectedK1Validators: Array<ethers.BytesLike> = [];
             const expectedR1Owners = [encodePublicKey(keyPair)];
             const expectedK1Owners: Array<ethers.BytesLike> = [];
             const expectedModules: Array<ethers.BytesLike> = [];
             const expectedHooks: Array<ethers.BytesLike> = [];
-            const expectedImplementation = implementation.address;
+            const expectedImplementation = await implementation.getAddress();
 
             expect(await account.r1ListValidators()).to.deep.eq(
                 expectedR1Validators,
@@ -144,11 +152,13 @@ describe('Account no module no hook TEE validator', function () {
         });
 
         it('Registers contract to the registry', async function () {
-            expect(await registry.isClave(account.address)).to.be.true;
+            expect(await registry.isClave(await account.getAddress())).to.be
+                .true;
         });
 
         it('Not show other contracts in registry', async function () {
-            expect(await registry.isClave(factory.address)).not.to.be.true;
+            expect(await registry.isClave(await factory.getAddress())).not.to.be
+                .true;
         });
 
         it('Transfer ETH correctly', async function () {
@@ -156,51 +166,49 @@ describe('Account no module no hook TEE validator', function () {
             const delta = parseEther('0.01');
 
             const accountBalanceBefore = await provider.getBalance(
-                account.address,
+                await account.getAddress(),
             );
             const receiverBalanceBefore = await provider.getBalance(
-                richWallet.address,
+                await richWallet.getAddress(),
             );
 
-            const transfer = ethTransfer(richWallet.address, amount);
+            const transfer = ethTransfer(await richWallet.getAddress(), amount);
             const tx = await prepareTeeTx(
                 provider,
                 account,
                 transfer,
-                teeValidator.address,
+                await teeValidator.getAddress(),
                 keyPair,
             );
 
-            const txReceipt = await provider.sendTransaction(
-                utils.serialize(tx),
+            const txReceipt = await provider.broadcastTransaction(
+                utils.serializeEip712(tx),
             );
 
             await txReceipt.wait();
 
             const accountBalanceAfter = await provider.getBalance(
-                account.address,
+                await account.getAddress(),
             );
             const receiverBalanceAfter = await provider.getBalance(
-                richWallet.address,
+                await richWallet.getAddress(),
             );
 
             expect(accountBalanceAfter).to.be.closeTo(
-                accountBalanceBefore.sub(amount),
+                accountBalanceBefore - amount,
                 delta,
             );
 
-            expect(receiverBalanceAfter).to.eq(
-                receiverBalanceBefore.add(amount),
-            );
+            expect(receiverBalanceAfter).to.eq(receiverBalanceBefore + amount);
         });
 
         it('Make batch transaction correctly', async function () {
             const accountBalanceBefore = await provider.getBalance(
-                account.address,
+                await account.getAddress(),
             );
 
-            const receiver1 = Wallet.createRandom().address;
-            const receiver2 = Wallet.createRandom().address;
+            const receiver1 = await Wallet.createRandom().getAddress();
+            const receiver2 = await Wallet.createRandom().getAddress();
 
             const calls: Array<BatchCaller.CallStruct> = [
                 {
@@ -220,23 +228,23 @@ describe('Account no module no hook TEE validator', function () {
             const batchTx = await prepareBatchTx(
                 provider,
                 account,
-                batchCaller.address,
+                await batchCaller.getAddress(),
                 calls,
-                teeValidator.address,
+                await teeValidator.getAddress(),
                 keyPair,
             );
 
-            const txReceipt = await provider.sendTransaction(
-                utils.serialize(batchTx),
+            const txReceipt = await provider.broadcastTransaction(
+                utils.serializeEip712(batchTx),
             );
             await txReceipt.wait();
 
             const accountBalanceAfter = await provider.getBalance(
-                account.address,
+                await account.getAddress(),
             );
 
             expect(accountBalanceAfter).to.be.closeTo(
-                accountBalanceBefore.sub(parseEther('0.3')),
+                accountBalanceBefore - parseEther('0.3'),
                 parseEther('0.01'),
             );
             expect(await provider.getBalance(receiver1)).to.eq(
@@ -256,7 +264,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 expect(await account.r1IsOwner(newPublicKey)).to.be.false;
 
-                const addOwnerTx = await account.populateTransaction.r1AddOwner(
+                const addOwnerTx = await account.r1AddOwner.populateTransaction(
                     newPublicKey,
                 );
 
@@ -264,12 +272,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
@@ -284,7 +292,7 @@ describe('Account no module no hook TEE validator', function () {
                 const newKeyPair = genKey();
                 const newPublicKey = encodePublicKey(newKeyPair);
 
-                const addOwnerTx = await account.populateTransaction.r1AddOwner(
+                const addOwnerTx = await account.r1AddOwner.populateTransaction(
                     newPublicKey,
                 );
 
@@ -292,19 +300,19 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
                 expect(await account.r1IsOwner(newPublicKey)).to.be.true;
 
                 const removeOwnerTx =
-                    await account.populateTransaction.r1RemoveOwner(
+                    await account.r1RemoveOwner.populateTransaction(
                         newPublicKey,
                     );
 
@@ -312,12 +320,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     removeOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt2 = await provider.sendTransaction(
-                    utils.serialize(tx2),
+                const txReceipt2 = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx2),
                 );
                 await txReceipt2.wait();
 
@@ -329,11 +337,11 @@ describe('Account no module no hook TEE validator', function () {
             });
 
             it('Adds a new k1 owner correctly', async function () {
-                const newAddress = Wallet.createRandom().address;
+                const newAddress = await Wallet.createRandom().getAddress();
 
                 expect(await account.k1IsOwner(newAddress)).to.be.false;
 
-                const addOwnerTx = await account.populateTransaction.k1AddOwner(
+                const addOwnerTx = await account.k1AddOwner.populateTransaction(
                     newAddress,
                 );
 
@@ -341,12 +349,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
@@ -358,9 +366,9 @@ describe('Account no module no hook TEE validator', function () {
             });
 
             it('Removes a k1 owner correctly', async function () {
-                const newAddress = Wallet.createRandom().address;
+                const newAddress = await Wallet.createRandom().getAddress();
 
-                const addOwnerTx = await account.populateTransaction.k1AddOwner(
+                const addOwnerTx = await account.k1AddOwner.populateTransaction(
                     newAddress,
                 );
 
@@ -368,30 +376,30 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
                 expect(await account.k1IsOwner(newAddress)).to.be.true;
 
                 const removeOwnerTx =
-                    await account.populateTransaction.k1RemoveOwner(newAddress);
+                    await account.k1RemoveOwner.populateTransaction(newAddress);
 
                 const tx2 = await prepareTeeTx(
                     provider,
                     account,
                     removeOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt2 = await provider.sendTransaction(
-                    utils.serialize(tx2),
+                const txReceipt2 = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx2),
                 );
                 await txReceipt2.wait();
 
@@ -403,9 +411,9 @@ describe('Account no module no hook TEE validator', function () {
             });
 
             it('Resets owners correctly', async function () {
-                const newAddress = Wallet.createRandom().address;
+                const newAddress = await Wallet.createRandom().getAddress();
 
-                const addOwnerTx = await account.populateTransaction.k1AddOwner(
+                const addOwnerTx = await account.k1AddOwner.populateTransaction(
                     newAddress,
                 );
 
@@ -413,12 +421,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
@@ -428,18 +436,18 @@ describe('Account no module no hook TEE validator', function () {
                 const newPublicKey = encodePublicKey(newKeyPair);
 
                 const resetOwnersTx =
-                    await account.populateTransaction.resetOwners(newPublicKey);
+                    await account.resetOwners.populateTransaction(newPublicKey);
 
                 const tx2 = await prepareTeeTx(
                     provider,
                     account,
                     resetOwnersTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt2 = await provider.sendTransaction(
-                    utils.serialize(tx2),
+                const txReceipt2 = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx2),
                 );
                 await txReceipt2.wait();
 
@@ -462,7 +470,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 const invalidPubkey = '0x' + 'C'.repeat(invalidLength);
 
-                const addOwnerTx = await account.populateTransaction.r1AddOwner(
+                const addOwnerTx = await account.r1AddOwner.populateTransaction(
                     invalidPubkey,
                 );
 
@@ -470,12 +478,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -503,21 +511,21 @@ describe('Account no module no hook TEE validator', function () {
                 );
             });
 
-            it('Adds zero address as k1 owner', async function () {
-                const addOwnerTx = await account.populateTransaction.k1AddOwner(
-                    constants.AddressZero,
+            it('Adds await zero getAddress() as k1 owner', async function () {
+                const addOwnerTx = await account.k1AddOwner.populateTransaction(
+                    ZeroAddress,
                 );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     addOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -537,7 +545,7 @@ describe('Account no module no hook TEE validator', function () {
                 await expect(
                     account
                         .connect(randomWallet)
-                        .k1AddOwner(randomWallet.address),
+                        .k1AddOwner(await randomWallet.getAddress()),
                 ).to.be.revertedWithCustomError(
                     account,
                     'NOT_FROM_SELF_OR_MODULE',
@@ -548,7 +556,7 @@ describe('Account no module no hook TEE validator', function () {
                 const newKeyPair = genKey();
                 const newPublicKey = encodePublicKey(newKeyPair);
 
-                const addOwnerTx = await account.populateTransaction.r1AddOwner(
+                const addOwnerTx = await account.r1AddOwner.populateTransaction(
                     newPublicKey,
                 );
 
@@ -556,12 +564,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
@@ -579,7 +587,7 @@ describe('Account no module no hook TEE validator', function () {
 
             it('Removes last r1 owner', async function () {
                 const removeOwnerTx =
-                    await account.populateTransaction.r1RemoveOwner(
+                    await account.r1RemoveOwner.populateTransaction(
                         encodePublicKey(keyPair),
                     );
 
@@ -587,12 +595,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     removeOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -607,9 +615,9 @@ describe('Account no module no hook TEE validator', function () {
             });
 
             it('Removes k1 owner with unauthorized msg.sender', async function () {
-                const newAddress = Wallet.createRandom().address;
+                const newAddress = await Wallet.createRandom().getAddress();
 
-                const addOwnerTx = await account.populateTransaction.k1AddOwner(
+                const addOwnerTx = await account.k1AddOwner.populateTransaction(
                     newAddress,
                 );
 
@@ -617,12 +625,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addOwnerTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
@@ -633,7 +641,7 @@ describe('Account no module no hook TEE validator', function () {
                 await expect(
                     account
                         .connect(randomWallet)
-                        .k1RemoveOwner(randomWallet.address),
+                        .k1RemoveOwner(await randomWallet.getAddress()),
                 ).to.be.revertedWithCustomError(
                     account,
                     'NOT_FROM_SELF_OR_MODULE',
@@ -661,7 +669,7 @@ describe('Account no module no hook TEE validator', function () {
                 const invalidPubkey = '0x' + 'C'.repeat(invalidLength);
 
                 const resetOwnersTx =
-                    await account.populateTransaction.resetOwners(
+                    await account.resetOwners.populateTransaction(
                         invalidPubkey,
                     );
 
@@ -669,12 +677,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     resetOwnersTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -695,36 +703,42 @@ describe('Account no module no hook TEE validator', function () {
             it('Adds a new r1 validator correctly', async function () {
                 const newR1Validator = await deployTeeValidator(
                     richWallet,
-                    verifier.address,
+                    await verifier.getAddress(),
                 );
 
-                expect(await account.r1IsValidator(newR1Validator.address)).to
-                    .be.false;
+                expect(
+                    await account.r1IsValidator(
+                        await newR1Validator.getAddress(),
+                    ),
+                ).to.be.false;
 
                 const addValidatorTx =
-                    await account.populateTransaction.r1AddValidator(
-                        newR1Validator.address,
+                    await account.r1AddValidator.populateTransaction(
+                        await newR1Validator.getAddress(),
                     );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     addValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.r1IsValidator(newR1Validator.address)).to
-                    .be.true;
+                expect(
+                    await account.r1IsValidator(
+                        await newR1Validator.getAddress(),
+                    ),
+                ).to.be.true;
 
                 const expectedValidators = [
-                    newR1Validator.address,
-                    teeValidator.address,
+                    await newR1Validator.getAddress(),
+                    await teeValidator.getAddress(),
                 ];
 
                 expect(await account.r1ListValidators()).to.deep.eq(
@@ -735,31 +749,33 @@ describe('Account no module no hook TEE validator', function () {
             it('Adds a new k1 validator correctly', async function () {
                 const k1Validator = await deployEOAValidator(richWallet);
 
-                expect(await account.k1IsValidator(k1Validator.address)).to.be
-                    .false;
+                expect(
+                    await account.k1IsValidator(await k1Validator.getAddress()),
+                ).to.be.false;
 
                 const addValidatorTx =
-                    await account.populateTransaction.k1AddValidator(
-                        k1Validator.address,
+                    await account.k1AddValidator.populateTransaction(
+                        await k1Validator.getAddress(),
                     );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     addValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.k1IsValidator(k1Validator.address)).to.be
-                    .true;
+                expect(
+                    await account.k1IsValidator(await k1Validator.getAddress()),
+                ).to.be.true;
 
-                const expectedValidators = [k1Validator.address];
+                const expectedValidators = [await k1Validator.getAddress()];
 
                 expect(await account.k1ListValidators()).to.deep.eq(
                     expectedValidators,
@@ -769,52 +785,58 @@ describe('Account no module no hook TEE validator', function () {
             it('Removes an r1 validator correctly', async function () {
                 const newR1Validator = await deployTeeValidator(
                     richWallet,
-                    verifier.address,
+                    await verifier.getAddress(),
                 );
 
                 const addValidatorTx =
-                    await account.populateTransaction.r1AddValidator(
-                        newR1Validator.address,
+                    await account.r1AddValidator.populateTransaction(
+                        await newR1Validator.getAddress(),
                     );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     addValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.r1IsValidator(newR1Validator.address)).to
-                    .be.true;
+                expect(
+                    await account.r1IsValidator(
+                        await newR1Validator.getAddress(),
+                    ),
+                ).to.be.true;
 
                 const removeValidatorTx =
-                    await account.populateTransaction.r1RemoveValidator(
-                        newR1Validator.address,
+                    await account.r1RemoveValidator.populateTransaction(
+                        await newR1Validator.getAddress(),
                     );
 
                 const tx2 = await prepareTeeTx(
                     provider,
                     account,
                     removeValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt2 = await provider.sendTransaction(
-                    utils.serialize(tx2),
+                const txReceipt2 = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx2),
                 );
                 await txReceipt2.wait();
 
-                expect(await account.r1IsValidator(newR1Validator.address)).to
-                    .be.false;
+                expect(
+                    await account.r1IsValidator(
+                        await newR1Validator.getAddress(),
+                    ),
+                ).to.be.false;
 
-                const expectedValidators = [teeValidator.address];
+                const expectedValidators = [await teeValidator.getAddress()];
 
                 expect(await account.r1ListValidators()).to.deep.eq(
                     expectedValidators,
@@ -825,46 +847,48 @@ describe('Account no module no hook TEE validator', function () {
                 const k1Validator = await deployEOAValidator(richWallet);
 
                 const addValidatorTx =
-                    await account.populateTransaction.k1AddValidator(
-                        k1Validator.address,
+                    await account.k1AddValidator.populateTransaction(
+                        await k1Validator.getAddress(),
                     );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     addValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.k1IsValidator(k1Validator.address)).to.be
-                    .true;
+                expect(
+                    await account.k1IsValidator(await k1Validator.getAddress()),
+                ).to.be.true;
 
                 const removeValidatorTx =
-                    await account.populateTransaction.k1RemoveValidator(
-                        k1Validator.address,
+                    await account.k1RemoveValidator.populateTransaction(
+                        await k1Validator.getAddress(),
                     );
 
                 const tx2 = await prepareTeeTx(
                     provider,
                     account,
                     removeValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt2 = await provider.sendTransaction(
-                    utils.serialize(tx2),
+                const txReceipt2 = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx2),
                 );
                 await txReceipt2.wait();
 
-                expect(await account.k1IsValidator(k1Validator.address)).to.be
-                    .false;
+                expect(
+                    await account.k1IsValidator(await k1Validator.getAddress()),
+                ).to.be.false;
 
                 const expectedValidators: Array<string> = [];
 
@@ -878,7 +902,7 @@ describe('Account no module no hook TEE validator', function () {
             it('Adds r1 validator with unauthorized msg.sender', async function () {
                 const newR1Validator = await deployTeeValidator(
                     richWallet,
-                    verifier.address,
+                    await verifier.getAddress(),
                 );
 
                 const randomWallet = Wallet.createRandom().connect(provider);
@@ -886,7 +910,7 @@ describe('Account no module no hook TEE validator', function () {
                 await expect(
                     account
                         .connect(randomWallet)
-                        .r1AddValidator(newR1Validator.address),
+                        .r1AddValidator(await newR1Validator.getAddress()),
                 ).to.be.revertedWithCustomError(
                     account,
                     'NOT_FROM_SELF_OR_MODULE',
@@ -899,20 +923,20 @@ describe('Account no module no hook TEE validator', function () {
                 );
 
                 const addValidatorTx =
-                    await account.populateTransaction.r1AddValidator(
-                        wrongInterfaceValidator.address,
+                    await account.r1AddValidator.populateTransaction(
+                        await wrongInterfaceValidator.getAddress(),
                     );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     addValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -930,20 +954,20 @@ describe('Account no module no hook TEE validator', function () {
                 const noInterfaceValidator = Wallet.createRandom();
 
                 const addValidatorTx =
-                    await account.populateTransaction.r1AddValidator(
-                        noInterfaceValidator.address,
+                    await account.r1AddValidator.populateTransaction(
+                        await noInterfaceValidator.getAddress(),
                     );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     addValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -960,36 +984,39 @@ describe('Account no module no hook TEE validator', function () {
             it('Removes r1 validator with unauthorized msg.sender', async function () {
                 const newR1Validator = await deployTeeValidator(
                     richWallet,
-                    verifier.address,
+                    await verifier.getAddress(),
                 );
 
                 const addValidatorTx =
-                    await account.populateTransaction.r1AddValidator(
-                        newR1Validator.address,
+                    await account.r1AddValidator.populateTransaction(
+                        await newR1Validator.getAddress(),
                     );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     addValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.r1IsValidator(newR1Validator.address)).to
-                    .be.true;
+                expect(
+                    await account.r1IsValidator(
+                        await newR1Validator.getAddress(),
+                    ),
+                ).to.be.true;
 
                 const randomWallet = Wallet.createRandom().connect(provider);
 
                 await expect(
                     account
                         .connect(randomWallet)
-                        .r1RemoveValidator(newR1Validator.address),
+                        .r1RemoveValidator(await newR1Validator.getAddress()),
                 ).to.be.revertedWithCustomError(
                     account,
                     'NOT_FROM_SELF_OR_MODULE',
@@ -998,20 +1025,20 @@ describe('Account no module no hook TEE validator', function () {
 
             it('Removes last r1 validator', async function () {
                 const removeValidatorTx =
-                    await account.populateTransaction.r1RemoveValidator(
-                        teeValidator.address,
+                    await account.r1RemoveValidator.populateTransaction(
+                        await teeValidator.getAddress(),
                     );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     removeValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -1033,7 +1060,7 @@ describe('Account no module no hook TEE validator', function () {
                 await expect(
                     account
                         .connect(randomWallet)
-                        .k1AddValidator(k1Validator.address),
+                        .k1AddValidator(await k1Validator.getAddress()),
                 ).to.be.revertedWithCustomError(
                     account,
                     'NOT_FROM_SELF_OR_MODULE',
@@ -1043,24 +1070,24 @@ describe('Account no module no hook TEE validator', function () {
             it('Adds k1 validator with WRONG interface', async function () {
                 const wrongInterfaceValidator = await deployTeeValidator(
                     richWallet,
-                    verifier.address,
+                    await verifier.getAddress(),
                 );
 
                 const addValidatorTx =
-                    await account.populateTransaction.k1AddValidator(
-                        wrongInterfaceValidator.address,
+                    await account.k1AddValidator.populateTransaction(
+                        await wrongInterfaceValidator.getAddress(),
                     );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     addValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -1078,20 +1105,20 @@ describe('Account no module no hook TEE validator', function () {
                 const noInterfaceValidator = Wallet.createRandom();
 
                 const addValidatorTx =
-                    await account.populateTransaction.k1AddValidator(
-                        noInterfaceValidator.address,
+                    await account.k1AddValidator.populateTransaction(
+                        await noInterfaceValidator.getAddress(),
                     );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     addValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -1109,32 +1136,33 @@ describe('Account no module no hook TEE validator', function () {
                 const k1Validator = await deployEOAValidator(richWallet);
 
                 const addValidatorTx =
-                    await account.populateTransaction.k1AddValidator(
-                        k1Validator.address,
+                    await account.k1AddValidator.populateTransaction(
+                        await k1Validator.getAddress(),
                     );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     addValidatorTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.k1IsValidator(k1Validator.address)).to.be
-                    .true;
+                expect(
+                    await account.k1IsValidator(await k1Validator.getAddress()),
+                ).to.be.true;
 
                 const randomWallet = Wallet.createRandom().connect(provider);
 
                 await expect(
                     account
                         .connect(randomWallet)
-                        .k1RemoveValidator(k1Validator.address),
+                        .k1RemoveValidator(await k1Validator.getAddress()),
                 ).to.be.revertedWithCustomError(
                     account,
                     'NOT_FROM_SELF_OR_MODULE',
@@ -1148,15 +1176,19 @@ describe('Account no module no hook TEE validator', function () {
             it('Adds a new module correctly', async function () {
                 const mockModule = await deployMockModule(richWallet);
 
-                expect(await account.isModule(mockModule.address)).to.be.false;
+                expect(await account.isModule(await mockModule.getAddress())).to
+                    .be.false;
 
-                const initData = defaultAbiCoder.encode(
+                const initData = AbiCoder.defaultAbiCoder().encode(
                     ['uint256'],
                     [parseEther('42')],
                 );
-                const moduleAndData = hexConcat([mockModule.address, initData]);
+                const moduleAndData = concat([
+                    await mockModule.getAddress(),
+                    initData,
+                ]);
 
-                const addModuleTx = await account.populateTransaction.addModule(
+                const addModuleTx = await account.addModule.populateTransaction(
                     moduleAndData,
                 );
 
@@ -1164,18 +1196,19 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addModuleTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.isModule(mockModule.address)).to.be.true;
+                expect(await account.isModule(await mockModule.getAddress())).to
+                    .be.true;
 
-                const expectedModules = [mockModule.address];
+                const expectedModules = [await mockModule.getAddress()];
 
                 expect(await account.listModules()).to.deep.eq(expectedModules);
             });
@@ -1183,13 +1216,16 @@ describe('Account no module no hook TEE validator', function () {
             it('Removes a module correctly', async function () {
                 const mockModule = await deployMockModule(richWallet);
 
-                const initData = defaultAbiCoder.encode(
+                const initData = AbiCoder.defaultAbiCoder().encode(
                     ['uint256'],
                     [parseEther('42')],
                 );
-                const moduleAndData = hexConcat([mockModule.address, initData]);
+                const moduleAndData = concat([
+                    await mockModule.getAddress(),
+                    initData,
+                ]);
 
-                const addModuleTx = await account.populateTransaction.addModule(
+                const addModuleTx = await account.addModule.populateTransaction(
                     moduleAndData,
                 );
 
@@ -1197,36 +1233,38 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addModuleTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.isModule(mockModule.address)).to.be.true;
+                expect(await account.isModule(await mockModule.getAddress())).to
+                    .be.true;
 
                 const removeModuleTx =
-                    await account.populateTransaction.removeModule(
-                        mockModule.address,
+                    await account.removeModule.populateTransaction(
+                        await mockModule.getAddress(),
                     );
 
                 const tx2 = await prepareTeeTx(
                     provider,
                     account,
                     removeModuleTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt2 = await provider.sendTransaction(
-                    utils.serialize(tx2),
+                const txReceipt2 = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx2),
                 );
                 await txReceipt2.wait();
 
-                expect(await account.isModule(mockModule.address)).to.be.false;
+                expect(await account.isModule(await mockModule.getAddress())).to
+                    .be.false;
 
                 const expectedModules: Array<string> = [];
 
@@ -1239,13 +1277,16 @@ describe('Account no module no hook TEE validator', function () {
 
                 const mockModule = await deployMockModule(richWallet);
 
-                const initData = defaultAbiCoder.encode(
+                const initData = AbiCoder.defaultAbiCoder().encode(
                     ['uint256'],
                     [parseEther('42')],
                 );
-                const moduleAndData = hexConcat([mockModule.address, initData]);
+                const moduleAndData = concat([
+                    await mockModule.getAddress(),
+                    initData,
+                ]);
 
-                const addModuleTx = await account.populateTransaction.addModule(
+                const addModuleTx = await account.addModule.populateTransaction(
                     moduleAndData,
                 );
 
@@ -1253,41 +1294,41 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addModuleTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
                 const accountBalanceBefore = await provider.getBalance(
-                    account.address,
+                    await account.getAddress(),
                 );
                 const receiverBalanceBefore = await provider.getBalance(
-                    richWallet.address,
+                    await richWallet.getAddress(),
                 );
 
                 await mockModule.testExecuteFromModule(
-                    account.address,
-                    richWallet.address,
+                    await account.getAddress(),
+                    await richWallet.getAddress(),
                 );
 
                 const accountBalanceAfter = await provider.getBalance(
-                    account.address,
+                    await account.getAddress(),
                 );
                 const receiverBalanceAfter = await provider.getBalance(
-                    richWallet.address,
+                    await richWallet.getAddress(),
                 );
 
                 expect(accountBalanceAfter).to.be.closeTo(
-                    accountBalanceBefore.sub(amount),
+                    accountBalanceBefore - amount,
                     delta,
                 );
 
                 expect(receiverBalanceAfter).to.be.closeTo(
-                    receiverBalanceBefore.add(amount),
+                    receiverBalanceBefore + amount,
                     delta,
                 );
             });
@@ -1296,11 +1337,14 @@ describe('Account no module no hook TEE validator', function () {
             it('Adds module with unauthorized msg.sender', async function () {
                 const mockModule = await deployMockModule(richWallet);
 
-                const initData = defaultAbiCoder.encode(
+                const initData = AbiCoder.defaultAbiCoder().encode(
                     ['uint256'],
                     [parseEther('42')],
                 );
-                const moduleAndData = hexConcat([mockModule.address, initData]);
+                const moduleAndData = concat([
+                    await mockModule.getAddress(),
+                    initData,
+                ]);
 
                 const randomWallet = Wallet.createRandom().connect(provider);
 
@@ -1315,9 +1359,12 @@ describe('Account no module no hook TEE validator', function () {
             it('Adds module with invalid moduleAndData length', async function () {
                 const mockModule = await deployMockModule(richWallet);
 
-                const moduleAndData = mockModule.address.slice(0, 10);
+                const moduleAndData = (await mockModule.getAddress()).slice(
+                    0,
+                    10,
+                );
 
-                const addModuleTx = await account.populateTransaction.addModule(
+                const addModuleTx = await account.addModule.populateTransaction(
                     moduleAndData,
                 );
 
@@ -1325,12 +1372,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addModuleTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -1347,16 +1394,16 @@ describe('Account no module no hook TEE validator', function () {
             it('Adds module with no interface', async function () {
                 const noInterfaceModule = Wallet.createRandom();
 
-                const initData = defaultAbiCoder.encode(
+                const initData = AbiCoder.defaultAbiCoder().encode(
                     ['uint256'],
                     [parseEther('42')],
                 );
-                const moduleAndData = hexConcat([
-                    noInterfaceModule.address,
+                const moduleAndData = concat([
+                    await noInterfaceModule.getAddress(),
                     initData,
                 ]);
 
-                const addModuleTx = await account.populateTransaction.addModule(
+                const addModuleTx = await account.addModule.populateTransaction(
                     moduleAndData,
                 );
 
@@ -1364,12 +1411,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addModuleTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -1386,13 +1433,16 @@ describe('Account no module no hook TEE validator', function () {
             it('Removes module with unauthorized msg.sender', async function () {
                 const mockModule = await deployMockModule(richWallet);
 
-                const initData = defaultAbiCoder.encode(
+                const initData = AbiCoder.defaultAbiCoder().encode(
                     ['uint256'],
                     [parseEther('42')],
                 );
-                const moduleAndData = hexConcat([mockModule.address, initData]);
+                const moduleAndData = concat([
+                    await mockModule.getAddress(),
+                    initData,
+                ]);
 
-                const addModuleTx = await account.populateTransaction.addModule(
+                const addModuleTx = await account.addModule.populateTransaction(
                     moduleAndData,
                 );
 
@@ -1400,12 +1450,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addModuleTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
@@ -1414,7 +1464,7 @@ describe('Account no module no hook TEE validator', function () {
                 await expect(
                     account
                         .connect(randomWallet)
-                        .removeModule(mockModule.address),
+                        .removeModule(await mockModule.getAddress()),
                 ).to.be.revertedWithCustomError(
                     account,
                     'NOT_FROM_SELF_OR_MODULE',
@@ -1430,26 +1480,26 @@ describe('Account no module no hook TEE validator', function () {
                     richWallet,
                 );
 
-                const upgradeTx = await account.populateTransaction.upgradeTo(
-                    mockImplementation.address,
+                const upgradeTx = await account.upgradeTo.populateTransaction(
+                    await mockImplementation.getAddress(),
                 );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     upgradeTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 await txReceipt.wait();
 
                 expect(await account.implementation()).to.eq(
-                    mockImplementation.address,
+                    await mockImplementation.getAddress(),
                 );
             });
         });
@@ -1464,25 +1514,25 @@ describe('Account no module no hook TEE validator', function () {
                 await expect(
                     account
                         .connect(randomWallet)
-                        .upgradeTo(mockImplementation.address),
+                        .upgradeTo(await mockImplementation.getAddress()),
                 ).to.be.revertedWithCustomError(account, 'NOT_FROM_SELF');
             });
 
             it('Upgrades to same implementation', async function () {
-                const upgradeTx = await account.populateTransaction.upgradeTo(
-                    implementation.address,
+                const upgradeTx = await account.upgradeTo.populateTransaction(
+                    await implementation.getAddress(),
                 );
 
                 const tx = await prepareTeeTx(
                     provider,
                     account,
                     upgradeTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -1503,10 +1553,11 @@ describe('Account no module no hook TEE validator', function () {
             it('Adds a new validation hook correctly', async function () {
                 const mockHook = await deployMockValidationHook(richWallet);
 
-                expect(await account.isHook(mockHook.address)).to.be.false;
+                expect(await account.isHook(await mockHook.getAddress())).to.be
+                    .false;
 
-                const addHookTx = await account.populateTransaction.addHook(
-                    mockHook.address,
+                const addHookTx = await account.addHook.populateTransaction(
+                    await mockHook.getAddress(),
                     true,
                 );
 
@@ -1514,28 +1565,30 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.isHook(mockHook.address)).to.be.true;
+                expect(await account.isHook(await mockHook.getAddress())).to.be
+                    .true;
 
-                const expectedHooks = [mockHook.address];
+                const expectedHooks = [await mockHook.getAddress()];
                 expect(await account.listHooks(true)).to.deep.eq(expectedHooks);
             });
 
             it('Adds a new execution hook correctly', async function () {
                 const mockHook = await deployMockExecutionHook(richWallet);
 
-                expect(await account.isHook(mockHook.address)).to.be.false;
+                expect(await account.isHook(await mockHook.getAddress())).to.be
+                    .false;
 
-                const addHookTx = await account.populateTransaction.addHook(
-                    mockHook.address,
+                const addHookTx = await account.addHook.populateTransaction(
+                    await mockHook.getAddress(),
                     false,
                 );
 
@@ -1543,18 +1596,19 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.isHook(mockHook.address)).to.be.true;
+                expect(await account.isHook(await mockHook.getAddress())).to.be
+                    .true;
 
-                const expectedHooks = [mockHook.address];
+                const expectedHooks = [await mockHook.getAddress()];
                 expect(await account.listHooks(false)).to.deep.eq(
                     expectedHooks,
                 );
@@ -1563,10 +1617,11 @@ describe('Account no module no hook TEE validator', function () {
             it('Removes a hook correctly', async function () {
                 const mockHook = await deployMockExecutionHook(richWallet);
 
-                expect(await account.isHook(mockHook.address)).to.be.false;
+                expect(await account.isHook(await mockHook.getAddress())).to.be
+                    .false;
 
-                const addHookTx = await account.populateTransaction.addHook(
-                    mockHook.address,
+                const addHookTx = await account.addHook.populateTransaction(
+                    await mockHook.getAddress(),
                     false,
                 );
 
@@ -1574,20 +1629,21 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.isHook(mockHook.address)).to.be.true;
+                expect(await account.isHook(await mockHook.getAddress())).to.be
+                    .true;
 
                 const removeHookTx =
-                    await account.populateTransaction.removeHook(
-                        mockHook.address,
+                    await account.removeHook.populateTransaction(
+                        await mockHook.getAddress(),
                         false,
                     );
 
@@ -1595,16 +1651,17 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     removeHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt2 = await provider.sendTransaction(
-                    utils.serialize(tx2),
+                const txReceipt2 = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx2),
                 );
                 txReceipt2.wait();
 
-                expect(await account.isHook(mockHook.address)).to.be.false;
+                expect(await account.isHook(await mockHook.getAddress())).to.be
+                    .false;
 
                 const expectedHooks: Array<string> = [];
                 expect(await account.listHooks(true)).to.deep.eq(expectedHooks);
@@ -1613,10 +1670,11 @@ describe('Account no module no hook TEE validator', function () {
             it('Sets hook data correctly', async function () {
                 const mockHook = await deployMockValidationHook(richWallet);
 
-                expect(await account.isHook(mockHook.address)).to.be.false;
+                expect(await account.isHook(await mockHook.getAddress())).to.be
+                    .false;
 
-                const addHookTx = await account.populateTransaction.addHook(
-                    mockHook.address,
+                const addHookTx = await account.addHook.populateTransaction(
+                    await mockHook.getAddress(),
                     true,
                 );
 
@@ -1624,34 +1682,40 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                expect(await account.isHook(mockHook.address)).to.be.true;
+                expect(await account.isHook(await mockHook.getAddress())).to.be
+                    .true;
 
                 const key = randomBytes(32);
                 const data = '0xc1ae';
 
-                await mockHook.setHookData(account.address, key, data);
-
-                expect(await account.getHookData(mockHook.address, key)).to.eq(
+                await mockHook.setHookData(
+                    await account.getAddress(),
+                    key,
                     data,
                 );
+
+                expect(
+                    await account.getHookData(await mockHook.getAddress(), key),
+                ).to.eq(data);
             });
 
             it('Runs validation hooks successfully', async function () {
                 const mockHook = await deployMockValidationHook(richWallet);
 
-                expect(await account.isHook(mockHook.address)).to.be.false;
+                expect(await account.isHook(await mockHook.getAddress())).to.be
+                    .false;
 
-                const addHookTx = await account.populateTransaction.addHook(
-                    mockHook.address,
+                const addHookTx = await account.addHook.populateTransaction(
+                    await mockHook.getAddress(),
                     true,
                 );
 
@@ -1659,30 +1723,32 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                const transfer = ethTransfer(richWallet.address, 1);
+                const transfer = ethTransfer(await richWallet.getAddress(), 1);
 
-                const hookData = [defaultAbiCoder.encode(['bool'], [false])];
+                const hookData = [
+                    AbiCoder.defaultAbiCoder().encode(['bool'], [false]),
+                ];
 
                 const tx2 = await prepareTeeTx(
                     provider,
                     account,
                     transfer,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                     hookData,
                 );
 
-                const txReceipt2 = await provider.sendTransaction(
-                    utils.serialize(tx2),
+                const txReceipt2 = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx2),
                 );
                 await txReceipt2.wait();
             });
@@ -1697,7 +1763,7 @@ describe('Account no module no hook TEE validator', function () {
                 await expect(
                     account
                         .connect(randomWallet)
-                        .addHook(mockHook.address, true),
+                        .addHook(await mockHook.getAddress(), true),
                 ).to.be.revertedWithCustomError(
                     account,
                     'NOT_FROM_SELF_OR_MODULE',
@@ -1707,9 +1773,9 @@ describe('Account no module no hook TEE validator', function () {
             it('Adds hook with invalid hookAndData length', async function () {
                 const mockHook = await deployMockValidationHook(richWallet);
 
-                const hookAndData = mockHook.address.slice(0, 10);
+                const hookAndData = (await mockHook.getAddress()).slice(0, 10);
 
-                const addHookTx = await account.populateTransaction.addHook(
+                const addHookTx = await account.addHook.populateTransaction(
                     hookAndData,
                     true,
                 );
@@ -1718,12 +1784,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -1740,8 +1806,8 @@ describe('Account no module no hook TEE validator', function () {
             it('Adds hook with NO interface', async function () {
                 const noInterfaceHook = Wallet.createRandom();
 
-                const addHookTx = await account.populateTransaction.addHook(
-                    noInterfaceHook.address,
+                const addHookTx = await account.addHook.populateTransaction(
+                    await noInterfaceHook.getAddress(),
                     true,
                 );
 
@@ -1749,12 +1815,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
@@ -1771,8 +1837,8 @@ describe('Account no module no hook TEE validator', function () {
             it('Removes hook with unauthorized msg.sender', async function () {
                 const mockHook = await deployMockValidationHook(richWallet);
 
-                const addHookTx = await account.populateTransaction.addHook(
-                    mockHook.address,
+                const addHookTx = await account.addHook.populateTransaction(
+                    await mockHook.getAddress(),
                     true,
                 );
 
@@ -1780,12 +1846,12 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
@@ -1794,7 +1860,7 @@ describe('Account no module no hook TEE validator', function () {
                 await expect(
                     account
                         .connect(randomWallet)
-                        .removeHook(mockHook.address, true),
+                        .removeHook(await mockHook.getAddress(), true),
                 ).to.be.revertedWithCustomError(
                     account,
                     'NOT_FROM_SELF_OR_MODULE',
@@ -1813,8 +1879,8 @@ describe('Account no module no hook TEE validator', function () {
             it('Sets hook data with invalid key', async function () {
                 const mockHook = await deployMockValidationHook(richWallet);
 
-                const addHookTx = await account.populateTransaction.addHook(
-                    mockHook.address,
+                const addHookTx = await account.addHook.populateTransaction(
+                    await mockHook.getAddress(),
                     true,
                 );
 
@@ -1822,31 +1888,31 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                const key = solidityKeccak256(
+                const key = solidityPackedKeccak256(
                     ['string'],
                     ['HookManager.context'],
                 );
                 const data = '0xc1ae';
 
                 await expect(
-                    mockHook.setHookData(account.address, key, data),
+                    mockHook.setHookData(await account.getAddress(), key, data),
                 ).to.be.revertedWithCustomError(account, 'INVALID_KEY');
             });
 
             it('Run validation hooks fails', async function () {
                 const mockHook = await deployMockValidationHook(richWallet);
 
-                const addHookTx = await account.populateTransaction.addHook(
-                    mockHook.address,
+                const addHookTx = await account.addHook.populateTransaction(
+                    await mockHook.getAddress(),
                     true,
                 );
 
@@ -1854,30 +1920,34 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                const transfer = ethTransfer(richWallet.address, 5);
+                const transfer = ethTransfer(await richWallet.getAddress(), 5);
 
-                const hookData = [defaultAbiCoder.encode(['bool'], [true])];
+                const hookData = [
+                    AbiCoder.defaultAbiCoder().encode(['bool'], [true]),
+                ];
 
                 const tx2 = await prepareTeeTx(
                     provider,
                     account,
                     transfer,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                     hookData,
                 );
 
                 try {
-                    await provider.sendTransaction(utils.serialize(tx2));
+                    await provider.broadcastTransaction(
+                        utils.serializeEip712(tx2),
+                    );
                     assert(false, 'Should revert');
                 } catch (e) {}
             });
@@ -1885,8 +1955,8 @@ describe('Account no module no hook TEE validator', function () {
             it('Run execution hooks fails', async function () {
                 const mockHook = await deployMockExecutionHook(richWallet);
 
-                const addHookTx = await account.populateTransaction.addHook(
-                    mockHook.address,
+                const addHookTx = await account.addHook.populateTransaction(
+                    await mockHook.getAddress(),
                     false,
                 );
 
@@ -1894,27 +1964,27 @@ describe('Account no module no hook TEE validator', function () {
                     provider,
                     account,
                     addHookTx,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt = await provider.sendTransaction(
-                    utils.serialize(tx),
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
                 );
                 await txReceipt.wait();
 
-                const transfer = ethTransfer(richWallet.address, 5);
+                const transfer = ethTransfer(await richWallet.getAddress(), 5);
 
                 const tx2 = await prepareTeeTx(
                     provider,
                     account,
                     transfer,
-                    teeValidator.address,
+                    await teeValidator.getAddress(),
                     keyPair,
                 );
 
-                const txReceipt2 = await provider.sendTransaction(
-                    utils.serialize(tx2),
+                const txReceipt2 = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx2),
                 );
 
                 try {
@@ -1925,451 +1995,449 @@ describe('Account no module no hook TEE validator', function () {
         });
     });
 
-    describe('Paymaster', function () {
-        let mockToken: MockStable;
-        let gaslessPaymaster: GaslessPaymaster;
-        let erc20Paymaster: ERC20PaymasterMock;
-        let subsidizerPaymaster: SubsidizerPaymasterMock;
-
-        beforeEach(async function () {
-            mockToken = await deployMockStable(richWallet);
-
-            gaslessPaymaster = await deployGaslessPaymaster(
-                richWallet,
-                registry.address,
-                2,
-            );
-
-            erc20Paymaster = await deployERC20PaymasterMock(richWallet, [
-                {
-                    tokenAddress: mockToken.address,
-                    decimals: 18,
-                    priceMarkup: 20000,
-                },
-            ]);
-
-            subsidizerPaymaster = await deploySubsidizerPaymasterMock(
-                richWallet,
-                [
-                    {
-                        tokenAddress: mockToken.address,
-                        decimals: 18,
-                        priceMarkup: 20000,
-                    },
-                ],
-                registry.address,
-            );
-
-            await mockToken.mint(account.address, parseEther('100'));
-
-            await (
-                await richWallet.sendTransaction({
-                    to: gaslessPaymaster.address,
-                    value: parseEther('50'),
-                })
-            ).wait();
-
-            await (
-                await richWallet.sendTransaction({
-                    to: erc20Paymaster.address,
-                    value: parseEther('50'),
-                })
-            ).wait();
-
-            await (
-                await richWallet.sendTransaction({
-                    to: subsidizerPaymaster.address,
-                    value: parseEther('50'),
-                })
-            ).wait();
-        });
-
-        it('Should fund the account with mock token', async function () {
-            expect(await mockToken.balanceOf(account.address)).to.be.eq(
-                parseEther('100'),
-            );
-        });
-
-        it('Should fund the paymasters', async function () {
-            expect(await provider.getBalance(gaslessPaymaster.address)).to.eq(
-                parseEther('50'),
-            );
-            expect(await provider.getBalance(erc20Paymaster.address)).to.eq(
-                parseEther('50'),
-            );
-            expect(
-                await provider.getBalance(subsidizerPaymaster.address),
-            ).to.eq(parseEther('50'));
-        });
-
-        it('Should prepare an oracle payload', async function () {
-            const oraclePayload = await getOraclePayload(erc20Paymaster);
-            expect(oraclePayload).not.to.be.undefined;
-        });
-
-        it('Should pay gas with token', async function () {
-            const amount = parseEther('10');
-
-            const accountBalanceBefore = await provider.getBalance(
-                account.address,
-            );
-            const receiverBalanceBefore = await provider.getBalance(
-                richWallet.address,
-            );
-            const paymasterBalanceBefore = await provider.getBalance(
-                erc20Paymaster.address,
-            );
-
-            const accountTokenBalanceBefore = await mockToken.balanceOf(
-                account.address,
-            );
-            const contractTokenBalanceBefore = await mockToken.balanceOf(
-                erc20Paymaster.address,
-            );
-
-            const transfer = ethTransfer(richWallet.address, amount);
-            const tx = await prepareTeeTx(
-                provider,
-                account,
-                transfer,
-                teeValidator.address,
-                keyPair,
-                [],
-                getERC20PaymasterInput(
-                    erc20Paymaster.address,
-                    mockToken.address,
-                    parseUnits('50', 18),
-                    await getOraclePayload(erc20Paymaster),
-                ),
-            );
-
-            const txReceipt = await provider.sendTransaction(
-                utils.serialize(tx),
-            );
-
-            await txReceipt.wait();
-
-            const accountBalanceAfter = await provider.getBalance(
-                account.address,
-            );
-            const receiverBalanceAfter = await provider.getBalance(
-                richWallet.address,
-            );
-            const paymasterBalanceAfter = await provider.getBalance(
-                erc20Paymaster.address,
-            );
-
-            const accountTokenBalanceAfter = await mockToken.balanceOf(
-                account.address,
-            );
-            const contractTokenBalanceAfter = await mockToken.balanceOf(
-                erc20Paymaster.address,
-            );
-
-            expect(accountBalanceAfter.add(amount)).to.be.equal(
-                accountBalanceBefore,
-            );
-
-            expect(receiverBalanceBefore.add(amount)).to.be.equal(
-                receiverBalanceAfter,
-            );
-
-            expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
-
-            expect(accountTokenBalanceBefore).is.greaterThan(
-                accountTokenBalanceAfter,
-            );
-
-            expect(
-                accountTokenBalanceBefore.sub(accountTokenBalanceAfter),
-            ).to.be.equal(
-                contractTokenBalanceAfter.sub(contractTokenBalanceBefore),
-            );
-        });
-
-        it('Should send tx without paying gas', async function () {
-            const amount = parseEther('10');
-
-            const accountBalanceBefore = await provider.getBalance(
-                account.address,
-            );
-            const receiverBalanceBefore = await provider.getBalance(
-                richWallet.address,
-            );
-            const paymasterBalanceBefore = await provider.getBalance(
-                gaslessPaymaster.address,
-            );
-
-            const transfer = ethTransfer(richWallet.address, amount);
-            const tx = await prepareTeeTx(
-                provider,
-                account,
-                transfer,
-                teeValidator.address,
-                keyPair,
-                [],
-                getGaslessPaymasterInput(gaslessPaymaster.address),
-            );
-
-            const txReceipt = await provider.sendTransaction(
-                utils.serialize(tx),
-            );
-
-            await txReceipt.wait();
-
-            const accountBalanceAfter = await provider.getBalance(
-                account.address,
-            );
-            const receiverBalanceAfter = await provider.getBalance(
-                richWallet.address,
-            );
-            const paymasterBalanceAfter = await provider.getBalance(
-                gaslessPaymaster.address,
-            );
-
-            expect(accountBalanceAfter.add(amount)).to.be.equal(
-                accountBalanceBefore,
-            );
-            expect(receiverBalanceBefore.add(amount)).to.be.equal(
-                receiverBalanceAfter,
-            );
-            expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
-        });
-
-        it('Should pay subsidized gas with token', async function () {
-            const amount = parseEther('10');
-
-            const accountBalanceBefore = await provider.getBalance(
-                account.address,
-            );
-            const receiverBalanceBefore = await provider.getBalance(
-                richWallet.address,
-            );
-            const paymasterBalanceBefore = await provider.getBalance(
-                subsidizerPaymaster.address,
-            );
-
-            const accountTokenBalanceBefore = await mockToken.balanceOf(
-                account.address,
-            );
-            const contractTokenBalanceBefore = await mockToken.balanceOf(
-                subsidizerPaymaster.address,
-            );
-
-            const transfer = ethTransfer(richWallet.address, amount);
-            const tx = await prepareTeeTx(
-                provider,
-                account,
-                transfer,
-                teeValidator.address,
-                keyPair,
-                [],
-                getERC20PaymasterInput(
-                    subsidizerPaymaster.address,
-                    mockToken.address,
-                    parseUnits('50', 18),
-                    await getOraclePayload(subsidizerPaymaster),
-                ),
-            );
-
-            const txReceipt = await provider.sendTransaction(
-                utils.serialize(tx),
-            );
-
-            await txReceipt.wait();
-
-            const accountBalanceAfter = await provider.getBalance(
-                account.address,
-            );
-            const receiverBalanceAfter = await provider.getBalance(
-                richWallet.address,
-            );
-            const paymasterBalanceAfter = await provider.getBalance(
-                subsidizerPaymaster.address,
-            );
-
-            const accountTokenBalanceAfter = await mockToken.balanceOf(
-                account.address,
-            );
-            const contractTokenBalanceAfter = await mockToken.balanceOf(
-                subsidizerPaymaster.address,
-            );
-
-            expect(accountBalanceAfter.add(amount)).to.be.equal(
-                accountBalanceBefore,
-            );
-
-            expect(receiverBalanceBefore.add(amount)).to.be.equal(
-                receiverBalanceAfter,
-            );
-
-            expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
-
-            expect(accountTokenBalanceBefore).is.greaterThan(
-                accountTokenBalanceAfter,
-            );
-
-            expect(
-                accountTokenBalanceBefore.sub(accountTokenBalanceAfter),
-            ).to.be.equal(
-                contractTokenBalanceAfter.sub(contractTokenBalanceBefore),
-            );
-        });
-
-        describe('Subsidizer refunds calculations', function () {
-            const MAX_GAS_TO_SUBSIDIZE = 1_250_000;
-
-            const calcRefund = (
-                gaslimit: number,
-                gasused: number,
-                max: number,
-            ): number => {
-                const userpaid = gaslimit > max ? gaslimit - max : 0;
-                const gasrefunded = gaslimit - gasused;
-
-                if (userpaid === 0) {
-                    return 0;
-                }
-
-                if (max > gasused) {
-                    return userpaid;
-                } else {
-                    return gasrefunded;
-                }
-            };
-
-            const calcExpected = (
-                refunded: number,
-                maxFeePerGas: number,
-                rate: ethers.BigNumber,
-            ): number => {
-                return (
-                    refunded *
-                    maxFeePerGas *
-                    rate.div(constants.WeiPerEther).toNumber()
-                );
-            };
-
-            type Config = {
-                gasLimit: number;
-                gasUsed: number;
-                maxFeePerGas: number;
-                rate: ethers.BigNumber;
-                maxGasToSubsidize: number;
-            };
-
-            const checkRefund = async (
-                pmConfig: Config,
-            ): Promise<[number, ethers.BigNumber]> => {
-                const expected = calcExpected(
-                    calcRefund(
-                        pmConfig.gasLimit,
-                        pmConfig.gasUsed,
-                        pmConfig.maxGasToSubsidize,
-                    ),
-                    pmConfig.maxFeePerGas,
-                    pmConfig.rate,
-                );
-
-                const real = await subsidizerPaymaster.calcRefundAmount(
-                    pmConfig.gasLimit,
-                    pmConfig.gasLimit - pmConfig.gasUsed,
-                    pmConfig.maxFeePerGas,
-                    pmConfig.rate,
-                );
-
-                return [expected, real];
-            };
-
-            it('Should calculate if gasUsed is bigger than maxGasToSubsidize', async function () {
-                const pmRate = await subsidizerPaymaster.getPairPrice(
-                    mockToken.address,
-                    '0x',
-                );
-
-                const pmConfig: Config = {
-                    gasLimit: 2_000_000,
-                    gasUsed: 1_500_000,
-                    maxFeePerGas: 100,
-                    rate: pmRate,
-                    maxGasToSubsidize: 1_000_000,
-                };
-
-                const values = await checkRefund(pmConfig);
-                expect(values[0].toString()).to.be.equal(values[1].toString());
-            });
-
-            it('Should calculate if gasUsed is equal to gasLimit and bigger than maxGasToSubsidize', async function () {
-                const pmRate = await subsidizerPaymaster.getPairPrice(
-                    mockToken.address,
-                    '0x',
-                );
-
-                const pmConfig = {
-                    gasLimit: 2_000_000,
-                    gasUsed: 2_000_000,
-                    maxFeePerGas: 100,
-                    rate: pmRate,
-                    maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
-                };
-
-                const values = await checkRefund(pmConfig);
-                expect(values[0].toString()).to.be.equal(values[1].toString());
-            });
-
-            it('Should calculate if gasUsed is less than gasLimit and both less than maxGasToSubsidize', async function () {
-                const pmRate = await subsidizerPaymaster.getPairPrice(
-                    mockToken.address,
-                    '0x',
-                );
-
-                const pmConfig = {
-                    gasLimit: 1_000_000,
-                    gasUsed: 500_000,
-                    maxFeePerGas: 100,
-                    rate: pmRate,
-                    maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
-                };
-
-                const values = await checkRefund(pmConfig);
-                expect(values[0].toString()).to.be.equal(values[1].toString());
-            });
-
-            it('Should calculate if gasUsed is equal to gasLimit and both less than maxGasToSubsidize', async function () {
-                const pmRate = await subsidizerPaymaster.getPairPrice(
-                    mockToken.address,
-                    '0x',
-                );
-
-                const pmConfig = {
-                    gasLimit: 500_000,
-                    gasUsed: 500_000,
-                    maxFeePerGas: 100,
-                    rate: pmRate,
-                    maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
-                };
-
-                const values = await checkRefund(pmConfig);
-                expect(values[0].toString()).to.be.equal(values[1].toString());
-            });
-
-            it('Should calculate if gasUsed is less then maxGasToSubsidize ', async function () {
-                const pmRate = await subsidizerPaymaster.getPairPrice(
-                    mockToken.address,
-                    '0x',
-                );
-
-                const pmConfig = {
-                    gasLimit: 2_000_000,
-                    gasUsed: 500_000,
-                    maxFeePerGas: 100,
-                    rate: pmRate,
-                    maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
-                };
-
-                const values = await checkRefund(pmConfig);
-                expect(values[0].toString()).to.be.equal(values[1].toString());
-            });
-        });
-    });
+    // describe('Paymaster', function () {
+    //     let mockToken: MockStable;
+    //     let gaslessPaymaster: GaslessPaymaster;
+    //     let erc20Paymaster: ERC20PaymasterMock;
+    //     let subsidizerPaymaster: SubsidizerPaymasterMock;
+
+    //     beforeEach(async function () {
+    //         mockToken = await deployMockStable(richWallet);
+
+    //         gaslessPaymaster = await deployGaslessPaymaster(
+    //             richWallet,
+    //             await registry.getAddress(),
+    //             2,
+    //         );
+
+    //         erc20Paymaster = await deployERC20PaymasterMock(richWallet, [
+    //             {
+    //                 tokenAddress: await mockToken.getAddress(),
+    //                 decimals: 18,
+    //                 priceMarkup: 20000,
+    //             },
+    //         ]);
+
+    //         subsidizerPaymaster = await deploySubsidizerPaymasterMock(
+    //             richWallet,
+    //             [
+    //                 {
+    //                     tokenAddress: await mockToken.getAddress(),
+    //                     decimals: 18,
+    //                     priceMarkup: 20000,
+    //                 },
+    //             ],
+    //             await registry.getAddress(),
+    //         );
+
+    //         await mockToken.mint(await account.getAddress(), parseEther('100'));
+
+    //         await (
+    //             await richWallet.sendTransaction({
+    //                 to: await gaslessPaymaster.getAddress(),
+    //                 value: parseEther('50'),
+    //             })
+    //         ).wait();
+
+    //         await (
+    //             await richWallet.sendTransaction({
+    //                 to: await erc20Paymaster.getAddress(),
+    //                 value: parseEther('50'),
+    //             })
+    //         ).wait();
+
+    //         await (
+    //             await richWallet.sendTransaction({
+    //                 to: await subsidizerPaymaster.getAddress(),
+    //                 value: parseEther('50'),
+    //             })
+    //         ).wait();
+    //     });
+
+    //     it('Should fund the account with mock token', async function () {
+    //         expect(
+    //             await mockToken.balanceOf(await account.getAddress()),
+    //         ).to.be.eq(parseEther('100'));
+    //     });
+
+    //     it('Should fund the paymasters', async function () {
+    //         expect(
+    //             await provider.getBalance(await gaslessPaymaster.getAddress()),
+    //         ).to.eq(parseEther('50'));
+    //         expect(
+    //             await provider.getBalance(await erc20Paymaster.getAddress()),
+    //         ).to.eq(parseEther('50'));
+    //         expect(
+    //             await provider.getBalance(
+    //                 await subsidizerPaymaster.getAddress(),
+    //             ),
+    //         ).to.eq(parseEther('50'));
+    //     });
+
+    //     it('Should prepare an oracle payload', async function () {
+    //         const oraclePayload = await getOraclePayload(erc20Paymaster);
+    //         expect(oraclePayload).not.to.be.undefined;
+    //     });
+
+    //     it('Should pay gas with token', async function () {
+    //         const amount = parseEther('10');
+
+    //         const accountBalanceBefore = await provider.getBalance(
+    //             await account.getAddress(),
+    //         );
+    //         const receiverBalanceBefore = await provider.getBalance(
+    //             await richWallet.getAddress(),
+    //         );
+    //         const paymasterBalanceBefore = await provider.getBalance(
+    //             await erc20Paymaster.getAddress(),
+    //         );
+
+    //         const accountTokenBalanceBefore = await mockToken.balanceOf(
+    //             await account.getAddress(),
+    //         );
+    //         const contractTokenBalanceBefore = await mockToken.balanceOf(
+    //             await erc20Paymaster.getAddress(),
+    //         );
+
+    //         const transfer = ethTransfer(await richWallet.getAddress(), amount);
+    //         const tx = await prepareTeeTx(
+    //             provider,
+    //             account,
+    //             transfer,
+    //             await teeValidator.getAddress(),
+    //             keyPair,
+    //             [],
+    //             getERC20PaymasterInput(
+    //                 await erc20Paymaster.getAddress(),
+    //                 await mockToken.getAddress(),
+    //                 parseUnits('50', 18),
+    //                 await getOraclePayload(erc20Paymaster),
+    //             ),
+    //         );
+
+    //         const txReceipt = await provider.broadcastTransaction(
+    //             utils.serializeEip712(tx),
+    //         );
+
+    //         await txReceipt.wait();
+
+    //         const accountBalanceAfter = await provider.getBalance(
+    //             await account.getAddress(),
+    //         );
+    //         const receiverBalanceAfter = await provider.getBalance(
+    //             await richWallet.getAddress(),
+    //         );
+    //         const paymasterBalanceAfter = await provider.getBalance(
+    //             await erc20Paymaster.getAddress(),
+    //         );
+
+    //         const accountTokenBalanceAfter = await mockToken.balanceOf(
+    //             await account.getAddress(),
+    //         );
+    //         const contractTokenBalanceAfter = await mockToken.balanceOf(
+    //             await erc20Paymaster.getAddress(),
+    //         );
+
+    //         expect(accountBalanceAfter + amount).to.be.equal(
+    //             accountBalanceBefore,
+    //         );
+
+    //         expect(receiverBalanceBefore + amount).to.be.equal(
+    //             receiverBalanceAfter,
+    //         );
+
+    //         expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
+
+    //         expect(accountTokenBalanceBefore).is.greaterThan(
+    //             accountTokenBalanceAfter,
+    //         );
+
+    //         expect(
+    //             accountTokenBalanceBefore - accountTokenBalanceAfter,
+    //         ).to.be.equal(
+    //             contractTokenBalanceAfter - contractTokenBalanceBefore,
+    //         );
+    //     });
+
+    //     it('Should send tx without paying gas', async function () {
+    //         const amount = parseEther('10');
+
+    //         const accountBalanceBefore = await provider.getBalance(
+    //             await account.getAddress(),
+    //         );
+    //         const receiverBalanceBefore = await provider.getBalance(
+    //             await richWallet.getAddress(),
+    //         );
+    //         const paymasterBalanceBefore = await provider.getBalance(
+    //             await gaslessPaymaster.getAddress(),
+    //         );
+
+    //         const transfer = ethTransfer(await richWallet.getAddress(), amount);
+    //         const tx = await prepareTeeTx(
+    //             provider,
+    //             account,
+    //             transfer,
+    //             await teeValidator.getAddress(),
+    //             keyPair,
+    //             [],
+    //             getGaslessPaymasterInput(await gaslessPaymaster.getAddress()),
+    //         );
+
+    //         const txReceipt = await provider.broadcastTransaction(
+    //             utils.serializeEip712(tx),
+    //         );
+
+    //         await txReceipt.wait();
+
+    //         const accountBalanceAfter = await provider.getBalance(
+    //             await account.getAddress(),
+    //         );
+    //         const receiverBalanceAfter = await provider.getBalance(
+    //             await richWallet.getAddress(),
+    //         );
+    //         const paymasterBalanceAfter = await provider.getBalance(
+    //             await gaslessPaymaster.getAddress(),
+    //         );
+
+    //         expect(accountBalanceAfter + amount).to.be.equal(
+    //             accountBalanceBefore,
+    //         );
+    //         expect(receiverBalanceBefore + amount).to.be.equal(
+    //             receiverBalanceAfter,
+    //         );
+    //         expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
+    //     });
+
+    //     it('Should pay subsidized gas with token', async function () {
+    //         const amount = parseEther('10');
+
+    //         const accountBalanceBefore = await provider.getBalance(
+    //             await account.getAddress(),
+    //         );
+    //         const receiverBalanceBefore = await provider.getBalance(
+    //             await richWallet.getAddress(),
+    //         );
+    //         const paymasterBalanceBefore = await provider.getBalance(
+    //             await subsidizerPaymaster.getAddress(),
+    //         );
+
+    //         const accountTokenBalanceBefore = await mockToken.balanceOf(
+    //             await account.getAddress(),
+    //         );
+    //         const contractTokenBalanceBefore = await mockToken.balanceOf(
+    //             await subsidizerPaymaster.getAddress(),
+    //         );
+
+    //         const transfer = ethTransfer(await richWallet.getAddress(), amount);
+    //         const tx = await prepareTeeTx(
+    //             provider,
+    //             account,
+    //             transfer,
+    //             await teeValidator.getAddress(),
+    //             keyPair,
+    //             [],
+    //             getERC20PaymasterInput(
+    //                 await subsidizerPaymaster.getAddress(),
+    //                 await mockToken.getAddress(),
+    //                 parseUnits('50', 18),
+    //                 await getOraclePayload(subsidizerPaymaster),
+    //             ),
+    //         );
+
+    //         const txReceipt = await provider.broadcastTransaction(
+    //             utils.serializeEip712(tx),
+    //         );
+
+    //         await txReceipt.wait();
+
+    //         const accountBalanceAfter = await provider.getBalance(
+    //             await account.getAddress(),
+    //         );
+    //         const receiverBalanceAfter = await provider.getBalance(
+    //             await richWallet.getAddress(),
+    //         );
+    //         const paymasterBalanceAfter = await provider.getBalance(
+    //             await subsidizerPaymaster.getAddress(),
+    //         );
+
+    //         const accountTokenBalanceAfter = await mockToken.balanceOf(
+    //             await account.getAddress(),
+    //         );
+    //         const contractTokenBalanceAfter = await mockToken.balanceOf(
+    //             await subsidizerPaymaster.getAddress(),
+    //         );
+
+    //         expect(accountBalanceAfter + amount).to.be.equal(
+    //             accountBalanceBefore,
+    //         );
+
+    //         expect(receiverBalanceBefore + amount).to.be.equal(
+    //             receiverBalanceAfter,
+    //         );
+
+    //         expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
+
+    //         expect(accountTokenBalanceBefore).is.greaterThan(
+    //             accountTokenBalanceAfter,
+    //         );
+
+    //         expect(
+    //             accountTokenBalanceBefore - accountTokenBalanceAfter,
+    //         ).to.be.equal(
+    //             contractTokenBalanceAfter - contractTokenBalanceBefore,
+    //         );
+    //     });
+
+    //     describe('Subsidizer refunds calculations', function () {
+    //         const MAX_GAS_TO_SUBSIDIZE = 1_250_000;
+
+    //         const calcRefund = (
+    //             gaslimit: number,
+    //             gasused: number,
+    //             max: number,
+    //         ): number => {
+    //             const userpaid = gaslimit > max ? gaslimit - max : 0;
+    //             const gasrefunded = gaslimit - gasused;
+
+    //             if (userpaid === 0) {
+    //                 return 0;
+    //             }
+
+    //             if (max > gasused) {
+    //                 return userpaid;
+    //             } else {
+    //                 return gasrefunded;
+    //             }
+    //         };
+
+    //         const calcExpected = (
+    //             refunded: number,
+    //             maxFeePerGas: number,
+    //             rate: bigint,
+    //         ): number => {
+    //             return refunded * maxFeePerGas * Number(rate / WeiPerEther);
+    //         };
+
+    //         type Config = {
+    //             gasLimit: number;
+    //             gasUsed: number;
+    //             maxFeePerGas: number;
+    //             rate: bigint;
+    //             maxGasToSubsidize: number;
+    //         };
+
+    //         const checkRefund = async (
+    //             pmConfig: Config,
+    //         ): Promise<[number, bigint]> => {
+    //             const expected = calcExpected(
+    //                 calcRefund(
+    //                     pmConfig.gasLimit,
+    //                     pmConfig.gasUsed,
+    //                     pmConfig.maxGasToSubsidize,
+    //                 ),
+    //                 pmConfig.maxFeePerGas,
+    //                 pmConfig.rate,
+    //             );
+
+    //             const real = await subsidizerPaymaster.calcRefundAmount(
+    //                 pmConfig.gasLimit,
+    //                 pmConfig.gasLimit - pmConfig.gasUsed,
+    //                 pmConfig.maxFeePerGas,
+    //                 pmConfig.rate,
+    //             );
+
+    //             return [expected, real];
+    //         };
+
+    //         it('Should calculate if gasUsed is bigger than maxGasToSubsidize', async function () {
+    //             const pmRate = await subsidizerPaymaster.getPairPrice(
+    //                 await mockToken.getAddress(),
+    //                 '0x',
+    //             );
+
+    //             const pmConfig: Config = {
+    //                 gasLimit: 2_000_000,
+    //                 gasUsed: 1_500_000,
+    //                 maxFeePerGas: 100,
+    //                 rate: pmRate,
+    //                 maxGasToSubsidize: 1_000_000,
+    //             };
+
+    //             const values = await checkRefund(pmConfig);
+    //             expect(values[0].toString()).to.be.equal(values[1].toString());
+    //         });
+
+    //         it('Should calculate if gasUsed is equal to gasLimit and bigger than maxGasToSubsidize', async function () {
+    //             const pmRate = await subsidizerPaymaster.getPairPrice(
+    //                 await mockToken.getAddress(),
+    //                 '0x',
+    //             );
+
+    //             const pmConfig = {
+    //                 gasLimit: 2_000_000,
+    //                 gasUsed: 2_000_000,
+    //                 maxFeePerGas: 100,
+    //                 rate: pmRate,
+    //                 maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
+    //             };
+
+    //             const values = await checkRefund(pmConfig);
+    //             expect(values[0].toString()).to.be.equal(values[1].toString());
+    //         });
+
+    //         it('Should calculate if gasUsed is less than gasLimit and both less than maxGasToSubsidize', async function () {
+    //             const pmRate = await subsidizerPaymaster.getPairPrice(
+    //                 await mockToken.getAddress(),
+    //                 '0x',
+    //             );
+
+    //             const pmConfig = {
+    //                 gasLimit: 1_000_000,
+    //                 gasUsed: 500_000,
+    //                 maxFeePerGas: 100,
+    //                 rate: pmRate,
+    //                 maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
+    //             };
+
+    //             const values = await checkRefund(pmConfig);
+    //             expect(values[0].toString()).to.be.equal(values[1].toString());
+    //         });
+
+    //         it('Should calculate if gasUsed is equal to gasLimit and both less than maxGasToSubsidize', async function () {
+    //             const pmRate = await subsidizerPaymaster.getPairPrice(
+    //                 await mockToken.getAddress(),
+    //                 '0x',
+    //             );
+
+    //             const pmConfig = {
+    //                 gasLimit: 500_000,
+    //                 gasUsed: 500_000,
+    //                 maxFeePerGas: 100,
+    //                 rate: pmRate,
+    //                 maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
+    //             };
+
+    //             const values = await checkRefund(pmConfig);
+    //             expect(values[0].toString()).to.be.equal(values[1].toString());
+    //         });
+
+    //         it('Should calculate if gasUsed is less then maxGasToSubsidize ', async function () {
+    //             const pmRate = await subsidizerPaymaster.getPairPrice(
+    //                 await mockToken.getAddress(),
+    //                 '0x',
+    //             );
+
+    //             const pmConfig = {
+    //                 gasLimit: 2_000_000,
+    //                 gasUsed: 500_000,
+    //                 maxFeePerGas: 100,
+    //                 rate: pmRate,
+    //                 maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
+    //             };
+
+    //             const values = await checkRefund(pmConfig);
+    //             expect(values[0].toString()).to.be.equal(values[1].toString());
+    //         });
+    //     });
+    // });
 });

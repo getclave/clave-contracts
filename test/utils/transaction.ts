@@ -4,11 +4,9 @@
  * Proprietary and confidential
  */
 import type { ec } from 'elliptic';
-import { type BigNumberish, ethers } from 'ethers';
-import { parseEther } from 'ethers/lib/utils';
-import type { Provider, types } from 'zksync-web3';
-import { EIP712Signer, utils } from 'zksync-web3';
-import type { TransactionRequest } from 'zksync-web3/build/src/types';
+import { type BigNumberish, ethers, parseEther } from 'ethers';
+import type { Provider, types } from 'zksync-ethers';
+import { EIP712Signer, utils } from 'zksync-ethers';
 
 import type { ClaveProxy } from '../../typechain-types';
 import type { BatchCaller } from '../../typechain-types';
@@ -17,7 +15,7 @@ import { sign } from './p256';
 export const ethTransfer = (
     to: string,
     value: BigNumberish,
-): TransactionRequest => {
+): types.TransactionLike => {
     return {
         to,
         value,
@@ -28,11 +26,11 @@ export const ethTransfer = (
 export async function prepareMockTx(
     provider: Provider,
     account: ClaveProxy,
-    tx: TransactionRequest,
+    tx: types.TransactionLike,
     validatorAddress: string,
     paymasterParams?: types.PaymasterParams,
-): Promise<TransactionRequest> {
-    const abiCoder = ethers.utils.defaultAbiCoder;
+): Promise<types.TransactionLike> {
+    const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     const signature = abiCoder.encode(
         ['bytes', 'address', 'bytes[]'],
         ['0x' + 'C1AE'.repeat(32), validatorAddress, []],
@@ -40,8 +38,8 @@ export async function prepareMockTx(
 
     tx = {
         ...tx,
-        from: account.address,
-        nonce: await provider.getTransactionCount(account.address),
+        from: await account.getAddress(),
+        nonce: await provider.getTransactionCount(await account.getAddress()),
         gasLimit: 10_000_000,
         gasPrice: await provider.getGasPrice(),
         chainId: (await provider.getNetwork()).chainId,
@@ -59,20 +57,20 @@ export async function prepareMockTx(
 export async function prepareTeeTx(
     provider: Provider,
     account: ClaveProxy,
-    tx: TransactionRequest,
+    tx: types.TransactionLike,
     validatorAddress: string,
     keyPair: ec.KeyPair,
-    hookData: Array<ethers.utils.BytesLike> = [],
+    hookData: Array<ethers.BytesLike> = [],
     paymasterParams?: types.PaymasterParams,
-): Promise<TransactionRequest> {
+): Promise<types.TransactionLike> {
     if (tx.value == undefined) {
         tx.value = parseEther('0');
     }
 
     tx = {
         ...tx,
-        from: account.address,
-        nonce: await provider.getTransactionCount(account.address),
+        from: await account.getAddress(),
+        nonce: await provider.getTransactionCount(await account.getAddress()),
         gasLimit: 30_000_000,
         gasPrice: await provider.getGasPrice(),
         chainId: (await provider.getNetwork()).chainId,
@@ -85,7 +83,7 @@ export async function prepareTeeTx(
 
     const signedTxHash = EIP712Signer.getSignedDigest(tx);
 
-    const abiCoder = ethers.utils.defaultAbiCoder;
+    const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     let signature = sign(signedTxHash.toString(), keyPair);
 
     signature = abiCoder.encode(
@@ -108,10 +106,10 @@ export async function prepareBatchTx(
     calls: Array<BatchCaller.CallStruct>,
     validatorAddress: string,
     keyPair: ec.KeyPair,
-    hookData: Array<ethers.utils.BytesLike> = [],
+    hookData: Array<ethers.BytesLike> = [],
     paymasterParams?: types.PaymasterParams,
-): Promise<TransactionRequest> {
-    const abiCoder = ethers.utils.defaultAbiCoder;
+): Promise<types.TransactionLike> {
+    const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     const data =
         '0x8f0273a9' +
         abiCoder
@@ -125,8 +123,8 @@ export async function prepareBatchTx(
 
     const tx = {
         to: BatchCallerAddress,
-        from: account.address,
-        nonce: await provider.getTransactionCount(account.address),
+        from: await account.getAddress(),
+        nonce: await provider.getTransactionCount(await account.getAddress()),
         gasLimit: 30_000_000,
         gasPrice: await provider.getGasPrice(),
         data,

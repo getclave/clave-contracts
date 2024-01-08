@@ -6,8 +6,8 @@
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
 import { ethers } from 'ethers';
 import * as hre from 'hardhat';
-import type { Wallet } from 'zksync-web3';
-import { utils } from 'zksync-web3';
+import type { Wallet } from 'zksync-ethers';
+import { utils } from 'zksync-ethers';
 
 import type {
     AccountFactory,
@@ -32,6 +32,12 @@ import type {
 } from '../../typechain-types';
 import type { CallableProxy } from './proxy-helpers';
 
+async function getOverrides(wallet: Wallet): Promise<ethers.Overrides> {
+    return {
+        nonce: Number(await wallet.getDeploymentNonce()),
+    };
+}
+
 export async function deployBatchCaller(wallet: Wallet): Promise<BatchCaller> {
     const deployer: Deployer = new Deployer(hre, wallet);
     const batchCallerArtifact = await deployer.loadArtifact('BatchCaller');
@@ -39,13 +45,13 @@ export async function deployBatchCaller(wallet: Wallet): Promise<BatchCaller> {
     const batchCaller = await deployer.deploy(
         batchCallerArtifact,
         [],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'BatchCaller',
-        batchCaller.address,
+        await batchCaller.getAddress(),
         wallet,
     );
 }
@@ -62,13 +68,13 @@ export async function deployImplementation(
     const implementation = await deployer.deploy(
         claveImplArtifact,
         [batchCallerAddress],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'ClaveImplementation',
-        implementation.address,
+        await implementation.getAddress(),
         wallet,
     );
 }
@@ -82,13 +88,13 @@ export async function deployMockImplementation(
     const implementation = await deployer.deploy(
         mockImplArtifact,
         [],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'MockImplementation',
-        implementation.address,
+        await implementation.getAddress(),
         wallet,
     );
 }
@@ -101,11 +107,16 @@ export async function deployVerifier(
         'P256VerifierExpensive',
     );
 
-    const verifier = await deployer.deploy(verifierArtifact, [], undefined, []);
+    const verifier = await deployer.deploy(
+        verifierArtifact,
+        [],
+        await getOverrides(wallet),
+        [],
+    );
 
     return await hre.ethers.getContractAt(
         'P256VerifierExpensive',
-        verifier.address,
+        await verifier.getAddress(),
         wallet,
     );
 }
@@ -119,13 +130,13 @@ export async function deployMockValidator(
     const mockValidator = await deployer.deploy(
         mockValidatorArtifact,
         [],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'MockValidator',
-        mockValidator.address,
+        await mockValidator.getAddress(),
         wallet,
     );
 }
@@ -140,13 +151,13 @@ export async function deployTeeValidator(
     const TEEValidator = await deployer.deploy(
         teeValidatorArtifact,
         [verifierAddress],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'TEEValidator',
-        TEEValidator.address,
+        await TEEValidator.getAddress(),
         wallet,
     );
 }
@@ -160,13 +171,13 @@ export async function deployEOAValidator(
     const eoaValidator = await deployer.deploy(
         eoaValidatorArtifact,
         [],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'EOAValidator',
-        eoaValidator.address,
+        await eoaValidator.getAddress(),
         wallet,
     );
 }
@@ -182,13 +193,13 @@ export async function deploySocialRecoveryModule(
     const socialRecoveryModule = await deployer.deploy(
         socialRecoveryModuleArtifact,
         ['srm', '1', 0, 0],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'SocialRecoveryModule',
-        socialRecoveryModule.address,
+        await socialRecoveryModule.getAddress(),
         wallet,
     );
 }
@@ -200,13 +211,13 @@ export async function deployMockModule(wallet: Wallet): Promise<MockModule> {
     const mockModule = await deployer.deploy(
         mockModuleArtifact,
         [],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'MockModule',
-        mockModule.address,
+        await mockModule.getAddress(),
         wallet,
     );
 }
@@ -217,11 +228,16 @@ export async function deployMockValidationHook(
     const deployer: Deployer = new Deployer(hre, wallet);
     const mockHookArtifact = await deployer.loadArtifact('MockValidationHook');
 
-    const mockHook = await deployer.deploy(mockHookArtifact, [], undefined, []);
+    const mockHook = await deployer.deploy(
+        mockHookArtifact,
+        [],
+        await getOverrides(wallet),
+        [],
+    );
 
     return await hre.ethers.getContractAt(
         'MockValidationHook',
-        mockHook.address,
+        await mockHook.getAddress(),
         wallet,
     );
 }
@@ -232,11 +248,16 @@ export async function deployMockExecutionHook(
     const deployer: Deployer = new Deployer(hre, wallet);
     const mockHookArtifact = await deployer.loadArtifact('MockExecutionHook');
 
-    const mockHook = await deployer.deploy(mockHookArtifact, [], undefined, []);
+    const mockHook = await deployer.deploy(
+        mockHookArtifact,
+        [],
+        await getOverrides(wallet),
+        [],
+    );
 
     return await hre.ethers.getContractAt(
         'MockExecutionHook',
-        mockHook.address,
+        await mockHook.getAddress(),
         wallet,
     );
 }
@@ -245,11 +266,16 @@ export async function deployRegistry(wallet: Wallet): Promise<ClaveRegistry> {
     const deployer: Deployer = new Deployer(hre, wallet);
     const registryArtifact = await deployer.loadArtifact('ClaveRegistry');
 
-    const registry = await deployer.deploy(registryArtifact, [], undefined, []);
+    const registry = await deployer.deploy(
+        registryArtifact,
+        [],
+        await getOverrides(wallet),
+        [],
+    );
 
     return await hre.ethers.getContractAt(
         'ClaveRegistry',
-        registry.address,
+        await registry.getAddress(),
         wallet,
     );
 }
@@ -267,27 +293,28 @@ export async function deployFactory(
     const factory = await deployer.deploy(
         factoryArtifact,
         [implAddress, registryAddress, bytecodeHash, wallet.address],
-        undefined,
+        await getOverrides(wallet),
         [accountArtifact.bytecode],
     );
 
     return await hre.ethers.getContractAt(
         'AccountFactory',
-        factory.address,
+        await factory.getAddress(),
         wallet,
     );
 }
 
 export async function deployAccount(
     wallet: Wallet,
+    nonce: number,
     accountFactory: AccountFactory,
     validatorAddress: string,
     initialR1Owner: string,
     modules: Array<ethers.BytesLike> = [],
 ): Promise<CallableProxy> {
-    const salt = ethers.utils.randomBytes(32);
+    const salt = ethers.randomBytes(32);
 
-    const abiCoder = ethers.utils.defaultAbiCoder;
+    const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     const initializer =
         '0x1c6f4ceb' +
         abiCoder
@@ -299,6 +326,7 @@ export async function deployAccount(
 
     const tx = await accountFactory.deployAccount(salt, initializer, {
         gasLimit: 10_000_000,
+        nonce,
     });
     await tx.wait();
 
@@ -315,9 +343,18 @@ export async function deployMockStable(wallet: Wallet): Promise<MockStable> {
     const deployer: Deployer = new Deployer(hre, wallet);
     const stableArtifact = await deployer.loadArtifact('MockStable');
 
-    const stable = await deployer.deploy(stableArtifact, [], undefined, []);
+    const stable = await deployer.deploy(
+        stableArtifact,
+        [],
+        await getOverrides(wallet),
+        [],
+    );
 
-    return await hre.ethers.getContractAt('MockStable', stable.address, wallet);
+    return await hre.ethers.getContractAt(
+        'MockStable',
+        await stable.getAddress(),
+        wallet,
+    );
 }
 
 export async function deployGaslessPaymaster(
@@ -331,13 +368,13 @@ export async function deployGaslessPaymaster(
     const paymaster = await deployer.deploy(
         paymasterArtifact,
         [registryAddress, limit],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'GaslessPaymaster',
-        paymaster.address,
+        await paymaster.getAddress(),
         wallet,
     );
 }
@@ -356,13 +393,13 @@ export async function deployERC20Paymaster(
     const paymaster = await deployer.deploy(
         paymasterArtifact,
         [tokens],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'ERC20Paymaster',
-        paymaster.address,
+        await paymaster.getAddress(),
         wallet,
     );
 }
@@ -381,13 +418,13 @@ export async function deployERC20PaymasterMock(
     const paymaster = await deployer.deploy(
         paymasterArtifact,
         [tokens],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'ERC20PaymasterMock',
-        paymaster.address,
+        await paymaster.getAddress(),
         wallet,
     );
 }
@@ -409,13 +446,13 @@ export async function deploySubsidizerPaymaster(
     const paymaster = await deployer.deploy(
         paymasterArtifact,
         [tokens, registryAddress],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'SubsidizerPaymaster',
-        paymaster.address,
+        await paymaster.getAddress(),
         wallet,
     );
 }
@@ -437,13 +474,13 @@ export async function deploySubsidizerPaymasterMock(
     const paymaster = await deployer.deploy(
         paymasterArtifact,
         [tokens, registryAddress],
-        undefined,
+        await getOverrides(wallet),
         [],
     );
 
     return await hre.ethers.getContractAt(
         'SubsidizerPaymasterMock',
-        paymaster.address,
+        await paymaster.getAddress(),
         wallet,
     );
 }
