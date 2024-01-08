@@ -1,0 +1,53 @@
+{
+  "name": "clave-contracts-zksync",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "getclave.io",
+  "license": "MIT",
+  "devDependencies": {
+    "@getclave/constants": "1.0.0",
+    "@matterlabs/hardhat-zksync-chai-matchers": "1.2.1",
+    "@matterlabs/hardhat-zksync-deploy": "1.1.2 ",
+    "@matterlabs/hardhat-zksync-solc": "1.0.6",
+    "@matterlabs/hardhat-zksync-toolbox": "1.2.1",
+    "@matterlabs/hardhat-zksync-verify": "1.2.2",
+    "@nomicfoundation/hardhat-chai-matchers": "2.0.3",
+    "@nomicfoundation/hardhat-ethers": "3.0.5",
+    "@nomicfoundation/hardhat-verify": "2.0.3",
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typechain/hardhat": "9.1.0",
+    "@types/chai": "^4.3.4",
+    "@types/elliptic": "^6.4.15",
+    "@types/mocha": "^10.0.1",
+    "chai": "^4.3.7",
+    "dotenv": "^16.0.3",
+    "elliptic": "^6.5.4",
+    "ethers": "^6.9.2",
+    "hardhat": "^2.19.2",
+    "mocha": "^10.2.0",
+    "prettier-plugin-solidity": "^1.1.3",
+    "read-last-lines": "^1.8.0",
+    "ts-node": "^10.9.1",
+    "typechain": "^8.3.1",
+    "typescript": "5.3.3",
+    "zksync-ethers": "^6.0.0"
+  },
+  "scripts": {
+    "test": "NODE_ENV=test hardhat test --network zkSyncTestnet",
+    "auto-test": "./test/bash/autotest.sh",
+    "gas-report": "./test/bash/snapshot.sh",
+    "release-dev": "npx hardhat deploy-zksync --script release-dev.ts",
+    "release-prod": "npx hardhat deploy-zksync --script release-prod.ts",
+    "lint-check": "npx prettier --list-different --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
+    "lint": "npx prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'"
+  },
+  "dependencies": {
+    "@account-abstraction/contracts": "^0.6.0",
+    "@matterlabs/zksync-contracts": "^0.6.1",
+    "@nomad-xyz/excessively-safe-call": "github:nomad-xyz/ExcessivelySafeCall",
+    "@openzeppelin/contracts": "4.6.0",
+    "@openzeppelin/contracts-upgradeable": "4.6.0",
+    "@redstone-finance/evm-connector": "0.3.6",
+    "ts-morph": "^19.0.0"
+  }
+}
