@@ -4,7 +4,7 @@
  * Proprietary and confidential
  */
 import '@matterlabs/hardhat-zksync-toolbox';
-import '@nomiclabs/hardhat-ethers';
+import '@nomicfoundation/hardhat-ethers';
 import '@typechain/hardhat';
 import dotenv from 'dotenv';
 import type { HardhatUserConfig } from 'hardhat/config';
