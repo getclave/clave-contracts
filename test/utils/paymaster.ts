@@ -3,8 +3,8 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-import type { BigNumber, ethers } from 'ethers';
-import { type types, utils } from 'zksync-web3';
+import type { ethers } from 'ethers';
+import { type types, utils } from 'zksync-ethers';
 
 export function getGaslessPaymasterInput(
     paymasterAddress: types.Address,
@@ -18,7 +18,7 @@ export function getGaslessPaymasterInput(
 export function getERC20PaymasterInput(
     paymasterAddress: types.Address,
     tokenAddress: types.Address,
-    minimalAllowance: BigNumber,
+    minimalAllowance: bigint,
     oraclePayload: ethers.BytesLike,
 ): types.PaymasterParams {
     return utils.getPaymasterParams(paymasterAddress, {
