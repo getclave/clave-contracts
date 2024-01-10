@@ -34,7 +34,7 @@ export default async function (
 
     console.log(`TEE Validator address: ${teeValidator.address}`);
 
-    if (chainId === 0x118) {
+    if (chainId === 0x12c) {
         try {
             const verificationId = await hre.run('verify:verify', {
                 address: teeValidator.address,

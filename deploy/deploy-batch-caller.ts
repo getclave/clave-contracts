@@ -33,7 +33,7 @@ export default async function (
 
     console.log(`BatchCaller address: ${batchCaller.address}`);
 
-    if (chainId === 0x118) {
+    if (chainId === 0x12c) {
         try {
             const verificationId = await hre.run('verify:verify', {
                 address: batchCaller.address,
