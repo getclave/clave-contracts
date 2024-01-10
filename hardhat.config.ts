@@ -30,7 +30,7 @@ const zkSyncTestnet =
 
 const config: HardhatUserConfig = {
     zksolc: {
-        version: 'latest',
+        version: '1.3.19',
         settings: {
             isSystem: true,
             optimizer: {
