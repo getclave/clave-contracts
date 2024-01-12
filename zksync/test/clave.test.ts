@@ -98,9 +98,7 @@ beforeEach(async () => {
         await implementation.getAddress(),
         await registry.getAddress(),
     );
-    await registry.setFactory(await factory.getAddress(), {
-        nonce: await richWallet.getNonce(),
-    });
+    await registry.setFactory(await factory.getAddress());
 
     account = await deployAccount(
         richWallet,
@@ -115,7 +113,6 @@ beforeEach(async () => {
         await richWallet.sendTransaction({
             to: await account.getAddress(),
             value: parseEther('100'),
-            nonce: await richWallet.getNonce(),
         })
     ).wait();
 });
