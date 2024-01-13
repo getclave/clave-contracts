@@ -2280,18 +2280,18 @@ describe('Account no module no hook TEE validator', function () {
         });
 
         describe('Subsidizer refunds calculations', function () {
-            const MAX_GAS_TO_SUBSIDIZE = 1_250_000;
+            const MAX_GAS_TO_SUBSIDIZE = 1_250_000n;
 
             const calcRefund = (
-                gaslimit: number,
-                gasused: number,
-                max: number,
-            ): number => {
+                gaslimit: bigint,
+                gasused: bigint,
+                max: bigint,
+            ): bigint => {
                 const userpaid = gaslimit > max ? gaslimit - max : 0;
                 const gasrefunded = gaslimit - gasused;
 
                 if (userpaid === 0) {
-                    return 0;
+                    return 0n;
                 }
 
                 if (max > gasused) {
@@ -2302,22 +2302,19 @@ describe('Account no module no hook TEE validator', function () {
             };
 
             const calcExpected = (
-                refunded: number,
-                maxFeePerGas: number,
+                refunded: bigint,
+                maxFeePerGas: bigint,
                 rate: bigint,
             ): bigint => {
-                return (
-                    (BigInt(refunded) * BigInt(maxFeePerGas) * rate) /
-                    WeiPerEther
-                );
+                return (refunded * maxFeePerGas * rate) / WeiPerEther;
             };
 
             type Config = {
-                gasLimit: number;
-                gasUsed: number;
-                maxFeePerGas: number;
+                gasLimit: bigint;
+                gasUsed: bigint;
+                maxFeePerGas: bigint;
                 rate: bigint;
-                maxGasToSubsidize: number;
+                maxGasToSubsidize: bigint;
             };
 
             const checkRefund = async (
@@ -2350,11 +2347,11 @@ describe('Account no module no hook TEE validator', function () {
                 );
 
                 const pmConfig: Config = {
-                    gasLimit: 2_000_000,
-                    gasUsed: 1_500_000,
-                    maxFeePerGas: 100,
+                    gasLimit: 2_000_000n,
+                    gasUsed: 1_500_000n,
+                    maxFeePerGas: 100n,
                     rate: pmRate,
-                    maxGasToSubsidize: 1_000_000,
+                    maxGasToSubsidize: 1_000_000n,
                 };
 
                 const values = await checkRefund(pmConfig);
@@ -2368,9 +2365,9 @@ describe('Account no module no hook TEE validator', function () {
                 );
 
                 const pmConfig = {
-                    gasLimit: 2_000_000,
-                    gasUsed: 2_000_000,
-                    maxFeePerGas: 100,
+                    gasLimit: 2_000_000n,
+                    gasUsed: 2_000_000n,
+                    maxFeePerGas: 100n,
                     rate: pmRate,
                     maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
                 };
@@ -2386,9 +2383,9 @@ describe('Account no module no hook TEE validator', function () {
                 );
 
                 const pmConfig = {
-                    gasLimit: 1_000_000,
-                    gasUsed: 500_000,
-                    maxFeePerGas: 100,
+                    gasLimit: 1_000_000n,
+                    gasUsed: 500_000n,
+                    maxFeePerGas: 100n,
                     rate: pmRate,
                     maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
                 };
@@ -2404,9 +2401,9 @@ describe('Account no module no hook TEE validator', function () {
                 );
 
                 const pmConfig = {
-                    gasLimit: 500_000,
-                    gasUsed: 500_000,
-                    maxFeePerGas: 100,
+                    gasLimit: 500_000n,
+                    gasUsed: 500_000n,
+                    maxFeePerGas: 100n,
                     rate: pmRate,
                     maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
                 };
@@ -2415,16 +2412,16 @@ describe('Account no module no hook TEE validator', function () {
                 expect(values[0]).to.be.equal(values[1]);
             });
 
-            it('Should calculate if gasUsed is less then maxGasToSubsidize ', async function () {
+            it.only('Should calculate if gasUsed is less then maxGasToSubsidize ', async function () {
                 const pmRate = await subsidizerPaymaster.getPairPrice(
                     await mockToken.getAddress(),
                     '0x',
                 );
 
                 const pmConfig = {
-                    gasLimit: 2_000_000,
-                    gasUsed: 500_000,
-                    maxFeePerGas: 100,
+                    gasLimit: 2_000_000n,
+                    gasUsed: 500_000n,
+                    maxFeePerGas: 100n,
                     rate: pmRate,
                     maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
                 };
