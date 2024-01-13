@@ -3,6 +3,7 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
+import type { Contract } from '@ethersproject/contracts';
 import { assert, expect } from 'chai';
 import type { ec } from 'elliptic';
 import {
@@ -23,11 +24,8 @@ import type {
     BatchCaller,
     ClaveImplementation,
     ClaveRegistry,
-    ERC20PaymasterMock,
-    GaslessPaymaster,
     MockStable,
     P256VerifierExpensive,
-    SubsidizerPaymasterMock,
     TEEValidator,
 } from '../typechain-types';
 import {
@@ -48,7 +46,7 @@ import {
     deployTeeValidator,
     deployVerifier,
 } from './utils/deploy';
-//import { getOraclePayload } from './utils/oracle';
+import { getOraclePayload } from './utils/oracle';
 import { encodePublicKey, genKey } from './utils/p256';
 import {
     getERC20PaymasterInput,
@@ -99,7 +97,6 @@ beforeEach(async () => {
         await registry.getAddress(),
     );
     await registry.setFactory(await factory.getAddress());
-
     account = await deployAccount(
         richWallet,
         await richWallet.getNonce(),
@@ -107,7 +104,6 @@ beforeEach(async () => {
         await teeValidator.getAddress(),
         publicKey,
     );
-
     // 100 ETH transfered to Account
     await (
         await richWallet.sendTransaction({
@@ -1992,449 +1988,449 @@ describe('Account no module no hook TEE validator', function () {
         });
     });
 
-    // describe('Paymaster', function () {
-    //     let mockToken: MockStable;
-    //     let gaslessPaymaster: GaslessPaymaster;
-    //     let erc20Paymaster: ERC20PaymasterMock;
-    //     let subsidizerPaymaster: SubsidizerPaymasterMock;
-
-    //     beforeEach(async function () {
-    //         mockToken = await deployMockStable(richWallet);
-
-    //         gaslessPaymaster = await deployGaslessPaymaster(
-    //             richWallet,
-    //             await registry.getAddress(),
-    //             2,
-    //         );
-
-    //         erc20Paymaster = await deployERC20PaymasterMock(richWallet, [
-    //             {
-    //                 tokenAddress: await mockToken.getAddress(),
-    //                 decimals: 18,
-    //                 priceMarkup: 20000,
-    //             },
-    //         ]);
-
-    //         subsidizerPaymaster = await deploySubsidizerPaymasterMock(
-    //             richWallet,
-    //             [
-    //                 {
-    //                     tokenAddress: await mockToken.getAddress(),
-    //                     decimals: 18,
-    //                     priceMarkup: 20000,
-    //                 },
-    //             ],
-    //             await registry.getAddress(),
-    //         );
-
-    //         await mockToken.mint(await account.getAddress(), parseEther('100'));
-
-    //         await (
-    //             await richWallet.sendTransaction({
-    //                 to: await gaslessPaymaster.getAddress(),
-    //                 value: parseEther('50'),
-    //             })
-    //         ).wait();
-
-    //         await (
-    //             await richWallet.sendTransaction({
-    //                 to: await erc20Paymaster.getAddress(),
-    //                 value: parseEther('50'),
-    //             })
-    //         ).wait();
-
-    //         await (
-    //             await richWallet.sendTransaction({
-    //                 to: await subsidizerPaymaster.getAddress(),
-    //                 value: parseEther('50'),
-    //             })
-    //         ).wait();
-    //     });
-
-    //     it('Should fund the account with mock token', async function () {
-    //         expect(
-    //             await mockToken.balanceOf(await account.getAddress()),
-    //         ).to.be.eq(parseEther('100'));
-    //     });
-
-    //     it('Should fund the paymasters', async function () {
-    //         expect(
-    //             await provider.getBalance(await gaslessPaymaster.getAddress()),
-    //         ).to.eq(parseEther('50'));
-    //         expect(
-    //             await provider.getBalance(await erc20Paymaster.getAddress()),
-    //         ).to.eq(parseEther('50'));
-    //         expect(
-    //             await provider.getBalance(
-    //                 await subsidizerPaymaster.getAddress(),
-    //             ),
-    //         ).to.eq(parseEther('50'));
-    //     });
-
-    //     it('Should prepare an oracle payload', async function () {
-    //         const oraclePayload = await getOraclePayload(erc20Paymaster);
-    //         expect(oraclePayload).not.to.be.undefined;
-    //     });
-
-    //     it('Should pay gas with token', async function () {
-    //         const amount = parseEther('10');
-
-    //         const accountBalanceBefore = await provider.getBalance(
-    //             await account.getAddress(),
-    //         );
-    //         const receiverBalanceBefore = await provider.getBalance(
-    //             await richWallet.getAddress(),
-    //         );
-    //         const paymasterBalanceBefore = await provider.getBalance(
-    //             await erc20Paymaster.getAddress(),
-    //         );
-
-    //         const accountTokenBalanceBefore = await mockToken.balanceOf(
-    //             await account.getAddress(),
-    //         );
-    //         const contractTokenBalanceBefore = await mockToken.balanceOf(
-    //             await erc20Paymaster.getAddress(),
-    //         );
-
-    //         const transfer = ethTransfer(await richWallet.getAddress(), amount);
-    //         const tx = await prepareTeeTx(
-    //             provider,
-    //             account,
-    //             transfer,
-    //             await teeValidator.getAddress(),
-    //             keyPair,
-    //             [],
-    //             getERC20PaymasterInput(
-    //                 await erc20Paymaster.getAddress(),
-    //                 await mockToken.getAddress(),
-    //                 parseUnits('50', 18),
-    //                 await getOraclePayload(erc20Paymaster),
-    //             ),
-    //         );
-
-    //         const txReceipt = await provider.broadcastTransaction(
-    //             utils.serializeEip712(tx),
-    //         );
-
-    //         await txReceipt.wait();
-
-    //         const accountBalanceAfter = await provider.getBalance(
-    //             await account.getAddress(),
-    //         );
-    //         const receiverBalanceAfter = await provider.getBalance(
-    //             await richWallet.getAddress(),
-    //         );
-    //         const paymasterBalanceAfter = await provider.getBalance(
-    //             await erc20Paymaster.getAddress(),
-    //         );
-
-    //         const accountTokenBalanceAfter = await mockToken.balanceOf(
-    //             await account.getAddress(),
-    //         );
-    //         const contractTokenBalanceAfter = await mockToken.balanceOf(
-    //             await erc20Paymaster.getAddress(),
-    //         );
-
-    //         expect(accountBalanceAfter + amount).to.be.equal(
-    //             accountBalanceBefore,
-    //         );
-
-    //         expect(receiverBalanceBefore + amount).to.be.equal(
-    //             receiverBalanceAfter,
-    //         );
-
-    //         expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
-
-    //         expect(accountTokenBalanceBefore).is.greaterThan(
-    //             accountTokenBalanceAfter,
-    //         );
-
-    //         expect(
-    //             accountTokenBalanceBefore - accountTokenBalanceAfter,
-    //         ).to.be.equal(
-    //             contractTokenBalanceAfter - contractTokenBalanceBefore,
-    //         );
-    //     });
-
-    //     it('Should send tx without paying gas', async function () {
-    //         const amount = parseEther('10');
-
-    //         const accountBalanceBefore = await provider.getBalance(
-    //             await account.getAddress(),
-    //         );
-    //         const receiverBalanceBefore = await provider.getBalance(
-    //             await richWallet.getAddress(),
-    //         );
-    //         const paymasterBalanceBefore = await provider.getBalance(
-    //             await gaslessPaymaster.getAddress(),
-    //         );
-
-    //         const transfer = ethTransfer(await richWallet.getAddress(), amount);
-    //         const tx = await prepareTeeTx(
-    //             provider,
-    //             account,
-    //             transfer,
-    //             await teeValidator.getAddress(),
-    //             keyPair,
-    //             [],
-    //             getGaslessPaymasterInput(await gaslessPaymaster.getAddress()),
-    //         );
-
-    //         const txReceipt = await provider.broadcastTransaction(
-    //             utils.serializeEip712(tx),
-    //         );
-
-    //         await txReceipt.wait();
-
-    //         const accountBalanceAfter = await provider.getBalance(
-    //             await account.getAddress(),
-    //         );
-    //         const receiverBalanceAfter = await provider.getBalance(
-    //             await richWallet.getAddress(),
-    //         );
-    //         const paymasterBalanceAfter = await provider.getBalance(
-    //             await gaslessPaymaster.getAddress(),
-    //         );
-
-    //         expect(accountBalanceAfter + amount).to.be.equal(
-    //             accountBalanceBefore,
-    //         );
-    //         expect(receiverBalanceBefore + amount).to.be.equal(
-    //             receiverBalanceAfter,
-    //         );
-    //         expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
-    //     });
-
-    //     it('Should pay subsidized gas with token', async function () {
-    //         const amount = parseEther('10');
-
-    //         const accountBalanceBefore = await provider.getBalance(
-    //             await account.getAddress(),
-    //         );
-    //         const receiverBalanceBefore = await provider.getBalance(
-    //             await richWallet.getAddress(),
-    //         );
-    //         const paymasterBalanceBefore = await provider.getBalance(
-    //             await subsidizerPaymaster.getAddress(),
-    //         );
-
-    //         const accountTokenBalanceBefore = await mockToken.balanceOf(
-    //             await account.getAddress(),
-    //         );
-    //         const contractTokenBalanceBefore = await mockToken.balanceOf(
-    //             await subsidizerPaymaster.getAddress(),
-    //         );
-
-    //         const transfer = ethTransfer(await richWallet.getAddress(), amount);
-    //         const tx = await prepareTeeTx(
-    //             provider,
-    //             account,
-    //             transfer,
-    //             await teeValidator.getAddress(),
-    //             keyPair,
-    //             [],
-    //             getERC20PaymasterInput(
-    //                 await subsidizerPaymaster.getAddress(),
-    //                 await mockToken.getAddress(),
-    //                 parseUnits('50', 18),
-    //                 await getOraclePayload(subsidizerPaymaster),
-    //             ),
-    //         );
-
-    //         const txReceipt = await provider.broadcastTransaction(
-    //             utils.serializeEip712(tx),
-    //         );
-
-    //         await txReceipt.wait();
-
-    //         const accountBalanceAfter = await provider.getBalance(
-    //             await account.getAddress(),
-    //         );
-    //         const receiverBalanceAfter = await provider.getBalance(
-    //             await richWallet.getAddress(),
-    //         );
-    //         const paymasterBalanceAfter = await provider.getBalance(
-    //             await subsidizerPaymaster.getAddress(),
-    //         );
-
-    //         const accountTokenBalanceAfter = await mockToken.balanceOf(
-    //             await account.getAddress(),
-    //         );
-    //         const contractTokenBalanceAfter = await mockToken.balanceOf(
-    //             await subsidizerPaymaster.getAddress(),
-    //         );
-
-    //         expect(accountBalanceAfter + amount).to.be.equal(
-    //             accountBalanceBefore,
-    //         );
-
-    //         expect(receiverBalanceBefore + amount).to.be.equal(
-    //             receiverBalanceAfter,
-    //         );
-
-    //         expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
-
-    //         expect(accountTokenBalanceBefore).is.greaterThan(
-    //             accountTokenBalanceAfter,
-    //         );
-
-    //         expect(
-    //             accountTokenBalanceBefore - accountTokenBalanceAfter,
-    //         ).to.be.equal(
-    //             contractTokenBalanceAfter - contractTokenBalanceBefore,
-    //         );
-    //     });
-
-    //     describe('Subsidizer refunds calculations', function () {
-    //         const MAX_GAS_TO_SUBSIDIZE = 1_250_000;
-
-    //         const calcRefund = (
-    //             gaslimit: number,
-    //             gasused: number,
-    //             max: number,
-    //         ): number => {
-    //             const userpaid = gaslimit > max ? gaslimit - max : 0;
-    //             const gasrefunded = gaslimit - gasused;
-
-    //             if (userpaid === 0) {
-    //                 return 0;
-    //             }
-
-    //             if (max > gasused) {
-    //                 return userpaid;
-    //             } else {
-    //                 return gasrefunded;
-    //             }
-    //         };
-
-    //         const calcExpected = (
-    //             refunded: number,
-    //             maxFeePerGas: number,
-    //             rate: bigint,
-    //         ): number => {
-    //             return refunded * maxFeePerGas * Number(rate / WeiPerEther);
-    //         };
-
-    //         type Config = {
-    //             gasLimit: number;
-    //             gasUsed: number;
-    //             maxFeePerGas: number;
-    //             rate: bigint;
-    //             maxGasToSubsidize: number;
-    //         };
-
-    //         const checkRefund = async (
-    //             pmConfig: Config,
-    //         ): Promise<[number, bigint]> => {
-    //             const expected = calcExpected(
-    //                 calcRefund(
-    //                     pmConfig.gasLimit,
-    //                     pmConfig.gasUsed,
-    //                     pmConfig.maxGasToSubsidize,
-    //                 ),
-    //                 pmConfig.maxFeePerGas,
-    //                 pmConfig.rate,
-    //             );
-
-    //             const real = await subsidizerPaymaster.calcRefundAmount(
-    //                 pmConfig.gasLimit,
-    //                 pmConfig.gasLimit - pmConfig.gasUsed,
-    //                 pmConfig.maxFeePerGas,
-    //                 pmConfig.rate,
-    //             );
-
-    //             return [expected, real];
-    //         };
-
-    //         it('Should calculate if gasUsed is bigger than maxGasToSubsidize', async function () {
-    //             const pmRate = await subsidizerPaymaster.getPairPrice(
-    //                 await mockToken.getAddress(),
-    //                 '0x',
-    //             );
-
-    //             const pmConfig: Config = {
-    //                 gasLimit: 2_000_000,
-    //                 gasUsed: 1_500_000,
-    //                 maxFeePerGas: 100,
-    //                 rate: pmRate,
-    //                 maxGasToSubsidize: 1_000_000,
-    //             };
-
-    //             const values = await checkRefund(pmConfig);
-    //             expect(values[0].toString()).to.be.equal(values[1].toString());
-    //         });
-
-    //         it('Should calculate if gasUsed is equal to gasLimit and bigger than maxGasToSubsidize', async function () {
-    //             const pmRate = await subsidizerPaymaster.getPairPrice(
-    //                 await mockToken.getAddress(),
-    //                 '0x',
-    //             );
-
-    //             const pmConfig = {
-    //                 gasLimit: 2_000_000,
-    //                 gasUsed: 2_000_000,
-    //                 maxFeePerGas: 100,
-    //                 rate: pmRate,
-    //                 maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
-    //             };
-
-    //             const values = await checkRefund(pmConfig);
-    //             expect(values[0].toString()).to.be.equal(values[1].toString());
-    //         });
-
-    //         it('Should calculate if gasUsed is less than gasLimit and both less than maxGasToSubsidize', async function () {
-    //             const pmRate = await subsidizerPaymaster.getPairPrice(
-    //                 await mockToken.getAddress(),
-    //                 '0x',
-    //             );
-
-    //             const pmConfig = {
-    //                 gasLimit: 1_000_000,
-    //                 gasUsed: 500_000,
-    //                 maxFeePerGas: 100,
-    //                 rate: pmRate,
-    //                 maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
-    //             };
-
-    //             const values = await checkRefund(pmConfig);
-    //             expect(values[0].toString()).to.be.equal(values[1].toString());
-    //         });
-
-    //         it('Should calculate if gasUsed is equal to gasLimit and both less than maxGasToSubsidize', async function () {
-    //             const pmRate = await subsidizerPaymaster.getPairPrice(
-    //                 await mockToken.getAddress(),
-    //                 '0x',
-    //             );
-
-    //             const pmConfig = {
-    //                 gasLimit: 500_000,
-    //                 gasUsed: 500_000,
-    //                 maxFeePerGas: 100,
-    //                 rate: pmRate,
-    //                 maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
-    //             };
-
-    //             const values = await checkRefund(pmConfig);
-    //             expect(values[0].toString()).to.be.equal(values[1].toString());
-    //         });
-
-    //         it('Should calculate if gasUsed is less then maxGasToSubsidize ', async function () {
-    //             const pmRate = await subsidizerPaymaster.getPairPrice(
-    //                 await mockToken.getAddress(),
-    //                 '0x',
-    //             );
-
-    //             const pmConfig = {
-    //                 gasLimit: 2_000_000,
-    //                 gasUsed: 500_000,
-    //                 maxFeePerGas: 100,
-    //                 rate: pmRate,
-    //                 maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
-    //             };
-
-    //             const values = await checkRefund(pmConfig);
-    //             expect(values[0].toString()).to.be.equal(values[1].toString());
-    //         });
-    //     });
-    // });
+    describe('Paymaster', function () {
+        let mockToken: MockStable;
+        let gaslessPaymaster: Contract;
+        let erc20Paymaster: Contract;
+        let subsidizerPaymaster: Contract;
+
+        beforeEach(async function () {
+            mockToken = await deployMockStable(richWallet);
+
+            gaslessPaymaster = await deployGaslessPaymaster(
+                richWallet,
+                await registry.getAddress(),
+                2,
+            );
+
+            erc20Paymaster = await deployERC20PaymasterMock(richWallet, [
+                {
+                    tokenAddress: await mockToken.getAddress(),
+                    decimals: 18,
+                    priceMarkup: 20000,
+                },
+            ]);
+
+            subsidizerPaymaster = await deploySubsidizerPaymasterMock(
+                richWallet,
+                [
+                    {
+                        tokenAddress: await mockToken.getAddress(),
+                        decimals: 18,
+                        priceMarkup: 20000,
+                    },
+                ],
+                await registry.getAddress(),
+            );
+
+            await mockToken.mint(await account.getAddress(), parseEther('100'));
+
+            await (
+                await richWallet.sendTransaction({
+                    to: gaslessPaymaster.address,
+                    value: parseEther('50'),
+                })
+            ).wait();
+
+            await (
+                await richWallet.sendTransaction({
+                    to: erc20Paymaster.address,
+                    value: parseEther('50'),
+                })
+            ).wait();
+
+            await (
+                await richWallet.sendTransaction({
+                    to: subsidizerPaymaster.address,
+                    value: parseEther('50'),
+                })
+            ).wait();
+        });
+
+        it('Should fund the account with mock token', async function () {
+            expect(
+                await mockToken.balanceOf(await account.getAddress()),
+            ).to.be.eq(parseEther('100'));
+        });
+
+        it('Should fund the paymasters', async function () {
+            expect(
+                await provider.getBalance(await gaslessPaymaster.getAddress()),
+            ).to.eq(parseEther('50'));
+            expect(
+                await provider.getBalance(await erc20Paymaster.getAddress()),
+            ).to.eq(parseEther('50'));
+            expect(
+                await provider.getBalance(
+                    await subsidizerPaymaster.getAddress(),
+                ),
+            ).to.eq(parseEther('50'));
+        });
+
+        it('Should prepare an oracle payload', async function () {
+            const oraclePayload = await getOraclePayload(erc20Paymaster);
+            expect(oraclePayload).not.to.be.undefined;
+        });
+
+        it('Should pay gas with token', async function () {
+            const amount = parseEther('10');
+
+            const accountBalanceBefore = await provider.getBalance(
+                await account.getAddress(),
+            );
+            const receiverBalanceBefore = await provider.getBalance(
+                await richWallet.getAddress(),
+            );
+            const paymasterBalanceBefore = await provider.getBalance(
+                await erc20Paymaster.getAddress(),
+            );
+
+            const accountTokenBalanceBefore = await mockToken.balanceOf(
+                await account.getAddress(),
+            );
+            const contractTokenBalanceBefore = await mockToken.balanceOf(
+                await erc20Paymaster.getAddress(),
+            );
+
+            const transfer = ethTransfer(await richWallet.getAddress(), amount);
+            const tx = await prepareTeeTx(
+                provider,
+                account,
+                transfer,
+                await teeValidator.getAddress(),
+                keyPair,
+                [],
+                getERC20PaymasterInput(
+                    await erc20Paymaster.getAddress(),
+                    await mockToken.getAddress(),
+                    parseUnits('50', 18),
+                    await getOraclePayload(erc20Paymaster),
+                ),
+            );
+
+            const txReceipt = await provider.broadcastTransaction(
+                utils.serializeEip712(tx),
+            );
+
+            await txReceipt.wait();
+
+            const accountBalanceAfter = await provider.getBalance(
+                await account.getAddress(),
+            );
+            const receiverBalanceAfter = await provider.getBalance(
+                await richWallet.getAddress(),
+            );
+            const paymasterBalanceAfter = await provider.getBalance(
+                await erc20Paymaster.getAddress(),
+            );
+
+            const accountTokenBalanceAfter = await mockToken.balanceOf(
+                await account.getAddress(),
+            );
+            const contractTokenBalanceAfter = await mockToken.balanceOf(
+                await erc20Paymaster.getAddress(),
+            );
+
+            expect(accountBalanceAfter + amount).to.be.equal(
+                accountBalanceBefore,
+            );
+
+            expect(receiverBalanceBefore + amount).to.be.equal(
+                receiverBalanceAfter,
+            );
+
+            expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
+
+            expect(accountTokenBalanceBefore).is.greaterThan(
+                accountTokenBalanceAfter,
+            );
+
+            expect(
+                accountTokenBalanceBefore - accountTokenBalanceAfter,
+            ).to.be.equal(
+                contractTokenBalanceAfter - contractTokenBalanceBefore,
+            );
+        });
+
+        it('Should send tx without paying gas', async function () {
+            const amount = parseEther('10');
+
+            const accountBalanceBefore = await provider.getBalance(
+                await account.getAddress(),
+            );
+            const receiverBalanceBefore = await provider.getBalance(
+                await richWallet.getAddress(),
+            );
+            const paymasterBalanceBefore = await provider.getBalance(
+                await gaslessPaymaster.getAddress(),
+            );
+
+            const transfer = ethTransfer(await richWallet.getAddress(), amount);
+            const tx = await prepareTeeTx(
+                provider,
+                account,
+                transfer,
+                await teeValidator.getAddress(),
+                keyPair,
+                [],
+                getGaslessPaymasterInput(await gaslessPaymaster.getAddress()),
+            );
+
+            const txReceipt = await provider.broadcastTransaction(
+                utils.serializeEip712(tx),
+            );
+
+            await txReceipt.wait();
+
+            const accountBalanceAfter = await provider.getBalance(
+                await account.getAddress(),
+            );
+            const receiverBalanceAfter = await provider.getBalance(
+                await richWallet.getAddress(),
+            );
+            const paymasterBalanceAfter = await provider.getBalance(
+                await gaslessPaymaster.getAddress(),
+            );
+
+            expect(accountBalanceAfter + amount).to.be.equal(
+                accountBalanceBefore,
+            );
+            expect(receiverBalanceBefore + amount).to.be.equal(
+                receiverBalanceAfter,
+            );
+            expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
+        });
+
+        it('Should pay subsidized gas with token', async function () {
+            const amount = parseEther('10');
+
+            const accountBalanceBefore = await provider.getBalance(
+                await account.getAddress(),
+            );
+            const receiverBalanceBefore = await provider.getBalance(
+                await richWallet.getAddress(),
+            );
+            const paymasterBalanceBefore = await provider.getBalance(
+                await subsidizerPaymaster.getAddress(),
+            );
+
+            const accountTokenBalanceBefore = await mockToken.balanceOf(
+                await account.getAddress(),
+            );
+            const contractTokenBalanceBefore = await mockToken.balanceOf(
+                await subsidizerPaymaster.getAddress(),
+            );
+
+            const transfer = ethTransfer(await richWallet.getAddress(), amount);
+            const tx = await prepareTeeTx(
+                provider,
+                account,
+                transfer,
+                await teeValidator.getAddress(),
+                keyPair,
+                [],
+                getERC20PaymasterInput(
+                    await subsidizerPaymaster.getAddress(),
+                    await mockToken.getAddress(),
+                    parseUnits('50', 18),
+                    await getOraclePayload(subsidizerPaymaster),
+                ),
+            );
+
+            const txReceipt = await provider.broadcastTransaction(
+                utils.serializeEip712(tx),
+            );
+
+            await txReceipt.wait();
+
+            const accountBalanceAfter = await provider.getBalance(
+                await account.getAddress(),
+            );
+            const receiverBalanceAfter = await provider.getBalance(
+                await richWallet.getAddress(),
+            );
+            const paymasterBalanceAfter = await provider.getBalance(
+                await subsidizerPaymaster.getAddress(),
+            );
+
+            const accountTokenBalanceAfter = await mockToken.balanceOf(
+                await account.getAddress(),
+            );
+            const contractTokenBalanceAfter = await mockToken.balanceOf(
+                await subsidizerPaymaster.getAddress(),
+            );
+
+            expect(accountBalanceAfter + amount).to.be.equal(
+                accountBalanceBefore,
+            );
+
+            expect(receiverBalanceBefore + amount).to.be.equal(
+                receiverBalanceAfter,
+            );
+
+            expect(paymasterBalanceAfter).is.lessThan(paymasterBalanceBefore);
+
+            expect(accountTokenBalanceBefore).is.greaterThan(
+                accountTokenBalanceAfter,
+            );
+
+            expect(
+                accountTokenBalanceBefore - accountTokenBalanceAfter,
+            ).to.be.equal(
+                contractTokenBalanceAfter - contractTokenBalanceBefore,
+            );
+        });
+
+        describe('Subsidizer refunds calculations', function () {
+            const MAX_GAS_TO_SUBSIDIZE = 1_250_000;
+
+            const calcRefund = (
+                gaslimit: number,
+                gasused: number,
+                max: number,
+            ): number => {
+                const userpaid = gaslimit > max ? gaslimit - max : 0;
+                const gasrefunded = gaslimit - gasused;
+
+                if (userpaid === 0) {
+                    return 0;
+                }
+
+                if (max > gasused) {
+                    return userpaid;
+                } else {
+                    return gasrefunded;
+                }
+            };
+
+            const calcExpected = (
+                refunded: number,
+                maxFeePerGas: number,
+                rate: bigint,
+            ): number => {
+                return refunded * maxFeePerGas * Number(rate / WeiPerEther);
+            };
+
+            type Config = {
+                gasLimit: number;
+                gasUsed: number;
+                maxFeePerGas: number;
+                rate: bigint;
+                maxGasToSubsidize: number;
+            };
+
+            const checkRefund = async (
+                pmConfig: Config,
+            ): Promise<[number, bigint]> => {
+                const expected = calcExpected(
+                    calcRefund(
+                        pmConfig.gasLimit,
+                        pmConfig.gasUsed,
+                        pmConfig.maxGasToSubsidize,
+                    ),
+                    pmConfig.maxFeePerGas,
+                    pmConfig.rate,
+                );
+
+                const real = await subsidizerPaymaster.calcRefundAmount(
+                    pmConfig.gasLimit,
+                    pmConfig.gasLimit - pmConfig.gasUsed,
+                    pmConfig.maxFeePerGas,
+                    pmConfig.rate,
+                );
+
+                return [expected, real];
+            };
+
+            it('Should calculate if gasUsed is bigger than maxGasToSubsidize', async function () {
+                const pmRate = await subsidizerPaymaster.getPairPrice(
+                    await mockToken.getAddress(),
+                    '0x',
+                );
+
+                const pmConfig: Config = {
+                    gasLimit: 2_000_000,
+                    gasUsed: 1_500_000,
+                    maxFeePerGas: 100,
+                    rate: pmRate,
+                    maxGasToSubsidize: 1_000_000,
+                };
+
+                const values = await checkRefund(pmConfig);
+                expect(values[0].toString()).to.be.equal(values[1].toString());
+            });
+
+            it('Should calculate if gasUsed is equal to gasLimit and bigger than maxGasToSubsidize', async function () {
+                const pmRate = await subsidizerPaymaster.getPairPrice(
+                    await mockToken.getAddress(),
+                    '0x',
+                );
+
+                const pmConfig = {
+                    gasLimit: 2_000_000,
+                    gasUsed: 2_000_000,
+                    maxFeePerGas: 100,
+                    rate: pmRate,
+                    maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
+                };
+
+                const values = await checkRefund(pmConfig);
+                expect(values[0].toString()).to.be.equal(values[1].toString());
+            });
+
+            it('Should calculate if gasUsed is less than gasLimit and both less than maxGasToSubsidize', async function () {
+                const pmRate = await subsidizerPaymaster.getPairPrice(
+                    await mockToken.getAddress(),
+                    '0x',
+                );
+
+                const pmConfig = {
+                    gasLimit: 1_000_000,
+                    gasUsed: 500_000,
+                    maxFeePerGas: 100,
+                    rate: pmRate,
+                    maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
+                };
+
+                const values = await checkRefund(pmConfig);
+                expect(values[0].toString()).to.be.equal(values[1].toString());
+            });
+
+            it('Should calculate if gasUsed is equal to gasLimit and both less than maxGasToSubsidize', async function () {
+                const pmRate = await subsidizerPaymaster.getPairPrice(
+                    await mockToken.getAddress(),
+                    '0x',
+                );
+
+                const pmConfig = {
+                    gasLimit: 500_000,
+                    gasUsed: 500_000,
+                    maxFeePerGas: 100,
+                    rate: pmRate,
+                    maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
+                };
+
+                const values = await checkRefund(pmConfig);
+                expect(values[0].toString()).to.be.equal(values[1].toString());
+            });
+
+            it('Should calculate if gasUsed is less then maxGasToSubsidize ', async function () {
+                const pmRate = await subsidizerPaymaster.getPairPrice(
+                    await mockToken.getAddress(),
+                    '0x',
+                );
+
+                const pmConfig = {
+                    gasLimit: 2_000_000,
+                    gasUsed: 500_000,
+                    maxFeePerGas: 100,
+                    rate: pmRate,
+                    maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
+                };
+
+                const values = await checkRefund(pmConfig);
+                expect(values[0].toString()).to.be.equal(values[1].toString());
+            });
+        });
+    });
 });
