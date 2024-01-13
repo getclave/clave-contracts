@@ -2350,7 +2350,7 @@ describe('Account no module no hook TEE validator', function () {
                     gasLimit: 2_000_000n,
                     gasUsed: 1_500_000n,
                     maxFeePerGas: 100n,
-                    rate: pmRate,
+                    rate: BigInt(pmRate.toString()),
                     maxGasToSubsidize: 1_000_000n,
                 };
 
@@ -2368,7 +2368,7 @@ describe('Account no module no hook TEE validator', function () {
                     gasLimit: 2_000_000n,
                     gasUsed: 2_000_000n,
                     maxFeePerGas: 100n,
-                    rate: pmRate,
+                    rate: BigInt(pmRate.toString()),
                     maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
                 };
 
@@ -2386,7 +2386,7 @@ describe('Account no module no hook TEE validator', function () {
                     gasLimit: 1_000_000n,
                     gasUsed: 500_000n,
                     maxFeePerGas: 100n,
-                    rate: pmRate,
+                    rate: BigInt(pmRate.toString()),
                     maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
                 };
 
@@ -2404,7 +2404,7 @@ describe('Account no module no hook TEE validator', function () {
                     gasLimit: 500_000n,
                     gasUsed: 500_000n,
                     maxFeePerGas: 100n,
-                    rate: pmRate,
+                    rate: BigInt(pmRate.toString()),
                     maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
                 };
 
@@ -2412,7 +2412,7 @@ describe('Account no module no hook TEE validator', function () {
                 expect(values[0]).to.be.equal(values[1]);
             });
 
-            it.only('Should calculate if gasUsed is less then maxGasToSubsidize ', async function () {
+            it('Should calculate if gasUsed is less then maxGasToSubsidize ', async function () {
                 const pmRate = await subsidizerPaymaster.getPairPrice(
                     await mockToken.getAddress(),
                     '0x',
@@ -2422,7 +2422,7 @@ describe('Account no module no hook TEE validator', function () {
                     gasLimit: 2_000_000n,
                     gasUsed: 500_000n,
                     maxFeePerGas: 100n,
-                    rate: pmRate,
+                    rate: BigInt(pmRate.toString()),
                     maxGasToSubsidize: MAX_GAS_TO_SUBSIDIZE,
                 };
 
