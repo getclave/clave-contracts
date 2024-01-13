@@ -3,6 +3,8 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
+import { Contract } from '@ethersproject/contracts';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
 import { ethers } from 'ethers';
 import * as hre from 'hardhat';
@@ -15,9 +17,6 @@ import type {
     ClaveImplementation,
     ClaveRegistry,
     EOAValidator,
-    ERC20Paymaster,
-    ERC20PaymasterMock,
-    GaslessPaymaster,
     MockExecutionHook,
     MockImplementation,
     MockModule,
@@ -26,8 +25,6 @@ import type {
     MockValidator,
     P256VerifierExpensive,
     SocialRecoveryModule,
-    SubsidizerPaymaster,
-    SubsidizerPaymasterMock,
     TEEValidator,
 } from '../../typechain-types';
 import type { CallableProxy } from './proxy-helpers';
@@ -330,7 +327,7 @@ export async function deployGaslessPaymaster(
     wallet: Wallet,
     registryAddress: string,
     limit: number,
-): Promise<GaslessPaymaster> {
+): Promise<Contract> {
     const deployer: Deployer = new Deployer(hre, wallet);
     const paymasterArtifact = await deployer.loadArtifact('GaslessPaymaster');
 
@@ -341,10 +338,14 @@ export async function deployGaslessPaymaster(
         [],
     );
 
-    return await hre.ethers.getContractAt(
-        'GaslessPaymaster',
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const provider = new JsonRpcProvider(hre.config.networks.zkSyncTestnet.url);
+
+    return new Contract(
         await paymaster.getAddress(),
-        wallet,
+        paymasterArtifact.abi,
+        provider,
     );
 }
 
@@ -355,7 +356,7 @@ export async function deployERC20Paymaster(
         decimals: number;
         priceMarkup: number;
     }>,
-): Promise<ERC20Paymaster> {
+): Promise<Contract> {
     const deployer: Deployer = new Deployer(hre, wallet);
     const paymasterArtifact = await deployer.loadArtifact('ERC20Paymaster');
 
@@ -366,10 +367,14 @@ export async function deployERC20Paymaster(
         [],
     );
 
-    return await hre.ethers.getContractAt(
-        'ERC20Paymaster',
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const provider = new JsonRpcProvider(hre.config.networks.zkSyncTestnet.url);
+
+    return new Contract(
         await paymaster.getAddress(),
-        wallet,
+        paymasterArtifact.abi,
+        provider,
     );
 }
 
@@ -380,7 +385,7 @@ export async function deployERC20PaymasterMock(
         decimals: number;
         priceMarkup: number;
     }>,
-): Promise<ERC20PaymasterMock> {
+): Promise<Contract> {
     const deployer: Deployer = new Deployer(hre, wallet);
     const paymasterArtifact = await deployer.loadArtifact('ERC20PaymasterMock');
 
@@ -391,10 +396,14 @@ export async function deployERC20PaymasterMock(
         [],
     );
 
-    return await hre.ethers.getContractAt(
-        'ERC20PaymasterMock',
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const provider = new JsonRpcProvider(hre.config.networks.zkSyncTestnet.url);
+
+    return new Contract(
         await paymaster.getAddress(),
-        wallet,
+        paymasterArtifact.abi,
+        provider,
     );
 }
 
@@ -406,7 +415,7 @@ export async function deploySubsidizerPaymaster(
         priceMarkup: number;
     }>,
     registryAddress: string,
-): Promise<SubsidizerPaymaster> {
+): Promise<Contract> {
     const deployer: Deployer = new Deployer(hre, wallet);
     const paymasterArtifact = await deployer.loadArtifact(
         'SubsidizerPaymaster',
@@ -419,10 +428,14 @@ export async function deploySubsidizerPaymaster(
         [],
     );
 
-    return await hre.ethers.getContractAt(
-        'SubsidizerPaymaster',
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const provider = new JsonRpcProvider(hre.config.networks.zkSyncTestnet.url);
+
+    return new Contract(
         await paymaster.getAddress(),
-        wallet,
+        paymasterArtifact.abi,
+        provider,
     );
 }
 
@@ -434,7 +447,7 @@ export async function deploySubsidizerPaymasterMock(
         priceMarkup: number;
     }>,
     registryAddress: string,
-): Promise<SubsidizerPaymasterMock> {
+): Promise<Contract> {
     const deployer: Deployer = new Deployer(hre, wallet);
     const paymasterArtifact = await deployer.loadArtifact(
         'SubsidizerPaymasterMock',
@@ -447,9 +460,13 @@ export async function deploySubsidizerPaymasterMock(
         [],
     );
 
-    return await hre.ethers.getContractAt(
-        'SubsidizerPaymasterMock',
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const provider = new JsonRpcProvider(hre.config.networks.zkSyncTestnet.url);
+
+    return new Contract(
         await paymaster.getAddress(),
-        wallet,
+        paymasterArtifact.abi,
+        provider,
     );
 }
