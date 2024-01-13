@@ -10,7 +10,7 @@ import {Errors} from '../libraries/Errors.sol';
  */
 contract TEEValidatorConstant is IR1Validator {
     //dummy value
-    address constant P256_VERIFIER = address(0);
+    address constant P256_VERIFIER = 0x4323cffC1Fda2da9928cB5A5A9dA45DC8Ee38a2f;
 
     /// @inheritdoc IR1Validator
     function validateSignature(

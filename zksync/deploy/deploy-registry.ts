@@ -29,7 +29,7 @@ export default async function (
 
     console.log(`Clave Registry address: ${registry.address}`);
 
-    if (chainId === 0x118) {
+    if (chainId === 0x12c) {
         try {
             const verificationId = await hre.run('verify:verify', {
                 address: registryAddress,

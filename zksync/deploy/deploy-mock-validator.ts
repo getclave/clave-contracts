@@ -31,7 +31,7 @@ export default async function (
 
     console.log(`Mock Validator address: ${mockValidatorAddress}`);
 
-    if (chainId === 0x118) {
+    if (chainId === 0x12c) {
         const verificationId = await hre.run('verify:verify', {
             address: mockValidatorAddress,
             contract: contractNames.mockValidator,

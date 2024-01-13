@@ -21,18 +21,18 @@ const zkSyncTestnet: NetworkUserConfig =
               zksync: true,
           }
         : {
-              url: 'https://zksync2-testnet.zksync.dev',
-              ethNetwork: 'goerli',
+              url: 'https://sepolia.era.zksync.dev/',
+              ethNetwork: 'sepolia',
               zksync: true,
               // contract verification endpoint
               verifyURL:
-                  'https://zksync2-testnet-explorer.zksync.dev/contract_verification',
-              chainId: 280,
+                  'https://explorer.sepolia.era.zksync.dev/contract_verification',
+              chainId: 300,
           };
 
 const config: HardhatUserConfig = {
     zksolc: {
-        version: 'latest',
+        version: '1.3.19',
         settings: {
             isSystem: true,
             optimizer: {

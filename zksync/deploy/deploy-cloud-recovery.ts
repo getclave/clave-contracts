@@ -36,7 +36,7 @@ export default async function (
 
     console.log(`Cloud Recovery address: ${CRMAddress}`);
 
-    if (chainId === 0x118) {
+    if (chainId === 0x12c) {
         try {
             const verificationId = await hre.run('verify:verify', {
                 address: CRMAddress,
