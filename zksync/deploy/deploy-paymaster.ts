@@ -6,7 +6,7 @@
 import { type AddressKey } from '@getclave/constants';
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { Provider, Wallet } from 'zksync-web3';
+import { Provider, Wallet } from 'zksync-ethers';
 
 import { contractNames } from './helpers/fully-qualified-contract-names';
 import { paymasterData } from './helpers/paymaster-data';
@@ -25,7 +25,7 @@ export default async function (
     const privateKey = process.env.PRIVATE_KEY!;
     const wallet = new Wallet(privateKey).connect(provider);
     const deployer = new Deployer(hre, wallet);
-    const chainId = await deployer.zkWallet.getChainId();
+    const chainId = hre.network.config.chainId;
 
     if (paymasterData.deploys[0]) {
         const erc20PaymasterArtifact = await deployer.loadArtifact(
@@ -39,14 +39,16 @@ export default async function (
             [],
         );
 
+        const erc20PaymasterAddress = await erc20Paymaster.getAddress();
+
         console.log(
-            `ERC20Paymaster deployment address: ${erc20Paymaster.address}`,
+            `ERC20Paymaster deployment address: ${erc20PaymasterAddress}`,
         );
 
         if (chainId === 0x118) {
             try {
                 const verificationIdERC20 = await hre.run('verify:verify', {
-                    address: erc20Paymaster.address,
+                    address: erc20PaymasterAddress,
                     contract: contractNames.erc20Paymaster,
                     constructorArguments: [paymasterData.tokenInput],
                 });
@@ -56,7 +58,7 @@ export default async function (
                 );
             } catch (error) {
                 console.log(
-                    "Couldn't verify the ${contractNames.erc20Paymaster} contracts:",
+                    `Couldn't verify the ${contractNames.erc20Paymaster} contracts:`,
                     error,
                 );
             }
@@ -64,12 +66,12 @@ export default async function (
 
         if (releaseType != null) {
             const key: AddressKey = 'ERC20_PAYMASTER';
-            updateAddress(releaseType, key, erc20Paymaster.address);
+            updateAddress(releaseType, key, erc20PaymasterAddress);
         }
 
-        if (paymasterData.fund[0].gt(0)) {
+        if (paymasterData.fund[0] > 0) {
             await wallet.sendTransaction({
-                to: erc20Paymaster.address,
+                to: erc20PaymasterAddress,
                 value: paymasterData.fund[0],
             });
         }
@@ -94,14 +96,16 @@ export default async function (
             [],
         );
 
+        const gaslessPaymasterAddress = await gaslessPaymaster.getAddress();
+
         console.log(
-            `GaslessPaymaster deployment address: ${gaslessPaymaster.address}`,
+            `GaslessPaymaster deployment address: ${gaslessPaymasterAddress}`,
         );
 
         if (chainId === 0x118) {
             try {
                 const verificationIdGasless = await hre.run('verify:verify', {
-                    address: gaslessPaymaster.address,
+                    address: gaslessPaymasterAddress,
                     contract: contractNames.gaslessPaymaster,
                     constructorArguments: [
                         REGISTRY_ADDRESS,
@@ -122,12 +126,12 @@ export default async function (
 
         if (releaseType != null) {
             const key: AddressKey = 'GASLESS_PAYMASTER';
-            updateAddress(releaseType, key, gaslessPaymaster.address);
+            updateAddress(releaseType, key, gaslessPaymasterAddress);
         }
 
-        if (paymasterData.fund[1].gt(0)) {
+        if (paymasterData.fund[1] > 0) {
             await wallet.sendTransaction({
-                to: gaslessPaymaster.address,
+                to: gaslessPaymasterAddress,
                 value: paymasterData.fund[1],
             });
         }

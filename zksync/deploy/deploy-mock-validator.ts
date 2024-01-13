@@ -5,7 +5,7 @@
  */
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { Wallet } from 'zksync-web3';
+import { Wallet } from 'zksync-ethers';
 
 import { contractNames } from './helpers/fully-qualified-contract-names';
 
@@ -16,7 +16,7 @@ export default async function (
     const privateKey = process.env.PRIVATE_KEY!;
     const wallet = new Wallet(privateKey);
     const deployer = new Deployer(hre, wallet);
-    const chainId = await deployer.zkWallet.getChainId();
+    const chainId = hre.network.config.chainId;
 
     const mockValidatorArtifact = await deployer.loadArtifact('MockValidator');
 
@@ -27,11 +27,13 @@ export default async function (
         [],
     );
 
-    console.log(`Mock Validator address: ${mockValidator.address}`);
+    const mockValidatorAddress = await mockValidator.getAddress();
+
+    console.log(`Mock Validator address: ${mockValidatorAddress}`);
 
     if (chainId === 0x118) {
         const verificationId = await hre.run('verify:verify', {
-            address: mockValidator.address,
+            address: mockValidatorAddress,
             contract: contractNames.mockValidator,
             constructorArguments: [],
         });
@@ -39,5 +41,5 @@ export default async function (
         console.log(`Verification ID: ${verificationId}`);
     }
 
-    return mockValidator.address;
+    return mockValidatorAddress;
 }

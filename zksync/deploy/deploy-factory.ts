@@ -6,7 +6,7 @@
 import { type AddressKey } from '@getclave/constants';
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { Provider, Wallet, utils } from 'zksync-web3';
+import { Provider, Wallet, utils } from 'zksync-ethers';
 
 import { contractNames } from './helpers/fully-qualified-contract-names';
 import type { ReleaseType } from './helpers/release';
@@ -25,7 +25,7 @@ export default async function (
     const privateKey = process.env.PRIVATE_KEY!;
     const wallet = new Wallet(privateKey).connect(provider);
     const deployer = new Deployer(hre, wallet);
-    const chainId = await deployer.zkWallet.getChainId();
+    const chainId = hre.network.config.chainId;
 
     const IMPLEMENTATION_ADDRESS =
         implementationAddress ||
@@ -59,12 +59,14 @@ export default async function (
         [accountArtifact.bytecode],
     );
 
-    console.log(`Account factory address: ${factory.address}`);
+    const factoryAddress = await factory.getAddress();
+
+    console.log(`Account factory address: ${factoryAddress}`);
 
     if (chainId === 0x118) {
         try {
             const verificationId = await hre.run('verify:verify', {
-                address: factory.address,
+                address: factoryAddress,
                 contract: contractNames.factory,
                 constructorArguments: [
                     IMPLEMENTATION_ADDRESS,
@@ -81,7 +83,7 @@ export default async function (
 
     if (releaseType != null) {
         const key: AddressKey = 'FACTORY';
-        updateAddress(releaseType, key, factory.address);
+        updateAddress(releaseType, key, factoryAddress);
     }
 
     const registry = await hre.ethers.getContractAt(
@@ -90,7 +92,7 @@ export default async function (
         wallet,
     );
 
-    await registry.connect(wallet).setFactory(factory.address);
+    await registry.connect(wallet).setFactory(factoryAddress);
 
-    return factory.address;
+    return factoryAddress;
 }

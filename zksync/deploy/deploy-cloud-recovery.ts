@@ -6,7 +6,7 @@
 import type { AddressKey } from '@getclave/constants';
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { Wallet } from 'zksync-web3';
+import { Wallet } from 'zksync-ethers';
 
 import { contractNames } from './helpers/fully-qualified-contract-names';
 import { ReleaseType, updateAddress } from './helpers/release';
@@ -19,7 +19,7 @@ export default async function (
     const privateKey = process.env.PRIVATE_KEY!;
     const wallet = new Wallet(privateKey);
     const deployer = new Deployer(hre, wallet);
-    const chainId = await deployer.zkWallet.getChainId();
+    const chainId = hre.network.config.chainId;
 
     const CRMArtifact = await deployer.loadArtifact('CloudRecoveryModule');
 
@@ -32,12 +32,14 @@ export default async function (
         [],
     );
 
-    console.log(`Cloud Recovery address: ${CRM.address}`);
+    const CRMAddress = await CRM.getAddress();
+
+    console.log(`Cloud Recovery address: ${CRMAddress}`);
 
     if (chainId === 0x118) {
         try {
             const verificationId = await hre.run('verify:verify', {
-                address: CRM.address,
+                address: CRMAddress,
                 contract: contractNames.cloudRecovery,
                 constructorArguments: ['crm', '1', timelock],
             });
@@ -49,8 +51,8 @@ export default async function (
 
     if (releaseType != null) {
         const key: AddressKey = 'CLOUD_RECOVERY';
-        updateAddress(releaseType, key, CRM.address);
+        updateAddress(releaseType, key, CRMAddress);
     }
 
-    return CRM.address;
+    return CRMAddress;
 }

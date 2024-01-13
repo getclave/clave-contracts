@@ -8,11 +8,12 @@ import '@nomicfoundation/hardhat-ethers';
 import '@typechain/hardhat';
 import dotenv from 'dotenv';
 import type { HardhatUserConfig } from 'hardhat/config';
+import type { NetworkUserConfig } from 'hardhat/types';
 
 dotenv.config();
 
 // dynamically changes endpoints for local tests
-const zkSyncTestnet =
+const zkSyncTestnet: NetworkUserConfig =
     process.env.NODE_ENV == 'test' || process.env.NODE_ENV == 'snapshot'
         ? {
               url: 'http://127.0.0.1:8011',
@@ -26,6 +27,7 @@ const zkSyncTestnet =
               // contract verification endpoint
               verifyURL:
                   'https://zksync2-testnet-explorer.zksync.dev/contract_verification',
+              chainId: 280,
           };
 
 const config: HardhatUserConfig = {

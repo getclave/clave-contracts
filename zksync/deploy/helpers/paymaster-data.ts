@@ -3,7 +3,7 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-import { parseEther } from 'ethers/lib/utils';
+import { parseEther } from 'ethers';
 
 export const paymasterData = {
     // ERC20Paymaster, GaslessPaymaster

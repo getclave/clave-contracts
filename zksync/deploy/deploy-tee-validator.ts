@@ -6,7 +6,7 @@
 import type { AddressKey } from '@getclave/constants';
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { Wallet } from 'zksync-web3';
+import { Wallet } from 'zksync-ethers';
 
 import { contractNames } from './helpers/fully-qualified-contract-names';
 import { type ReleaseType, updateAddress } from './helpers/release';
@@ -19,7 +19,7 @@ export default async function (
     const privateKey = process.env.PRIVATE_KEY!;
     const wallet = new Wallet(privateKey);
     const deployer = new Deployer(hre, wallet);
-    const chainId = await deployer.zkWallet.getChainId();
+    const chainId = hre.network.config.chainId;
 
     const teeValidatorArtifact = await deployer.loadArtifact(
         'TEEValidatorConstant',
@@ -32,12 +32,14 @@ export default async function (
         [],
     );
 
-    console.log(`TEE Validator address: ${teeValidator.address}`);
+    const teeValidatorAddress = await teeValidator.getAddress();
+
+    console.log(`TEE Validator address: ${teeValidatorAddress}`);
 
     if (chainId === 0x118) {
         try {
             const verificationId = await hre.run('verify:verify', {
-                address: teeValidator.address,
+                address: teeValidatorAddress,
                 contract: contractNames.teeValidator,
                 constructorArguments: [],
             });
@@ -49,8 +51,8 @@ export default async function (
 
     if (releaseType != null) {
         const key: AddressKey = 'VALIDATOR_ADDRESS';
-        updateAddress(releaseType, key, teeValidator.address);
+        updateAddress(releaseType, key, teeValidatorAddress);
     }
 
-    return teeValidator.address;
+    return teeValidatorAddress;
 }
