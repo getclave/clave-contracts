@@ -2054,16 +2054,14 @@ describe('Account no module no hook TEE validator', function () {
         });
 
         it('Should fund the paymasters', async function () {
+            expect(await provider.getBalance(gaslessPaymaster.address)).to.eq(
+                parseEther('50'),
+            );
+            expect(await provider.getBalance(erc20Paymaster.address)).to.eq(
+                parseEther('50'),
+            );
             expect(
-                await provider.getBalance(await gaslessPaymaster.getAddress()),
-            ).to.eq(parseEther('50'));
-            expect(
-                await provider.getBalance(await erc20Paymaster.getAddress()),
-            ).to.eq(parseEther('50'));
-            expect(
-                await provider.getBalance(
-                    await subsidizerPaymaster.getAddress(),
-                ),
+                await provider.getBalance(subsidizerPaymaster.address),
             ).to.eq(parseEther('50'));
         });
 
@@ -2082,14 +2080,14 @@ describe('Account no module no hook TEE validator', function () {
                 await richWallet.getAddress(),
             );
             const paymasterBalanceBefore = await provider.getBalance(
-                await erc20Paymaster.getAddress(),
+                erc20Paymaster.address,
             );
 
             const accountTokenBalanceBefore = await mockToken.balanceOf(
                 await account.getAddress(),
             );
             const contractTokenBalanceBefore = await mockToken.balanceOf(
-                await erc20Paymaster.getAddress(),
+                erc20Paymaster.address,
             );
 
             const transfer = ethTransfer(await richWallet.getAddress(), amount);
@@ -2101,7 +2099,7 @@ describe('Account no module no hook TEE validator', function () {
                 keyPair,
                 [],
                 getERC20PaymasterInput(
-                    await erc20Paymaster.getAddress(),
+                    erc20Paymaster.address,
                     await mockToken.getAddress(),
                     parseUnits('50', 18),
                     await getOraclePayload(erc20Paymaster),
@@ -2121,14 +2119,14 @@ describe('Account no module no hook TEE validator', function () {
                 await richWallet.getAddress(),
             );
             const paymasterBalanceAfter = await provider.getBalance(
-                await erc20Paymaster.getAddress(),
+                erc20Paymaster.address,
             );
 
             const accountTokenBalanceAfter = await mockToken.balanceOf(
                 await account.getAddress(),
             );
             const contractTokenBalanceAfter = await mockToken.balanceOf(
-                await erc20Paymaster.getAddress(),
+                erc20Paymaster.address,
             );
 
             expect(accountBalanceAfter + amount).to.be.equal(
@@ -2162,7 +2160,7 @@ describe('Account no module no hook TEE validator', function () {
                 await richWallet.getAddress(),
             );
             const paymasterBalanceBefore = await provider.getBalance(
-                await gaslessPaymaster.getAddress(),
+                gaslessPaymaster.address,
             );
 
             const transfer = ethTransfer(await richWallet.getAddress(), amount);
@@ -2173,7 +2171,7 @@ describe('Account no module no hook TEE validator', function () {
                 await teeValidator.getAddress(),
                 keyPair,
                 [],
-                getGaslessPaymasterInput(await gaslessPaymaster.getAddress()),
+                getGaslessPaymasterInput(gaslessPaymaster.address),
             );
 
             const txReceipt = await provider.broadcastTransaction(
@@ -2189,7 +2187,7 @@ describe('Account no module no hook TEE validator', function () {
                 await richWallet.getAddress(),
             );
             const paymasterBalanceAfter = await provider.getBalance(
-                await gaslessPaymaster.getAddress(),
+                gaslessPaymaster.address,
             );
 
             expect(accountBalanceAfter + amount).to.be.equal(
@@ -2211,14 +2209,14 @@ describe('Account no module no hook TEE validator', function () {
                 await richWallet.getAddress(),
             );
             const paymasterBalanceBefore = await provider.getBalance(
-                await subsidizerPaymaster.getAddress(),
+                subsidizerPaymaster.address,
             );
 
             const accountTokenBalanceBefore = await mockToken.balanceOf(
                 await account.getAddress(),
             );
             const contractTokenBalanceBefore = await mockToken.balanceOf(
-                await subsidizerPaymaster.getAddress(),
+                subsidizerPaymaster.address,
             );
 
             const transfer = ethTransfer(await richWallet.getAddress(), amount);
@@ -2230,7 +2228,7 @@ describe('Account no module no hook TEE validator', function () {
                 keyPair,
                 [],
                 getERC20PaymasterInput(
-                    await subsidizerPaymaster.getAddress(),
+                    subsidizerPaymaster.address,
                     await mockToken.getAddress(),
                     parseUnits('50', 18),
                     await getOraclePayload(subsidizerPaymaster),
@@ -2250,14 +2248,14 @@ describe('Account no module no hook TEE validator', function () {
                 await richWallet.getAddress(),
             );
             const paymasterBalanceAfter = await provider.getBalance(
-                await subsidizerPaymaster.getAddress(),
+                subsidizerPaymaster.address,
             );
 
             const accountTokenBalanceAfter = await mockToken.balanceOf(
                 await account.getAddress(),
             );
             const contractTokenBalanceAfter = await mockToken.balanceOf(
-                await subsidizerPaymaster.getAddress(),
+                subsidizerPaymaster.address,
             );
 
             expect(accountBalanceAfter + amount).to.be.equal(
@@ -2307,8 +2305,11 @@ describe('Account no module no hook TEE validator', function () {
                 refunded: number,
                 maxFeePerGas: number,
                 rate: bigint,
-            ): number => {
-                return refunded * maxFeePerGas * Number(rate / WeiPerEther);
+            ): bigint => {
+                return (
+                    (BigInt(refunded) * BigInt(maxFeePerGas) * rate) /
+                    WeiPerEther
+                );
             };
 
             type Config = {
@@ -2321,7 +2322,7 @@ describe('Account no module no hook TEE validator', function () {
 
             const checkRefund = async (
                 pmConfig: Config,
-            ): Promise<[number, bigint]> => {
+            ): Promise<[bigint, bigint]> => {
                 const expected = calcExpected(
                     calcRefund(
                         pmConfig.gasLimit,
@@ -2357,7 +2358,7 @@ describe('Account no module no hook TEE validator', function () {
                 };
 
                 const values = await checkRefund(pmConfig);
-                expect(values[0].toString()).to.be.equal(values[1].toString());
+                expect(values[0]).to.be.equal(values[1]);
             });
 
             it('Should calculate if gasUsed is equal to gasLimit and bigger than maxGasToSubsidize', async function () {
@@ -2375,7 +2376,7 @@ describe('Account no module no hook TEE validator', function () {
                 };
 
                 const values = await checkRefund(pmConfig);
-                expect(values[0].toString()).to.be.equal(values[1].toString());
+                expect(values[0]).to.be.equal(values[1]);
             });
 
             it('Should calculate if gasUsed is less than gasLimit and both less than maxGasToSubsidize', async function () {
@@ -2393,7 +2394,7 @@ describe('Account no module no hook TEE validator', function () {
                 };
 
                 const values = await checkRefund(pmConfig);
-                expect(values[0].toString()).to.be.equal(values[1].toString());
+                expect(values[0]).to.be.equal(values[1]);
             });
 
             it('Should calculate if gasUsed is equal to gasLimit and both less than maxGasToSubsidize', async function () {
@@ -2411,7 +2412,7 @@ describe('Account no module no hook TEE validator', function () {
                 };
 
                 const values = await checkRefund(pmConfig);
-                expect(values[0].toString()).to.be.equal(values[1].toString());
+                expect(values[0]).to.be.equal(values[1]);
             });
 
             it('Should calculate if gasUsed is less then maxGasToSubsidize ', async function () {
@@ -2429,7 +2430,7 @@ describe('Account no module no hook TEE validator', function () {
                 };
 
                 const values = await checkRefund(pmConfig);
-                expect(values[0].toString()).to.be.equal(values[1].toString());
+                expect(values[0]).to.be.equal(values[1]);
             });
         });
     });
