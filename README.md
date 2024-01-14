@@ -1,5 +1,7 @@
 # Clave ZkSync Contracts
 
+<img src="logo.svg" alt="Clave">
+
 ## Project structure
 
 -   `/contracts`: smart contracts.
