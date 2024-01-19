@@ -7,34 +7,29 @@ import {Errors} from '../libraries/Errors.sol';
 
 contract PasskeyValidatorConstant is IR1Validator {
     address constant P256_VERIFIER = 0x4323cffC1Fda2da9928cB5A5A9dA45DC8Ee38a2f;
+    string constant ClIENT_DATA_PREFIX = '{"type":"webauthn.get","challenge":"';
+    string constant ClIENT_DATA_SUFFIX = '","origin":"https://getclave.io"}';
+    bytes constant AUTHENTICATOR_DATA =
+        hex'175faf8504c2cdd7c01778a8b0efd4874ecb3aefd7ebb7079a941f7be8897d411d00000000';
 
     function validateSignature(
-        bytes32 signedHash,
-        bytes calldata fatSignature,
+        bytes32 challenge,
+        bytes calldata signature,
         bytes32[2] calldata pubKey
     ) external view returns (bool valid) {
-        (
-            bytes memory authenticatorData,
-            bytes1 authenticatorDataFlagMask,
-            bytes memory clientData,
-            bytes32 clientChallenge,
-            uint256 clientChallengeDataOffset,
-            bytes32[2] memory rs
-        ) = decodeFatSignature(fatSignature);
-
-        bool isValidChallenge = validateChallenge(signedHash, clientChallenge);
-        bool isValidAuthData = validateAuthData(authenticatorData, authenticatorDataFlagMask);
-        bool isValidClientData = validateClientData(
-            clientData,
-            clientChallenge,
-            clientChallengeDataOffset
+        bytes memory challengeBase64 = bytes(Base64Url.encode(bytes.concat(challenge)));
+        bytes memory clientData = bytes.concat(
+            bytes(ClIENT_DATA_PREFIX),
+            challengeBase64,
+            bytes(ClIENT_DATA_SUFFIX)
         );
+        bytes32[2] memory rs = abi.decode(signature, (bytes32[2]));
 
-        bytes32 message = createMessage(authenticatorData, clientData);
+        bytes32 message = createMessage(AUTHENTICATOR_DATA, clientData);
 
         bool isValidSig = callVerifier(message, rs, pubKey);
 
-        if (isValidChallenge && isValidAuthData && isValidClientData && isValidSig) {
+        if (isValidSig) {
             valid = true;
         }
     }
@@ -79,66 +74,6 @@ contract PasskeyValidatorConstant is IR1Validator {
         }
         // Otherwise return false for the unsucessful calls and invalid signatures
         return false;
-    }
-
-    /**
-     * @notice This function allows validating the client challenge
-     * @dev The client challenge must be the hash of the data to be validated
-     * @param signedHash bytes32            - Hash of the data to be validated
-     * @param clientChallenge bytes32 - Client challenge obtained by the fat signature
-     * @return valid bool - True if the client challenge is valid, false otherwise
-     */
-    function validateChallenge(
-        bytes32 signedHash,
-        bytes32 clientChallenge
-    ) private pure returns (bool valid) {
-        valid = signedHash == clientChallenge;
-    }
-
-    /**
-     * @notice This function allows validating the authenticator data
-     * @dev Validates by checking the 33rd byte of the authenticator data
-     * @dev Flag mask should be 0x01 for user presence and 0x04 for user verification
-     * @param authenticatorData bytes          - Authenticator data obtained by the fat signature
-     * @param authenticatorDataFlagMask bytes1 - Authenticator data flag mask obtained by the fat signature
-     * @return valid bool - True if the authenticator data is valid, false otherwise
-     */
-
-    function validateAuthData(
-        bytes memory authenticatorData,
-        bytes1 authenticatorDataFlagMask
-    ) private pure returns (bool valid) {
-        valid = (authenticatorData[32] & authenticatorDataFlagMask) == authenticatorDataFlagMask;
-    }
-
-    /**
-     * @notice This function allows validating the client data
-     * @dev Checks if client data contains base64url encoded client challenge at the offset
-     * @param clientData bytes                  - Client data obtained by the fat signature
-     * @param clientChallenge bytes32           - Client challenge obtained by the fat signature
-     * @param clientChallengeDataOffset uint256 - Offset of client challenge in client data obtained from fat signature
-     * @return valid bool - True if the client data is valid, false otherwise
-     */
-    function validateClientData(
-        bytes memory clientData,
-        bytes32 clientChallenge,
-        uint256 clientChallengeDataOffset
-    ) private pure returns (bool valid) {
-        bytes memory challengeExtracted = new bytes(
-            bytes(Base64Url.encode(abi.encodePacked(clientChallenge))).length
-        );
-
-        copyBytes(
-            clientData,
-            clientChallengeDataOffset,
-            challengeExtracted.length,
-            challengeExtracted,
-            0
-        );
-
-        valid =
-            keccak256(bytes(Base64Url.encode(abi.encodePacked(clientChallenge)))) ==
-            keccak256(challengeExtracted);
     }
 
     /**
@@ -197,39 +132,5 @@ contract PasskeyValidatorConstant is IR1Validator {
             j += 32;
         }
         return _to;
-    }
-
-    /**
-     * @notice This function allows decoding a WebAuthn signature to appropriate formatted data types
-     * @param fatSignature bytes - Signature in fat format to be decoded
-     * @return authenticatorData bytes           - Collection of data about the authentication, including information about the authenticator
-     * @return authenticatorDataFlagMask bytes1  - 0x01 for user presence and 0x04 for user verification
-     * @return clientData bytes                  - Contextual information regarding the authentication request
-     * @return clientChallenge bytes32           - Hash of the data to be validated
-     * @return clientChallengeDataOffset uint256 - Offset of client challenge in client data
-     * @return rs bytes32[2]                     - Signature in [r,s] format
-     */
-    function decodeFatSignature(
-        bytes memory fatSignature
-    )
-        private
-        pure
-        returns (
-            bytes memory authenticatorData,
-            bytes1 authenticatorDataFlagMask,
-            bytes memory clientData,
-            bytes32 clientChallenge,
-            uint256 clientChallengeDataOffset,
-            bytes32[2] memory rs
-        )
-    {
-        (
-            authenticatorData,
-            authenticatorDataFlagMask,
-            clientData,
-            clientChallenge,
-            clientChallengeDataOffset,
-            rs
-        ) = abi.decode(fatSignature, (bytes, bytes1, bytes, bytes32, uint256, bytes32[2]));
     }
 }
