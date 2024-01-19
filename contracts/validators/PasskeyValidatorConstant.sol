@@ -5,16 +5,8 @@ import {Base64Url} from '../helpers/Base64Url.sol';
 import {IR1Validator, IERC165} from '../interfaces/IValidator.sol';
 import {Errors} from '../libraries/Errors.sol';
 
-contract PasskeyValidator is IR1Validator {
-    address immutable P256_VERIFIER;
-
-    /**
-     * @notice Constructor function of the validator
-     * @param p256VerifierAddress address - Address of the p256 verifier contract
-     */
-    constructor(address p256VerifierAddress) {
-        P256_VERIFIER = p256VerifierAddress;
-    }
+contract PasskeyValidatorConstant is IR1Validator {
+    address constant P256_VERIFIER = 0x4323cffC1Fda2da9928cB5A5A9dA45DC8Ee38a2f;
 
     function validateSignature(
         bytes32 signedHash,
