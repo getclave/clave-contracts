@@ -10,6 +10,8 @@ export const contractNames = {
     mockValidator: 'contracts/test/MockValidator.sol:MockValidator',
     teeValidator:
         'contracts/validators/TEEValidatorConstant.sol:TEEValidatorConstant',
+    passkeyValidator:
+        'contracts/validators/PasskeyValidator.sol:PasskeyValidator',
     account: 'contracts/ClaveProxy.sol:ClaveProxy',
     registry: 'contracts/ClaveRegistry.sol:ClaveRegistry',
     socialRecovery:
