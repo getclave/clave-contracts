@@ -1,41 +1,54 @@
 // SPDX-License-Identifier: MIT
-// from OpenZeppelin Contracts (last updated v4.7.0) (utils/Base64.sol)
+// fork from: OpenZeppelin Contracts (last updated v4.7.0) (utils/Base64.sol)
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.0;
 
 /**
- * @dev Provides a set of functions to operate with Base64 strings.
+ * @dev Provides a set of functions to operate with Base64Url strings (with all trailing '=' characters omitted).
+ * see:
+ * 1. https://www.w3.org/TR/webauthn-2/#sctn-dependencies
+ * 2. https://datatracker.ietf.org/doc/html/rfc4648
+ *
  *
  * _Available since v4.5._
  */
 library Base64Url {
     /**
-     * @dev Base64 Encoding/Decoding Table
+     * @dev Base64Url Encoding/Decoding Table
      */
     string internal constant _TABLE =
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
     /**
-     * @dev Converts a bytes to its Bytes64 string representation.
+     * @dev Converts a `bytes` to its Bytes64Url `string` representation.
      */
     function encode(bytes memory data) internal pure returns (string memory) {
         /**
          * Inspired by Brecht Devos (Brechtpd) implementation - MIT licence
          * https://github.com/Brechtpd/base64/blob/e78d9fd951e7b0977ddca77d92dc85183770daf4/base64.sol
          */
-        if (data.length == 0) return '';
+
+        uint256 dataLen;
+        assembly {
+            dataLen := mload(data)
+        }
+        if (dataLen == 0) return '';
 
         // Loads the table into memory
         string memory table = _TABLE;
 
-        // Encoding takes 3 bytes chunks of binary data from bytes data parameter
+        uint256 encodedLen;
+        assembly {
+            encodedLen := mul(4, div(dataLen, 3)) //4 * (dataLen / 3);
+            let padding := mod(dataLen, 3)
+            if gt(padding, 0) {
+                encodedLen := add(add(encodedLen, padding), 1)
+            }
+        }
+
+        // Encoding takes 3 bytes chunks of binary data from `bytes` data parameter
         // and split into 4 numbers of 6 bits.
-        // The final Base64 length should be bytes data length multiplied by 4/3 rounded up
-        // - data.length + 2  -> Round up
-        // - / 3              -> Number of 3-bytes chunks
-        // - 4 *              -> 4 characters for each chunk
-        //string memory result = new string(4 * ((data.length + 2) / 3));
-        string memory result = new string(4 * ((data.length + 2) / 3) - 1);
+        string memory result = new string(encodedLen);
 
         /// @solidity memory-safe-assembly
         assembly {
@@ -48,7 +61,7 @@ library Base64Url {
             // Run over the input, 3 bytes at a time
             for {
                 let dataPtr := data
-                let endPtr := add(data, mload(data))
+                let endPtr := add(data, dataLen)
             } lt(dataPtr, endPtr) {
 
             } {
@@ -76,19 +89,6 @@ library Base64Url {
                 mstore8(resultPtr, mload(add(tablePtr, and(input, 0x3F))))
                 resultPtr := add(resultPtr, 1) // Advance
             }
-
-            /*
-            // When data bytes is not exactly 3 bytes long
-            // it is padded with = characters at the end
-            switch mod(mload(data), 3)
-            case 1 {
-                mstore8(sub(resultPtr, 1), 0x3d)
-                mstore8(sub(resultPtr, 2), 0x3d)
-            }
-            case 2 {
-                mstore8(sub(resultPtr, 1), 0x3d)
-            }
-            */
         }
 
         return result;
