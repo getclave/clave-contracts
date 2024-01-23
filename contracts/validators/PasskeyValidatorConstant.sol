@@ -11,7 +11,7 @@ import {VerifierCaller} from '../helpers/VerifierCaller.sol';
  * @author https://getclave.io
  */
 contract PasskeyValidatorConstant is IR1Validator, VerifierCaller {
-    address constant P256_VERIFIER = 0x4323cffC1Fda2da9928cB5A5A9dA45DC8Ee38a2f;
+    address constant P256_VERIFIER = 0x840Fec7b1615375E66f9631aBdA962dADeBFFf20;
     string constant ClIENT_DATA_PREFIX = '{"type":"webauthn.get","challenge":"';
     string constant IOS_ClIENT_DATA_SUFFIX = '","origin":"https://getclave.io"}';
     string constant ANDROID_ClIENT_DATA_SUFFIX =
