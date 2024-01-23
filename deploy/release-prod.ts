@@ -9,10 +9,10 @@ import deployBatchCaller from './deploy-batch-caller';
 import deployCloudRecovery from './deploy-cloud-recovery';
 import deployFactory from './deploy-factory';
 import deployImplementation from './deploy-implementation';
+import deployPasskeyValidator from './deploy-passkey-validator';
 import deployPaymaster from './deploy-paymaster';
 import deployRegistry from './deploy-registry';
 import deploySocialRecovery from './deploy-social-recovery';
-import deployTeeValidator from './deploy-tee-validator';
 import { ReleaseType } from './helpers/release';
 
 export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
@@ -24,7 +24,7 @@ export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
     );
     const registry = await deployRegistry(hre, ReleaseType.production);
     await deployFactory(hre, ReleaseType.production, implementation, registry);
-    await deployTeeValidator(hre, ReleaseType.production);
+    await deployPasskeyValidator(hre, ReleaseType.production);
     await deploySocialRecovery(hre, ReleaseType.production);
     await deployCloudRecovery(hre, ReleaseType.production);
     await deployPaymaster(hre, ReleaseType.production, registry);
