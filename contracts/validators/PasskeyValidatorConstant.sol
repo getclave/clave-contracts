@@ -5,6 +5,10 @@ import {Base64Url} from '../helpers/Base64Url.sol';
 import {IR1Validator, IERC165} from '../interfaces/IValidator.sol';
 import {Errors} from '../libraries/Errors.sol';
 
+/**
+ * @title validator contract for passkey r1 signatures
+ * @author https://getclave.io
+ */
 contract PasskeyValidatorConstant is IR1Validator {
     address constant P256_VERIFIER = 0x4323cffC1Fda2da9928cB5A5A9dA45DC8Ee38a2f;
     string constant ClIENT_DATA_PREFIX = '{"type":"webauthn.get","challenge":"';
@@ -14,6 +18,7 @@ contract PasskeyValidatorConstant is IR1Validator {
     bytes constant AUTHENTICATOR_DATA =
         hex'175faf8504c2cdd7c01778a8b0efd4874ecb3aefd7ebb7079a941f7be8897d411d00000000';
 
+    /// @inheritdoc IR1Validator
     function validateSignature(
         bytes32 challenge,
         bytes calldata signature,
