@@ -21,13 +21,13 @@ const zkSyncTestnet: NetworkUserConfig =
               zksync: true,
           }
         : {
-              url: 'https://sepolia.era.zksync.dev/',
-              ethNetwork: 'sepolia',
+              url: 'https://mainnet.era.zksync.io',
+              ethNetwork: 'mainnet',
               zksync: true,
               // contract verification endpoint
               verifyURL:
-                  'https://explorer.sepolia.era.zksync.dev/contract_verification',
-              chainId: 300,
+                  'https://zksync2-mainnet-explorer.zksync.io/contract_verification',
+              chainId: 324,
           };
 
 const config: HardhatUserConfig = {
