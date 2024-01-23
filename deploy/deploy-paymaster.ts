@@ -45,7 +45,7 @@ export default async function (
             `ERC20Paymaster deployment address: ${erc20PaymasterAddress}`,
         );
 
-        if (chainId === 0x12c) {
+        if (chainId === 0x12c || chainId === 0x144) {
             try {
                 const verificationIdERC20 = await hre.run('verify:verify', {
                     address: erc20PaymasterAddress,

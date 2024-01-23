@@ -34,7 +34,7 @@ export default async function (
 
     console.log(`Social Recovery address: ${SRMAddress}`);
 
-    if (chainId === 0x12c) {
+    if (chainId === 0x12c || chainId === 0x144) {
         try {
             const verificationId = await hre.run('verify:verify', {
                 address: SRMAddress,
