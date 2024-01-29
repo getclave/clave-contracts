@@ -74,7 +74,7 @@ let registry: ClaveRegistry;
 beforeEach(async () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    provider = new Provider(hre.config.networks.zkSyncTestnet.url);
+    provider = new Provider(hre.network.config.url);
     richWallet = new Wallet(richPk, provider);
 
     keyPair = genKey();

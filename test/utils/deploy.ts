@@ -340,7 +340,7 @@ export async function deployGaslessPaymaster(
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const provider = new JsonRpcProvider(hre.config.networks.zkSyncTestnet.url);
+    const provider = new JsonRpcProvider(hre.network.config.url);
 
     return new Contract(
         await paymaster.getAddress(),
@@ -369,7 +369,7 @@ export async function deployERC20Paymaster(
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const provider = new JsonRpcProvider(hre.config.networks.zkSyncTestnet.url);
+    const provider = new JsonRpcProvider(hre.network.config.url);
 
     return new Contract(
         await paymaster.getAddress(),
@@ -398,7 +398,7 @@ export async function deployERC20PaymasterMock(
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const provider = new JsonRpcProvider(hre.config.networks.zkSyncTestnet.url);
+    const provider = new JsonRpcProvider(hre.network.config.url);
 
     return new Contract(
         await paymaster.getAddress(),
@@ -430,7 +430,7 @@ export async function deploySubsidizerPaymaster(
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const provider = new JsonRpcProvider(hre.config.networks.zkSyncTestnet.url);
+    const provider = new JsonRpcProvider(hre.network.config.url);
 
     return new Contract(
         await paymaster.getAddress(),
@@ -462,7 +462,7 @@ export async function deploySubsidizerPaymasterMock(
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const provider = new JsonRpcProvider(hre.config.networks.zkSyncTestnet.url);
+    const provider = new JsonRpcProvider(hre.network.config.url);
 
     return new Contract(
         await paymaster.getAddress(),
