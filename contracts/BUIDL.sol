@@ -91,9 +91,9 @@ contract BUIDLToken is ERC20, ERC20Burnable, Ownable, ERC20Permit {
     function allowMasters(address[] calldata newMasters) external onlyOwner {
         for (uint i = 0; i < newMasters.length; i++) {
             address newMaster = newMasters[i];
-            require(!isMinter(newMaster), '[allowMinters] Address is already a minter');
+            require(!isMaster(newMaster), '[allowMasters] Address is already a master');
 
-            minters[newMaster] = true;
+            masters[newMaster] = true;
             emit NewMaster(newMaster);
         }
     }
@@ -107,9 +107,9 @@ contract BUIDLToken is ERC20, ERC20Burnable, Ownable, ERC20Permit {
     function disallowMasters(address[] calldata removedMasters) external onlyOwner {
         for (uint i = 0; i < removedMasters.length; i++) {
             address removedMaster = removedMasters[i];
-            require(isMinter(removedMaster), '[disallowMinters] Address is already not a minter');
+            require(isMaster(removedMaster), '[disallowMasters] Address is already not a master');
 
-            minters[removedMaster] = false;
+            masters[removedMaster] = false;
             emit RemovedMaster(removedMaster);
         }
     }
