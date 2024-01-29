@@ -6,7 +6,7 @@ era_test_node run > /dev/null &
 export LAST_PID=$!
 
 # Run hardhat tests with the specified environment and network
-NODE_ENV=test hardhat test --network zkSyncTestnet
+hardhat test --network inMemoryNode
 
 # Kill the background process
 kill -9 $LAST_PID
