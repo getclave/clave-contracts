@@ -33,8 +33,8 @@ abstract contract ERC1271Handler is
      */
     function isValidSignature(
         bytes32 signedHash,
-        bytes calldata signatureAndValidator
-    ) external view override returns (bytes4 magicValue) {
+        bytes memory signatureAndValidator
+    ) public view override returns (bytes4 magicValue) {
         (bytes memory signature, address validator) = SignatureDecoder.decodeSignatureNoHookData(
             signatureAndValidator
         );

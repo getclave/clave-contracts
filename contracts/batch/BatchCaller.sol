@@ -5,17 +5,17 @@ import {SystemContractHelper} from '@matterlabs/zksync-contracts/l2/system-contr
 import {EfficientCall} from '@matterlabs/zksync-contracts/l2/system-contracts/libraries/EfficientCall.sol';
 import {Errors} from '../libraries/Errors.sol';
 
+// Each call data for batches
+struct Call {
+    address target; // Target contract address
+    bool allowFailure; // Whether to revert if the call fails
+    uint256 value; // Amount of ETH to send with call
+    bytes callData; // Calldata to send
+}
+
 /// @title BatchCaller
 /// @notice Make multiple calls in a single transaction
 contract BatchCaller {
-    // Each call data for batches
-    struct Call {
-        address target; // Target contract address
-        bool allowFailure; // Whether to revert if the call fails
-        uint256 value; // Amount of ETH to send with call
-        bytes callData; // Calldata to send
-    }
-
     /// @notice Make multiple calls, ensure success if required
     /// @dev Reverts if not called via delegatecall
     /// @param calls Call[] calldata - An array of Call structs
