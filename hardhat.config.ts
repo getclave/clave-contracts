@@ -49,17 +49,6 @@ const config: HardhatUserConfig = {
     },
     solidity: {
         compilers: [{ version: '0.8.17' }],
-        // using different compiler version for separate contracts
-        // overrides: {
-        //     'contracts/path/contract.sol': {
-        //         version: '0.8.21',
-        //         settings: {},
-        //     },
-        // },
-    },
-    paths: {
-        //comment this line when running scripts or compiling, uncomment when writing code
-        //root: './apps/clave-contracts',
     },
 };
 
