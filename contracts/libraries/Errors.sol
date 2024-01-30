@@ -114,6 +114,7 @@ library Errors {
     error FAILED_FEE_TRANSFER();
     error INVALID_MARKUP();
     error USER_LIMIT_REACHED();
+    error INVALID_USER_LIMIT();
     error NOT_CLAVE_ACCOUNT();
 
     /*//////////////////////////////////////////////////////////////
