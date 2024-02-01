@@ -33,6 +33,7 @@ import {
     deployBatchCaller,
     deployEOAValidator,
     deployERC20PaymasterMock,
+    deployETHDenverPaymaster,
     deployFactory,
     deployGaslessPaymaster,
     deployImplementation,
@@ -71,6 +72,19 @@ let factory: AccountFactory;
 let account: CallableProxy;
 let registry: ClaveRegistry;
 
+async function getNonce(wallet: Wallet): Promise<number> {
+    return await wallet.getNonce();
+}
+
+async function waitTillNonceUpdate(
+    wallet: Wallet,
+    nonce: number,
+): Promise<void> {
+    while ((await wallet.getNonce()) === nonce) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+}
+
 beforeEach(async () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -80,23 +94,38 @@ beforeEach(async () => {
     keyPair = genKey();
     const publicKey = encodePublicKey(keyPair);
 
+    let nonce = await getNonce(richWallet);
     batchCaller = await deployBatchCaller(richWallet);
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     verifier = await deployVerifier(richWallet);
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     teeValidator = await deployTeeValidator(
         richWallet,
         await verifier.getAddress(),
     );
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     implementation = await deployImplementation(
         richWallet,
         await batchCaller.getAddress(),
     );
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     registry = await deployRegistry(richWallet);
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     factory = await deployFactory(
         richWallet,
         await implementation.getAddress(),
         await registry.getAddress(),
     );
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     await registry.setFactory(await factory.getAddress());
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     account = await deployAccount(
         richWallet,
         await richWallet.getNonce(),
@@ -104,6 +133,7 @@ beforeEach(async () => {
         await teeValidator.getAddress(),
         publicKey,
     );
+    await waitTillNonceUpdate(richWallet, nonce);
     // 100 ETH transfered to Account
     await (
         await richWallet.sendTransaction({
@@ -1993,6 +2023,7 @@ describe('Account no module no hook TEE validator', function () {
         let gaslessPaymaster: Contract;
         let erc20Paymaster: Contract;
         let subsidizerPaymaster: Contract;
+        let ethdenverPaymaster: Contract;
 
         beforeEach(async function () {
             mockToken = await deployMockStable(richWallet);
@@ -2023,6 +2054,13 @@ describe('Account no module no hook TEE validator', function () {
                 await registry.getAddress(),
             );
 
+            ethdenverPaymaster = await deployETHDenverPaymaster(
+                richWallet,
+                await registry.getAddress(),
+                2,
+                await mockToken.getAddress(),
+            );
+
             await mockToken.mint(await account.getAddress(), parseEther('100'));
 
             await (
@@ -2045,6 +2083,13 @@ describe('Account no module no hook TEE validator', function () {
                     value: parseEther('50'),
                 })
             ).wait();
+
+            await (
+                await richWallet.sendTransaction({
+                    to: ethdenverPaymaster.address,
+                    value: parseEther('50'),
+                })
+            ).wait();
         });
 
         it('Should fund the account with mock token', async function () {
@@ -2063,6 +2108,9 @@ describe('Account no module no hook TEE validator', function () {
             expect(
                 await provider.getBalance(subsidizerPaymaster.address),
             ).to.eq(parseEther('50'));
+            expect(await provider.getBalance(ethdenverPaymaster.address)).to.eq(
+                parseEther('50'),
+            );
         });
 
         it('Should prepare an oracle payload', async function () {
@@ -2428,6 +2476,71 @@ describe('Account no module no hook TEE validator', function () {
 
                 const values = await checkRefund(pmConfig);
                 expect(values[0]).to.be.equal(values[1]);
+            });
+        });
+
+        describe('ETHDenver Paymaster', function () {
+            it.only('Should start with two limit', async function () {
+                const address = await richWallet.getAddress();
+                const limit = await ethdenverPaymaster.getRemainingUserLimit(
+                    address,
+                );
+
+                expect(limit).to.be.equal(2n);
+            });
+
+            it('Should send tx without paying gas', async function () {
+                const amount = parseEther('10');
+
+                const accountBalanceBefore = await provider.getBalance(
+                    await account.getAddress(),
+                );
+                const receiverBalanceBefore = await provider.getBalance(
+                    await richWallet.getAddress(),
+                );
+                const paymasterBalanceBefore = await provider.getBalance(
+                    ethdenverPaymaster.address,
+                );
+
+                const transfer = ethTransfer(
+                    await richWallet.getAddress(),
+                    amount,
+                );
+                const tx = await prepareTeeTx(
+                    provider,
+                    account,
+                    transfer,
+                    await teeValidator.getAddress(),
+                    keyPair,
+                    [],
+                    getGaslessPaymasterInput(ethdenverPaymaster.address),
+                );
+
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
+                );
+
+                await txReceipt.wait();
+
+                const accountBalanceAfter = await provider.getBalance(
+                    await account.getAddress(),
+                );
+                const receiverBalanceAfter = await provider.getBalance(
+                    await richWallet.getAddress(),
+                );
+                const paymasterBalanceAfter = await provider.getBalance(
+                    ethdenverPaymaster.address,
+                );
+
+                expect(accountBalanceAfter + amount).to.be.equal(
+                    accountBalanceBefore,
+                );
+                expect(receiverBalanceBefore + amount).to.be.equal(
+                    receiverBalanceAfter,
+                );
+                expect(paymasterBalanceAfter).is.lessThan(
+                    paymasterBalanceBefore,
+                );
             });
         });
     });
