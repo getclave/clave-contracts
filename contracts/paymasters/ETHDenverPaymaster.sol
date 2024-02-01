@@ -115,6 +115,15 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
     }
 
     /**
+     * @notice Get remaining user tx limit
+     * @param userAddress address - User address
+     * @return uint256 - Remaining user tx limit
+     */
+    function getRemainingUserLimit(address userAddress) external view returns (uint256) {
+        return userLimit - userSponsored[userAddress];
+    }
+
+    /**
      * @notice Withdraw paymaster funds as owner
      * @param to address - Token receiver address
      * @param amount uint256 - Amount to be withdrawn

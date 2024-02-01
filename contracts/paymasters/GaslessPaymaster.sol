@@ -15,7 +15,7 @@ import {BootloaderAuth} from '../auth/BootloaderAuth.sol';
  */
 contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
     // User tx limit per paymaster
-    uint256 public immutable userLimit;
+    uint256 public userLimit;
     // Clave account registry contract
     address public claveRegistry;
 
@@ -24,6 +24,8 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
 
     // Event to be emitted when the balance is withdrawn
     event BalanceWithdrawn(address to, uint256 amount);
+    // Event to be emitted when the user limit is updated
+    event UserLimitChanged(uint256 newUserLimit);
     // Event to be emitted when a user tx is sponsored
     event FeeSponsored(address user);
 
@@ -94,6 +96,15 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
     }
 
     /**
+     * @notice Get remaining user tx limit
+     * @param userAddress address - User address
+     * @return uint256 - Remaining user tx limit
+     */
+    function getRemainingUserLimit(address userAddress) external view returns (uint256) {
+        return userLimit - userSponsored[userAddress];
+    }
+
+    /**
      * @notice Withdraw paymaster funds as owner
      * @param to address - Token receiver address
      * @param amount uint256 - Amount to be withdrawn
@@ -105,5 +116,17 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
         if (!success) revert Errors.UNAUTHORIZED_WITHDRAW();
 
         emit BalanceWithdrawn(to, amount);
+    }
+
+    /**
+     * @notice Update user tx sponsorship limit
+     * @param updatingUserLimit uint256 - New user free tx limit
+     * @dev Only owner address can call this method
+     */
+    function updateUserLimit(uint256 updatingUserLimit) external onlyOwner {
+        if (updatingUserLimit <= userLimit) revert Errors.INVALID_USER_LIMIT();
+
+        userLimit = updatingUserLimit;
+        emit UserLimitChanged(updatingUserLimit);
     }
 }
