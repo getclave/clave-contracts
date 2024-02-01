@@ -23,5 +23,7 @@ export const contractNames = {
         'contracts/test/ERC20PaymasterMock.sol:ERC20PaymasterMock',
     gaslessPaymaster:
         'contracts/paymasters/GaslessPaymaster.sol:GaslessPaymaster',
+    ethdenverPaymaster:
+        'contracts/paymasters/ETHDenverPaymaster.sol:ETHDenverPaymaster',
     buidlToken: 'contracts/BUIDL.sol:BUIDLToken',
 };
