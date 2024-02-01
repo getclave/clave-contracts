@@ -470,3 +470,30 @@ export async function deploySubsidizerPaymasterMock(
         provider,
     );
 }
+
+export async function deployETHDenverPaymaster(
+    wallet: Wallet,
+    registryAddress: string,
+    limit: number,
+    token: string,
+): Promise<Contract> {
+    const deployer: Deployer = new Deployer(hre, wallet);
+    const paymasterArtifact = await deployer.loadArtifact('ETHDenverPaymaster');
+
+    const paymaster = await deployer.deploy(
+        paymasterArtifact,
+        [registryAddress, limit, token],
+        undefined,
+        [],
+    );
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const provider = new JsonRpcProvider(hre.network.config.url);
+
+    return new Contract(
+        await paymaster.getAddress(),
+        paymasterArtifact.abi,
+        provider,
+    );
+}
