@@ -77,13 +77,13 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
         if (paymasterInputSelector != IPaymasterFlow.general.selector)
             revert Errors.UNSUPPORTED_FLOW();
 
-        // Check if the transaction calls 'transfer' or 'transferFrom' of campaign token
+        // Check if the transaction is NOT call of 'transfer' or 'transferFrom' of campaign token
+        // Check the user sponsorship limit and decrease for normal sponsored tx
         if (
-            address(uint160(_transaction.to)) == campaignToken &&
-            (bytes4(_transaction.data[0:4]) == TRANSFER_SIGNATURE ||
-                bytes4(_transaction.data[0:4]) == TRANSFERFROM_SIGNATURE)
-        ) {} else {
-            // Check the user sponsorship limit and decrease for normal sponsored tx
+            address(uint160(_transaction.to)) != campaignToken ||
+            (bytes4(_transaction.data[0:4]) != TRANSFER_SIGNATURE &&
+                bytes4(_transaction.data[0:4]) != TRANSFERFROM_SIGNATURE)
+        ) {
             uint256 txAmount = userSponsored[userAddress];
             if (txAmount >= userLimit) revert Errors.USER_LIMIT_REACHED();
             userSponsored[userAddress]++;
