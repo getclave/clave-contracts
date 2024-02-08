@@ -8,11 +8,14 @@ import {NONCE_HOLDER_SYSTEM_CONTRACT, DEPLOYER_SYSTEM_CONTRACT, INonceHolder} fr
 import {SystemContractsCaller} from '@matterlabs/zksync-contracts/l2/system-contracts/libraries/SystemContractsCaller.sol';
 import {Utils} from '@matterlabs/zksync-contracts/l2/system-contracts/libraries/Utils.sol';
 import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
-import {TokenCallbackHandler} from '@account-abstraction/contracts/samples/callback/TokenCallbackHandler.sol';
 
 import {HookManager} from './managers/HookManager.sol';
 import {ModuleManager} from './managers/ModuleManager.sol';
 import {UpgradeManager} from './managers/UpgradeManager.sol';
+
+import {TokenCallbackHandler} from './helpers/TokenCallbackHandler.sol';
+
+import {IClaveImplementation} from './interfaces/IClaveImplementation.sol';
 
 import {Errors} from './libraries/Errors.sol';
 import {SignatureDecoder} from './libraries/SignatureDecoder.sol';
@@ -24,6 +27,7 @@ import {ERC1271Handler} from './handlers/ERC1271Handler.sol';
  * @author https://getclave.io
  */
 contract ClaveImplementation is
+    IClaveImplementation,
     Initializable,
     IAccount,
     HookManager,
@@ -207,6 +211,15 @@ contract ClaveImplementation is
         bool valid = _handleValidation(validator, signedHash, signature);
 
         magicValue = valid ? ACCOUNT_VALIDATION_SUCCESS_MAGIC : bytes4(0);
+    }
+
+    /// @inheritdoc IClaveImplementation
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(IClaveImplementation, TokenCallbackHandler) returns (bool) {
+        return
+            interfaceId == type(IClaveImplementation).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     function _executeTransaction(
