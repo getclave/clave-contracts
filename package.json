@@ -44,7 +44,6 @@
     "lint": "npx prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'"
   },
   "dependencies": {
-    "@account-abstraction/contracts": "^0.6.0",
     "@matterlabs/zksync-contracts": "^0.6.1",
     "@nomad-xyz/excessively-safe-call": "github:nomad-xyz/ExcessivelySafeCall",
     "@openzeppelin/contracts": "4.6.0",
