@@ -7,10 +7,10 @@ import { parseEther } from 'ethers';
 
 export const paymasterData = {
     // ERC20Paymaster, GaslessPaymaster
-    deploys: [true, false],
-    fund: [parseEther('0.025'), parseEther('0')],
+    deploys: [false, true],
+    fund: [parseEther('0'), parseEther('0')],
     // GaslessPaymaster free tx limit
-    gaslessPaymaster_txLimit: 20000,
+    gaslessPaymaster_txLimit: 5,
     // ERC20Paymaster token inputs
     tokenInput: [
         {

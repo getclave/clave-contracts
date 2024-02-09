@@ -16,6 +16,7 @@ import deploySocialRecovery from './deploy-social-recovery';
 import { ReleaseType } from './helpers/release';
 
 export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
+    console.log(`Taking a production release on ${hre.network.name}`);
     const batchCaller = await deployBatchCaller(hre, ReleaseType.production);
     const implementation = await deployImplementation(
         hre,

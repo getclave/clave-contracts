@@ -20,7 +20,7 @@ export default async function (
 ): Promise<string> {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const provider = new Provider(hre.config.networks.zkSyncTestnet.url);
+    const provider = new Provider(hre.network.config.url);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const privateKey = process.env.PRIVATE_KEY!;
     const wallet = new Wallet(privateKey).connect(provider);

@@ -27,6 +27,6 @@ do
     fi
 done &
 # Run the hardhat test in snapshot mode on the zkSyncTestnet network
-NODE_ENV=snapshot hardhat test --network zkSyncTestnet
+hardhat test --network inMemoryNode
 # Kill all instances of the zksync era test node
 killall era_test_node
