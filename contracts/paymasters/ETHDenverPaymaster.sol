@@ -10,7 +10,7 @@ import {IClaveRegistry} from '../interfaces/IClaveRegistry.sol';
 import {BootloaderAuth} from '../auth/BootloaderAuth.sol';
 
 /**
- * @title Customized GaslessPaymaster to pay for limited number of transactions' fees for Clave users while BUIDL token transfers are free
+ * @title Customized GaslessPaymaster to pay for limited number of transactions' fees for Clave users while BUIDL token interactions are free
  * @author https://getclave.io
  */
 contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
@@ -20,9 +20,6 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
     address public claveRegistry;
     // BUIDL token address for campaign
     address public campaignToken;
-    // Allowed function signatures for campaign token
-    bytes4 private immutable TRANSFER_SIGNATURE;
-    bytes4 private immutable TRANSFERFROM_SIGNATURE;
 
     // Store users sponsored tx count
     mapping(address => uint256) public userSponsored;
@@ -47,11 +44,6 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
         claveRegistry = registry;
         userLimit = limit;
         campaignToken = token;
-
-        (TRANSFER_SIGNATURE, TRANSFERFROM_SIGNATURE) = (
-            bytes4(keccak256(bytes('transferFrom(address,address,uint256)'))),
-            bytes4(keccak256(bytes('transfer(address,uint256)')))
-        );
     }
 
     /// @inheritdoc IPaymaster
@@ -60,15 +52,6 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
         bytes32 /**_suggestedSignedHash*/,
         Transaction calldata _transaction
     ) external payable onlyBootloader returns (bytes4 magic, bytes memory context) {
-        // By default we consider the transaction as accepted.
-        magic = PAYMASTER_VALIDATION_SUCCESS_MAGIC;
-
-        // Get the user address
-        address userAddress = address(uint160(_transaction.from));
-
-        // Check if the account is a Clave account
-        if (!IClaveRegistry(claveRegistry).isClave(userAddress)) revert Errors.NOT_CLAVE_ACCOUNT();
-
         // Revert if standart paymaster input is shorter than 4 bytes
         if (_transaction.paymasterInput.length < 4) revert Errors.SHORT_PAYMASTER_INPUT();
 
@@ -77,13 +60,16 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
         if (paymasterInputSelector != IPaymasterFlow.general.selector)
             revert Errors.UNSUPPORTED_FLOW();
 
-        // Check if the transaction is NOT call of 'transfer' or 'transferFrom' of campaign token
-        // Check the user sponsorship limit and decrease for normal sponsored tx
-        if (
-            address(uint160(_transaction.to)) != campaignToken ||
-            (bytes4(_transaction.data[0:4]) != TRANSFER_SIGNATURE &&
-                bytes4(_transaction.data[0:4]) != TRANSFERFROM_SIGNATURE)
-        ) {
+        // By default we consider the transaction as accepted.
+        magic = PAYMASTER_VALIDATION_SUCCESS_MAGIC;
+
+        if (address(uint160(_transaction.to)) != campaignToken) {
+            // Get the user address
+            address userAddress = address(uint160(_transaction.from));
+            // Check if the account is a Clave account
+            if (!IClaveRegistry(claveRegistry).isClave(userAddress))
+                revert Errors.NOT_CLAVE_ACCOUNT();
+
             uint256 txAmount = userSponsored[userAddress];
             if (txAmount >= userLimit) revert Errors.USER_LIMIT_REACHED();
             userSponsored[userAddress]++;
