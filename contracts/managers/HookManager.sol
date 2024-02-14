@@ -31,17 +31,20 @@ abstract contract HookManager is IHookManager, Auth {
     bytes32 private constant CONTEXT_KEY = keccak256('HookManager.context');
 
     /// @inheritdoc IHookManager
-    function addHook(bytes calldata hookAndData, bool isValidation) external onlySelfOrModule {
+    function addHook(
+        bytes calldata hookAndData,
+        bool isValidation
+    ) external override onlySelfOrModule {
         _addHook(hookAndData, isValidation);
     }
 
     /// @inheritdoc IHookManager
-    function removeHook(address hook, bool isValidation) external onlySelfOrModule {
+    function removeHook(address hook, bool isValidation) external override onlySelfOrModule {
         _removeHook(hook, isValidation);
     }
 
     /// @inheritdoc IHookManager
-    function setHookData(bytes32 key, bytes calldata data) external onlyHook {
+    function setHookData(bytes32 key, bytes calldata data) external override onlyHook {
         if (key == CONTEXT_KEY) {
             revert Errors.INVALID_KEY();
         }
@@ -50,7 +53,7 @@ abstract contract HookManager is IHookManager, Auth {
     }
 
     /// @inheritdoc IHookManager
-    function getHookData(address hook, bytes32 key) external view returns (bytes memory) {
+    function getHookData(address hook, bytes32 key) external view override returns (bytes memory) {
         return _hookDataStore()[hook][key];
     }
 
@@ -60,7 +63,9 @@ abstract contract HookManager is IHookManager, Auth {
     }
 
     /// @inheritdoc IHookManager
-    function listHooks(bool isValidation) external view returns (address[] memory hookList) {
+    function listHooks(
+        bool isValidation
+    ) external view override returns (address[] memory hookList) {
         if (isValidation) {
             hookList = _validationHooksLinkedList().list();
         } else {

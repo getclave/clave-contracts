@@ -23,22 +23,22 @@ abstract contract OwnerManager is IOwnerManager, Auth {
     using AddressLinkedList for mapping(address => address);
 
     /// @inheritdoc IOwnerManager
-    function r1AddOwner(bytes calldata pubKey) external onlySelfOrModule {
+    function r1AddOwner(bytes calldata pubKey) external override onlySelfOrModule {
         _r1AddOwner(pubKey);
     }
 
     /// @inheritdoc IOwnerManager
-    function k1AddOwner(address addr) external onlySelfOrModule {
+    function k1AddOwner(address addr) external override onlySelfOrModule {
         _k1AddOwner(addr);
     }
 
     /// @inheritdoc IOwnerManager
-    function r1RemoveOwner(bytes calldata pubKey) external onlySelfOrModule {
+    function r1RemoveOwner(bytes calldata pubKey) external override onlySelfOrModule {
         _r1RemoveOwner(pubKey);
     }
 
     /// @inheritdoc IOwnerManager
-    function k1RemoveOwner(address addr) external onlySelfOrModule {
+    function k1RemoveOwner(address addr) external override onlySelfOrModule {
         _k1RemoveOwner(addr);
     }
 
@@ -53,22 +53,22 @@ abstract contract OwnerManager is IOwnerManager, Auth {
     }
 
     /// @inheritdoc IOwnerManager
-    function r1IsOwner(bytes calldata pubKey) external view returns (bool) {
+    function r1IsOwner(bytes calldata pubKey) external view override returns (bool) {
         return _r1IsOwner(pubKey);
     }
 
     /// @inheritdoc IOwnerManager
-    function k1IsOwner(address addr) external view returns (bool) {
+    function k1IsOwner(address addr) external view override returns (bool) {
         return _k1IsOwner(addr);
     }
 
     /// @inheritdoc IOwnerManager
-    function r1ListOwners() external view returns (bytes[] memory r1OwnerList) {
+    function r1ListOwners() external view override returns (bytes[] memory r1OwnerList) {
         r1OwnerList = _r1OwnersLinkedList().list();
     }
 
     /// @inheritdoc IOwnerManager
-    function k1ListOwners() external view returns (address[] memory k1OwnerList) {
+    function k1ListOwners() external view override returns (address[] memory k1OwnerList) {
         k1OwnerList = _k1OwnersLinkedList().list();
     }
 

@@ -14,18 +14,22 @@ import {IOwnerManager} from './IOwnerManager.sol';
 import {IUpgradeManager} from './IUpgradeManager.sol';
 import {IValidatorManager} from './IValidatorManager.sol';
 
-// interface IClave is IAccount {
+/**
+ * @title IClave
+ * @notice Interface for the Clave contract
+ * @dev Implementations of this interface are contract that can be used as a Clave
+ */
 interface IClave is
-    IAccount,
     IERC1271Upgradeable,
+    IERC777Recipient,
+    IERC721Receiver,
+    IERC1155Receiver,
     IHookManager,
     IModuleManager,
     IOwnerManager,
-    IUpgradeManager,
     IValidatorManager,
-    IERC777Recipient,
-    IERC721Receiver,
-    IERC1155Receiver
+    IUpgradeManager,
+    IAccount
 {
 
 }

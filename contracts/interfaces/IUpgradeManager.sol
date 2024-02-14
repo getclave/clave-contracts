@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.17;
 
-import {Errors} from '../libraries/Errors.sol';
-import {Auth} from '../auth/Auth.sol';
-
 /**
  * @title Interface of the upgrade manager contract
  * @author https://getclave.io
