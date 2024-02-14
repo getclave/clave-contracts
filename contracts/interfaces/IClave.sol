@@ -1,10 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.17;
 
-interface IClave {
-    function resetOwners(bytes calldata pubKey) external;
+import {IAccount} from '@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IAccount.sol';
 
-    function isModule(address addr) external view returns (bool);
+import {IERC1271Upgradeable} from '@openzeppelin/contracts-upgradeable/interfaces/IERC1271Upgradeable.sol';
 
-    function isHook(address addr) external view returns (bool);
+import {IHookManager} from './IHookManager.sol';
+import {IModuleManager} from './IModuleManager.sol';
+import {IOwnerManager} from './IOwnerManager.sol';
+import {IUpgradeManager} from './IUpgradeManager.sol';
+import {IValidatorManager} from './IValidatorManager.sol';
+
+// interface IClave is IAccount {
+interface IClave is
+    IAccount,
+    IERC1271Upgradeable,
+    IHookManager,
+    IModuleManager,
+    IOwnerManager,
+    IUpgradeManager,
+    IValidatorManager
+{
+
 }
