@@ -15,21 +15,20 @@ import {UpgradeManager} from './managers/UpgradeManager.sol';
 
 import {TokenCallbackHandler} from './helpers/TokenCallbackHandler.sol';
 
-import {IClaveImplementation} from './interfaces/IClaveImplementation.sol';
-
 import {Errors} from './libraries/Errors.sol';
 import {SignatureDecoder} from './libraries/SignatureDecoder.sol';
 
 import {ERC1271Handler} from './handlers/ERC1271Handler.sol';
+
+import {IClave} from './interfaces/IClave.sol';
 
 /**
  * @title Main account contract for the Clave wallet infrastructure in zkSync Era
  * @author https://getclave.io
  */
 contract ClaveImplementation is
-    IClaveImplementation,
+    IClave,
     Initializable,
-    IAccount,
     HookManager,
     ModuleManager,
     UpgradeManager,
@@ -213,13 +212,11 @@ contract ClaveImplementation is
         magicValue = valid ? ACCOUNT_VALIDATION_SUCCESS_MAGIC : bytes4(0);
     }
 
-    /// @inheritdoc IClaveImplementation
+    /// @dev type(IClave).interfaceId indicates Clave account types
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(IClaveImplementation, TokenCallbackHandler) returns (bool) {
-        return
-            interfaceId == type(IClaveImplementation).interfaceId ||
-            super.supportsInterface(interfaceId);
+    ) public view override(TokenCallbackHandler) returns (bool) {
+        return interfaceId == type(IClave).interfaceId || super.supportsInterface(interfaceId);
     }
 
     function _executeTransaction(
