@@ -20,7 +20,7 @@ import {SignatureDecoder} from './libraries/SignatureDecoder.sol';
 
 import {ERC1271Handler} from './handlers/ERC1271Handler.sol';
 
-import {IClave} from './interfaces/IClave.sol';
+import {IClaveAccount} from './interfaces/IClave.sol';
 
 /**
  * @title Main account contract for the Clave wallet infrastructure in zkSync Era
@@ -33,7 +33,7 @@ contract ClaveImplementation is
     ModuleManager,
     ERC1271Handler,
     TokenCallbackHandler,
-    IClave
+    IClaveAccount
 {
     // Helper library for the Transaction struct
     using TransactionHelper for Transaction;
@@ -193,7 +193,8 @@ contract ClaveImplementation is
     function supportsInterface(
         bytes4 interfaceId
     ) public view override(IERC165, TokenCallbackHandler) returns (bool) {
-        return interfaceId == type(IClave).interfaceId || super.supportsInterface(interfaceId);
+        return
+            interfaceId == type(IClaveAccount).interfaceId || super.supportsInterface(interfaceId);
     }
 
     function _validateTransaction(

@@ -10,7 +10,7 @@ import {AddressLinkedList} from '../libraries/LinkedList.sol';
 import {Errors} from '../libraries/Errors.sol';
 import {IModule} from '../interfaces/IModule.sol';
 import {IInitable} from '../interfaces/IInitable.sol';
-import {IClave} from '../interfaces/IClave.sol';
+import {IClaveAccount} from '../interfaces/IClave.sol';
 import {IModuleManager} from '../interfaces/IModuleManager.sol';
 
 /**

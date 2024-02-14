@@ -19,7 +19,7 @@ import {IValidatorManager} from './IValidatorManager.sol';
  * @notice Interface for the Clave contract
  * @dev Implementations of this interface are contract that can be used as a Clave
  */
-interface IClave is
+interface IClaveAccount is
     IERC1271Upgradeable,
     IERC777Recipient,
     IERC721Receiver,

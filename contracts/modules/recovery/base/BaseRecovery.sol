@@ -6,7 +6,7 @@ import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import {EIP712} from '../../../helpers/EIP712.sol';
 import {IModule} from '../../../interfaces/IModule.sol';
 import {Errors} from '../../../libraries/Errors.sol';
-import {IClave} from '../../../interfaces/IClave.sol';
+import {IClaveAccount} from '../../../interfaces/IClave.sol';
 
 /**
  * @title Base Account Recovery Module
@@ -83,7 +83,7 @@ abstract contract BaseRecovery is IModule, EIP712 {
             revert Errors.RECOVERY_TIMELOCK();
         }
 
-        IClave(recoveringAddress).resetOwners(recoveryState.newOwner);
+        IClaveAccount(recoveringAddress).resetOwners(recoveryState.newOwner);
 
         delete recoveryStates[recoveringAddress];
 
