@@ -4,6 +4,9 @@ pragma solidity ^0.8.17;
 import {IAccount} from '@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IAccount.sol';
 
 import {IERC1271Upgradeable} from '@openzeppelin/contracts-upgradeable/interfaces/IERC1271Upgradeable.sol';
+import {IERC777Recipient} from '@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol';
+import {IERC721Receiver} from '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
+import {IERC1155Receiver} from '@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol';
 
 import {IHookManager} from './IHookManager.sol';
 import {IModuleManager} from './IModuleManager.sol';
@@ -19,7 +22,10 @@ interface IClave is
     IModuleManager,
     IOwnerManager,
     IUpgradeManager,
-    IValidatorManager
+    IValidatorManager,
+    IERC777Recipient,
+    IERC721Receiver,
+    IERC1155Receiver
 {
 
 }
