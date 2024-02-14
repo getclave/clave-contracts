@@ -46,7 +46,7 @@ interface IModuleManager {
      * @param addr address - Address to check
      * @return bool - True if the address is a module, false otherwise
      */
-    function isModule(address addr) external;
+    function isModule(address addr) external returns (bool);
 
     /**
      * @notice Get the list of modules
