@@ -4,7 +4,7 @@
 
 -   `/contracts`: smart contracts.
 -   `/deploy`: deployment and contract interaction scripts.
--   `/test`: test files
+-   `/test`: test files.
 -   `hardhat.config.ts`: configuration file.
 
 ## Requirements
