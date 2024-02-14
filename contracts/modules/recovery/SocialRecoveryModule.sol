@@ -6,7 +6,7 @@ import {SignatureChecker} from '@openzeppelin/contracts/utils/cryptography/Signa
 
 import {EIP712} from '../../helpers/EIP712.sol';
 import {Errors} from '../../libraries/Errors.sol';
-import {IClave} from '../../interfaces/IClave.sol';
+import {IClaveAccount} from '../../interfaces/IClave.sol';
 import {BaseRecovery} from './base/BaseRecovery.sol';
 
 /**
@@ -65,7 +65,7 @@ contract SocialRecoveryModule is BaseRecovery {
             revert Errors.ALREADY_INITED();
         }
 
-        if (!IClave(msg.sender).isModule(address(this))) {
+        if (!IClaveAccount(msg.sender).isModule(address(this))) {
             revert Errors.MODULE_NOT_ADDED_CORRECTLY();
         }
 
@@ -85,7 +85,7 @@ contract SocialRecoveryModule is BaseRecovery {
             revert Errors.RECOVERY_NOT_INITED();
         }
 
-        if (IClave(msg.sender).isModule(address(this))) {
+        if (IClaveAccount(msg.sender).isModule(address(this))) {
             revert Errors.MODULE_NOT_REMOVED_CORRECTLY();
         }
 

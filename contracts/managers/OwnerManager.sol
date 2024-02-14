@@ -5,7 +5,7 @@ import {ClaveStorage} from '../libraries/ClaveStorage.sol';
 import {BytesLinkedList, AddressLinkedList} from '../libraries/LinkedList.sol';
 import {Errors} from '../libraries/Errors.sol';
 import {Auth} from '../auth/Auth.sol';
-import {IClave} from '../interfaces/IClave.sol';
+import {IClaveAccount} from '../interfaces/IClave.sol';
 import {IOwnerManager} from '../interfaces/IOwnerManager.sol';
 
 /**
