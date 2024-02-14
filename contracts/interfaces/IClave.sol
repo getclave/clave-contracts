@@ -30,6 +30,4 @@ interface IClaveAccount is
     IValidatorManager,
     IUpgradeManager,
     IAccount
-{
-
-}
+{}
