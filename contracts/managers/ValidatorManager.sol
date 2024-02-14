@@ -23,42 +23,42 @@ abstract contract ValidatorManager is IValidatorManager, Auth {
     using ERC165Checker for address;
 
     /// @inheritdoc IValidatorManager
-    function r1AddValidator(address validator) external onlySelfOrModule {
+    function r1AddValidator(address validator) external override onlySelfOrModule {
         _r1AddValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function k1AddValidator(address validator) external onlySelfOrModule {
+    function k1AddValidator(address validator) external override onlySelfOrModule {
         _k1AddValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function r1RemoveValidator(address validator) external onlySelfOrModule {
+    function r1RemoveValidator(address validator) external override onlySelfOrModule {
         _r1RemoveValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function k1RemoveValidator(address validator) external onlySelfOrModule {
+    function k1RemoveValidator(address validator) external override onlySelfOrModule {
         _k1RemoveValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function r1IsValidator(address validator) external view returns (bool) {
+    function r1IsValidator(address validator) external view override returns (bool) {
         return _r1IsValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function k1IsValidator(address validator) external view returns (bool) {
+    function k1IsValidator(address validator) external view override returns (bool) {
         return _k1IsValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function r1ListValidators() external view returns (address[] memory validatorList) {
+    function r1ListValidators() external view override returns (address[] memory validatorList) {
         validatorList = _r1ValidatorsLinkedList().list();
     }
 
     /// @inheritdoc IValidatorManager
-    function k1ListValidators() external view returns (address[] memory validatorList) {
+    function k1ListValidators() external view override returns (address[] memory validatorList) {
         validatorList = _k1ValidatorsLinkedList().list();
     }
 

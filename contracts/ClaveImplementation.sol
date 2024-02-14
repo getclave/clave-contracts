@@ -13,7 +13,7 @@ import {HookManager} from './managers/HookManager.sol';
 import {ModuleManager} from './managers/ModuleManager.sol';
 import {UpgradeManager} from './managers/UpgradeManager.sol';
 
-import {TokenCallbackHandler} from './helpers/TokenCallbackHandler.sol';
+import {TokenCallbackHandler, IERC165} from './helpers/TokenCallbackHandler.sol';
 
 import {Errors} from './libraries/Errors.sol';
 import {SignatureDecoder} from './libraries/SignatureDecoder.sol';
@@ -28,10 +28,10 @@ import {IClave} from './interfaces/IClave.sol';
  */
 contract ClaveImplementation is
     Initializable,
-    ERC1271Handler,
+    UpgradeManager,
     HookManager,
     ModuleManager,
-    UpgradeManager,
+    ERC1271Handler,
     TokenCallbackHandler,
     IClave
 {
@@ -90,7 +90,7 @@ contract ClaveImplementation is
         bytes32,
         bytes32 suggestedSignedHash,
         Transaction calldata transaction
-    ) external payable onlyBootloader returns (bytes4 magic) {
+    ) external payable override onlyBootloader returns (bytes4 magic) {
         _incrementNonce(transaction.nonce);
 
         // The fact there is enough balance for the account
@@ -121,7 +121,7 @@ contract ClaveImplementation is
         bytes32,
         bytes32,
         Transaction calldata transaction
-    ) external payable onlyBootloader {
+    ) external payable override onlyBootloader {
         _executeTransaction(transaction);
     }
 
@@ -131,7 +131,9 @@ contract ClaveImplementation is
      * since it typically should not be trusted.
      * @param transaction Transaction calldata - The transaction itself
      */
-    function executeTransactionFromOutside(Transaction calldata transaction) external payable {
+    function executeTransactionFromOutside(
+        Transaction calldata transaction
+    ) external payable override {
         // Check if msg.sender is authorized
         if (!_k1IsOwner(msg.sender)) {
             revert Errors.UNAUTHORIZED_OUTSIDE_TRANSACTION();
@@ -164,7 +166,7 @@ contract ClaveImplementation is
         bytes32,
         bytes32,
         Transaction calldata transaction
-    ) external payable onlyBootloader {
+    ) external payable override onlyBootloader {
         bool success = transaction.payToTheBootloader();
 
         if (!success) {
@@ -183,8 +185,15 @@ contract ClaveImplementation is
         bytes32,
         bytes32,
         Transaction calldata transaction
-    ) external payable onlyBootloader {
+    ) external payable override onlyBootloader {
         transaction.processPaymasterInput();
+    }
+
+    /// @dev type(IClave).interfaceId indicates Clave accounts
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(IERC165, TokenCallbackHandler) returns (bool) {
+        return interfaceId == type(IClave).interfaceId || super.supportsInterface(interfaceId);
     }
 
     function _validateTransaction(
@@ -210,13 +219,6 @@ contract ClaveImplementation is
         bool valid = _handleValidation(validator, signedHash, signature);
 
         magicValue = valid ? ACCOUNT_VALIDATION_SUCCESS_MAGIC : bytes4(0);
-    }
-
-    /// @dev type(IClave).interfaceId indicates Clave account types
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(TokenCallbackHandler) returns (bool) {
-        return interfaceId == type(IClave).interfaceId || super.supportsInterface(interfaceId);
     }
 
     function _executeTransaction(

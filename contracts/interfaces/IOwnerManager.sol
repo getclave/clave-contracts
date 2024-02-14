@@ -75,9 +75,9 @@ interface IOwnerManager {
     function resetOwners(bytes calldata pubKey) external;
 
     /**
-     * @notice Checks if a pubkey is in the list of r1 owners
-     * @param pubKey bytes calldata - Pubkey to check
-     * @return bool - True if the address is in the list, false otherwise
+     * @notice Checks if a public key is in the list of r1 owners
+     * @param pubKey bytes calldata - Public key to check
+     * @return bool - True if the public key is in the list, false otherwise
      */
     function r1IsOwner(bytes calldata pubKey) external view returns (bool);
 

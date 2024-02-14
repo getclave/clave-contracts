@@ -28,17 +28,21 @@ abstract contract ModuleManager is IModuleManager, Auth {
     using ExcessivelySafeCall for address;
 
     /// @inheritdoc IModuleManager
-    function addModule(bytes calldata moduleAndData) external onlySelfOrModule {
+    function addModule(bytes calldata moduleAndData) external override onlySelfOrModule {
         _addModule(moduleAndData);
     }
 
     /// @inheritdoc IModuleManager
-    function removeModule(address module) external onlySelfOrModule {
+    function removeModule(address module) external override onlySelfOrModule {
         _removeModule(module);
     }
 
     /// @inheritdoc IModuleManager
-    function executeFromModule(address to, uint256 value, bytes memory data) external onlyModule {
+    function executeFromModule(
+        address to,
+        uint256 value,
+        bytes memory data
+    ) external override onlyModule {
         if (to == address(this)) revert Errors.RECUSIVE_MODULE_CALL();
 
         assembly {
@@ -56,7 +60,7 @@ abstract contract ModuleManager is IModuleManager, Auth {
     }
 
     /// @inheritdoc IModuleManager
-    function listModules() external view returns (address[] memory moduleList) {
+    function listModules() external view override returns (address[] memory moduleList) {
         moduleList = _modulesLinkedList().list();
     }
 

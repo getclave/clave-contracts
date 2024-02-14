@@ -1,9 +1,7 @@
 // Copied from '@account-abstraction/contracts/samples/callback/TokenCallbackHandler.sol'
 
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.12;
-
-/* solhint-disable no-empty-blocks */
+pragma solidity ^0.8.17;
 
 import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import {IERC777Recipient} from '@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol';
