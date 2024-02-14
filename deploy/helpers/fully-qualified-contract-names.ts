@@ -20,8 +20,10 @@ export const contractNames = {
         'contracts/modules/recovery/CloudRecoveryModule.sol:CloudRecoveryModule',
     erc20Paymaster: 'contracts/paymasters/ERC20Paymaster.sol:ERC20Paymaster',
     erc20PaymasterMock:
-        'contracts/paymasters/ERC20PaymasterMock.sol:ERC20PaymasterMock',
+        'contracts/test/ERC20PaymasterMock.sol:ERC20PaymasterMock',
     gaslessPaymaster:
         'contracts/paymasters/GaslessPaymaster.sol:GaslessPaymaster',
-    wen: 'contracts/wen/WEN.sol:WENToken',
+    ethdenverPaymaster:
+        'contracts/paymasters/ETHDenverPaymaster.sol:ETHDenverPaymaster',
+    buidlToken: 'contracts/BUIDL.sol:BUIDLToken',
 };
