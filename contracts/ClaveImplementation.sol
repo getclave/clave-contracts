@@ -27,13 +27,13 @@ import {IClave} from './interfaces/IClave.sol';
  * @author https://getclave.io
  */
 contract ClaveImplementation is
-    IClave,
     Initializable,
+    ERC1271Handler,
     HookManager,
     ModuleManager,
     UpgradeManager,
-    ERC1271Handler,
-    TokenCallbackHandler
+    TokenCallbackHandler,
+    IClave
 {
     // Helper library for the Transaction struct
     using TransactionHelper for Transaction;
