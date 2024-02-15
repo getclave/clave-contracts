@@ -24,7 +24,7 @@ export default async function (
 
     const tokenAddress = await token.getAddress();
 
-    console.log(`Clave BUIDL Token address: ${token.address}`);
+    console.log(`Clave BUIDL Token address: ${tokenAddress}`);
 
     if (chainId === 0x12c || chainId === 0x144) {
         try {
