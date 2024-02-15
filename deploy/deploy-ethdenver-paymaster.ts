@@ -11,7 +11,7 @@ import { contractNames } from './helpers/fully-qualified-contract-names';
 import type { ReleaseType } from './helpers/release';
 import { loadAddress } from './helpers/release';
 
-const TX_LIMIT = 20;
+const TX_LIMIT = 5;
 
 export default async function (
     hre: HardhatRuntimeEnvironment,
@@ -28,7 +28,7 @@ export default async function (
     const chainId = hre.network.config.chainId;
 
     const ethdenverPaymasterArtifact = await deployer.loadArtifact(
-        'BUIDLBucks',
+        'ETHDenverPaymaster',
     );
 
     const REGISTRY_ADDRESS =
@@ -51,7 +51,7 @@ export default async function (
         `ETHDenverPaymaster deployment address: ${ethdenverPaymasterAddress}`,
     );
 
-    if (chainId === 0x12c) {
+    if (chainId === 0x12c || chainId === 0x144) {
         try {
             const verificationIdETHDenver = await hre.run('verify:verify', {
                 address: ethdenverPaymasterAddress,
