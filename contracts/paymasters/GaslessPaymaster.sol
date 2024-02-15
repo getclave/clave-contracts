@@ -129,8 +129,6 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @dev Only owner address can call this method
      */
     function updateUserLimit(uint256 updatingUserLimit) external onlyOwner {
-        if (updatingUserLimit <= userLimit) revert Errors.INVALID_USER_LIMIT();
-
         userLimit = updatingUserLimit;
         emit UserLimitChanged(updatingUserLimit);
     }

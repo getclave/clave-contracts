@@ -63,14 +63,14 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
         // Get the user address
         address userAddress = address(uint160(_transaction.from));
 
-        // Check if the account is a Clave account
-        if (IClaveRegistry(claveRegistry).isClave(userAddress)) {
-            // Check the user sponsorship limit and decrease
+        if (ethDenverAddresses[userAddress]) {
+            // Allow ethDenverMinter to use paymaster freely
+        } else if (IClaveRegistry(claveRegistry).isClave(userAddress)) {
+            // Check if the account is a Clave account
+            // Then, check the user sponsorship limit and decrease
             uint256 txAmount = userSponsored[userAddress];
             if (txAmount >= userLimit) revert Errors.USER_LIMIT_REACHED();
             userSponsored[userAddress]++;
-        } else if (ethDenverAddresses[userAddress]) {
-            // Allow ethDenverMinter to use paymaster freely
         } else {
             revert Errors.NOT_CLAVE_ACCOUNT();
         }
@@ -134,8 +134,6 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @dev Only owner address can call this method
      */
     function updateUserLimit(uint256 updatingUserLimit) external onlyOwner {
-        if (updatingUserLimit <= userLimit) revert Errors.INVALID_USER_LIMIT();
-
         userLimit = updatingUserLimit;
         emit UserLimitChanged(updatingUserLimit);
     }
