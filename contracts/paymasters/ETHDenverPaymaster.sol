@@ -106,7 +106,12 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @return uint256 - Remaining user tx limit
      */
     function getRemainingUserLimit(address userAddress) external view returns (uint256) {
-        return userLimit - userSponsored[userAddress];
+        uint256 limit;
+        uint256 sponsored = userSponsored[userAddress];
+
+        userLimit > sponsored ? limit = (userLimit - sponsored) : limit = 0;
+
+        return limit;
     }
 
     /**
