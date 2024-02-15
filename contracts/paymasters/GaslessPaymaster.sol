@@ -101,7 +101,12 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @return uint256 - Remaining user tx limit
      */
     function getRemainingUserLimit(address userAddress) external view returns (uint256) {
-        return userLimit - userSponsored[userAddress];
+        uint256 limit;
+        uint256 sponsored = userSponsored[userAddress];
+
+        userLimit > sponsored ? limit = (userLimit - sponsored) : limit = 0;
+
+        return limit;
     }
 
     /**
@@ -124,8 +129,6 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @dev Only owner address can call this method
      */
     function updateUserLimit(uint256 updatingUserLimit) external onlyOwner {
-        if (updatingUserLimit <= userLimit) revert Errors.INVALID_USER_LIMIT();
-
         userLimit = updatingUserLimit;
         emit UserLimitChanged(updatingUserLimit);
     }

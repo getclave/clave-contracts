@@ -10,7 +10,7 @@ import {IClaveRegistry} from '../interfaces/IClaveRegistry.sol';
 import {BootloaderAuth} from '../auth/BootloaderAuth.sol';
 
 /**
- * @title Customized GaslessPaymaster to pay for limited number of transactions' fees for Clave users while BUIDL token interactions are free
+ * @title GaslessPaymaster fork to pay for limited number of transactions' fees during ETHDenver
  * @author https://getclave.io
  */
 contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
@@ -18,11 +18,10 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
     uint256 public userLimit;
     // Clave account registry contract
     address public claveRegistry;
-    // BUIDL token address for campaign
-    address public campaignToken;
 
     // Store users sponsored tx count
     mapping(address => uint256) public userSponsored;
+    mapping(address => bool) public ethDenverAddresses;
 
     // Event to be emitted when the balance is withdrawn
     event BalanceWithdrawn(address to, uint256 amount);
@@ -38,12 +37,10 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @notice Constructor functino of the paymaster
      * @param registry address - Clave registry address
      * @param limit uint256    - User sponsorship limit
-     * @param token address    - Campaign token address
      */
-    constructor(address registry, uint256 limit, address token) {
+    constructor(address registry, uint256 limit) {
         claveRegistry = registry;
         userLimit = limit;
-        campaignToken = token;
     }
 
     /// @inheritdoc IPaymaster
@@ -52,6 +49,9 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
         bytes32 /**_suggestedSignedHash*/,
         Transaction calldata _transaction
     ) external payable onlyBootloader returns (bytes4 magic, bytes memory context) {
+        // By default we consider the transaction as accepted.
+        magic = PAYMASTER_VALIDATION_SUCCESS_MAGIC;
+
         // Revert if standart paymaster input is shorter than 4 bytes
         if (_transaction.paymasterInput.length < 4) revert Errors.SHORT_PAYMASTER_INPUT();
 
@@ -60,19 +60,19 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
         if (paymasterInputSelector != IPaymasterFlow.general.selector)
             revert Errors.UNSUPPORTED_FLOW();
 
-        // By default we consider the transaction as accepted.
-        magic = PAYMASTER_VALIDATION_SUCCESS_MAGIC;
+        // Get the user address
+        address userAddress = address(uint160(_transaction.from));
 
-        if (address(uint160(_transaction.to)) != campaignToken) {
-            // Get the user address
-            address userAddress = address(uint160(_transaction.from));
+        if (ethDenverAddresses[userAddress]) {
+            // Allow ethDenverMinter to use paymaster freely
+        } else if (IClaveRegistry(claveRegistry).isClave(userAddress)) {
             // Check if the account is a Clave account
-            if (!IClaveRegistry(claveRegistry).isClave(userAddress))
-                revert Errors.NOT_CLAVE_ACCOUNT();
-
+            // Then, check the user sponsorship limit and decrease
             uint256 txAmount = userSponsored[userAddress];
             if (txAmount >= userLimit) revert Errors.USER_LIMIT_REACHED();
             userSponsored[userAddress]++;
+        } else {
+            revert Errors.NOT_CLAVE_ACCOUNT();
         }
 
         // Required ETH and token to pay fees
@@ -106,13 +106,12 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @return uint256 - Remaining user tx limit
      */
     function getRemainingUserLimit(address userAddress) external view returns (uint256) {
+        uint256 limit;
         uint256 sponsored = userSponsored[userAddress];
 
-        if (sponsored > userLimit) {
-            return 0;
-        }
+        userLimit > sponsored ? limit = (userLimit - sponsored) : limit = 0;
 
-        return userLimit - sponsored;
+        return limit;
     }
 
     /**
@@ -137,5 +136,35 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
     function updateUserLimit(uint256 updatingUserLimit) external onlyOwner {
         userLimit = updatingUserLimit;
         emit UserLimitChanged(updatingUserLimit);
+    }
+
+    /**
+     * @notice Add minter addresses to the whitelist
+     * @param addresses address[] - Array of addresses to be added
+     * @dev Only owner address can call this method
+     * @dev Given addresses should not be included in the list
+     */
+    function addETHDenverAddresses(address[] calldata addresses) external onlyOwner {
+        for (uint i = 0; i < addresses.length; i++) {
+            address addr = addresses[i];
+            require(addr != address(0) || !ethDenverAddresses[addr]);
+
+            ethDenverAddresses[addr] = true;
+        }
+    }
+
+    /**
+     * @notice Remove minter addresses from the whitelist
+     * @param addresses address[] - Array of addresses to be removed
+     * @dev Only owner address can call this method
+     * @dev Given addresses should be included in the list
+     */
+    function removeETHDenverAddresses(address[] calldata addresses) external onlyOwner {
+        for (uint i = 0; i < addresses.length; i++) {
+            address addr = addresses[i];
+            require(addr != address(0) || ethDenverAddresses[addr]);
+
+            delete (ethDenverAddresses[addr]);
+        }
     }
 }
