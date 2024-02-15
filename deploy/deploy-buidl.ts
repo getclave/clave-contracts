@@ -18,7 +18,7 @@ export default async function (
     const deployer = new Deployer(hre, wallet);
     const chainId = hre.network.config.chainId;
 
-    const tokenArtifact = await deployer.loadArtifact('BUIDLToken');
+    const tokenArtifact = await deployer.loadArtifact('BUIDLBucks');
 
     const token = await deployer.deploy(tokenArtifact, [], undefined, []);
 
