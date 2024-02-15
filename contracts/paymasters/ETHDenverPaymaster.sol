@@ -18,11 +18,10 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
     uint256 public userLimit;
     // Clave account registry contract
     address public claveRegistry;
-    // Minter address in the ETHDenver
-    address public ethDenverMinter;
 
     // Store users sponsored tx count
     mapping(address => uint256) public userSponsored;
+    mapping(address => bool) public ethDenverAddresses;
 
     // Event to be emitted when the balance is withdrawn
     event BalanceWithdrawn(address to, uint256 amount);
@@ -38,12 +37,10 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @notice Constructor functino of the paymaster
      * @param registry address - Clave registry address
      * @param limit uint256    - User sponsorship limit
-     * @param minter address   - Minter address in the ETHDenver
      */
-    constructor(address registry, uint256 limit, address minter) {
+    constructor(address registry, uint256 limit) {
         claveRegistry = registry;
         userLimit = limit;
-        minter = ethDenverMinter;
     }
 
     /// @inheritdoc IPaymaster
@@ -72,7 +69,7 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
             uint256 txAmount = userSponsored[userAddress];
             if (txAmount >= userLimit) revert Errors.USER_LIMIT_REACHED();
             userSponsored[userAddress]++;
-        } else if (userAddress == ethDenverMinter) {
+        } else if (ethDenverAddresses[userAddress]) {
             // Allow ethDenverMinter to use paymaster freely
         } else {
             revert Errors.NOT_CLAVE_ACCOUNT();
@@ -136,5 +133,35 @@ contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
 
         userLimit = updatingUserLimit;
         emit UserLimitChanged(updatingUserLimit);
+    }
+
+    /**
+     * @notice Add minter addresses to the whitelist
+     * @param addresses address[] - Array of addresses to be added
+     * @dev Only owner address can call this method
+     * @dev Given addresses should not be included in the list
+     */
+    function addETHDenverAddresses(address[] calldata addresses) external onlyOwner {
+        for (uint i = 0; i < addresses.length; i++) {
+            address addr = addresses[i];
+            require(addr != address(0) || !ethDenverAddresses[addr]);
+
+            ethDenverAddresses[addr] = true;
+        }
+    }
+
+    /**
+     * @notice Remove minter addresses from the whitelist
+     * @param addresses address[] - Array of addresses to be removed
+     * @dev Only owner address can call this method
+     * @dev Given addresses should be included in the list
+     */
+    function removeETHDenverAddresses(address[] calldata addresses) external onlyOwner {
+        for (uint i = 0; i < addresses.length; i++) {
+            address addr = addresses[i];
+            require(addr != address(0) || ethDenverAddresses[addr]);
+
+            delete (ethDenverAddresses[addr]);
+        }
     }
 }

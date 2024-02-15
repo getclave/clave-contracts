@@ -3,17 +3,15 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-import { type AddressKey } from '@getclave/constants';
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Provider, Wallet } from 'zksync-ethers';
 
 import { contractNames } from './helpers/fully-qualified-contract-names';
 import type { ReleaseType } from './helpers/release';
-import { loadAddress, updateAddress } from './helpers/release';
+import { loadAddress } from './helpers/release';
 
 const TX_LIMIT = 20;
-const MINTER_ADDRESS = '';
 
 export default async function (
     hre: HardhatRuntimeEnvironment,
@@ -37,12 +35,12 @@ export default async function (
         registryAddress || (await loadAddress(releaseType, 'REGISTRY'));
 
     console.log(
-        `Used registry address ${REGISTRY_ADDRESS} to deploy gasless paymaster`,
+        `Used registry address ${REGISTRY_ADDRESS} to deploy ethdenver paymaster`,
     );
 
     const ethdenverPaymaster = await deployer.deploy(
         ethdenverPaymasterArtifact,
-        [REGISTRY_ADDRESS, TX_LIMIT, MINTER_ADDRESS],
+        [REGISTRY_ADDRESS, TX_LIMIT],
         undefined,
         [],
     );
@@ -55,18 +53,14 @@ export default async function (
 
     if (chainId === 0x12c) {
         try {
-            const verificationIdGasless = await hre.run('verify:verify', {
+            const verificationIdETHDenver = await hre.run('verify:verify', {
                 address: ethdenverPaymasterAddress,
                 contract: contractNames.ethdenverPaymaster,
-                constructorArguments: [
-                    REGISTRY_ADDRESS,
-                    TX_LIMIT,
-                    MINTER_ADDRESS,
-                ],
+                constructorArguments: [REGISTRY_ADDRESS, TX_LIMIT],
             });
 
             console.log(
-                `Verification ID - ETHDenverPaymaster: ${verificationIdGasless}`,
+                `Verification ID - ETHDenverPaymaster: ${verificationIdETHDenver}`,
             );
         } catch (error) {
             console.log(
@@ -74,10 +68,5 @@ export default async function (
                 error,
             );
         }
-    }
-
-    if (releaseType != null) {
-        const key: AddressKey = 'GASLESS_PAYMASTER';
-        updateAddress(releaseType, key, ethdenverPaymasterAddress);
     }
 }
