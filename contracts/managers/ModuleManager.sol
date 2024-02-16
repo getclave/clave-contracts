@@ -10,7 +10,8 @@ import {AddressLinkedList} from '../libraries/LinkedList.sol';
 import {Errors} from '../libraries/Errors.sol';
 import {IModule} from '../interfaces/IModule.sol';
 import {IInitable} from '../interfaces/IInitable.sol';
-import {IClave} from '../interfaces/IClave.sol';
+import {IClaveAccount} from '../interfaces/IClave.sol';
+import {IModuleManager} from '../interfaces/IModuleManager.sol';
 
 /**
  * @title Manager contract for modules
@@ -18,7 +19,7 @@ import {IClave} from '../interfaces/IClave.sol';
  * @dev Module addresses are stored in a linked list
  * @author https://getclave.io
  */
-abstract contract ModuleManager is Auth, IClave {
+abstract contract ModuleManager is IModuleManager, Auth {
     // Helper library for address to address mappings
     using AddressLinkedList for mapping(address => address);
     // Interface helper library
@@ -26,44 +27,22 @@ abstract contract ModuleManager is Auth, IClave {
     // Low level calls helper library
     using ExcessivelySafeCall for address;
 
-    /**
-     * @notice Event emitted when a module is added
-     * @param module address - Address of the added module
-     */
-    event AddModule(address indexed module);
-
-    /**
-     * @notice Event emitted when a module is removed
-     * @param module address - Address of the removed module
-     */
-    event RemoveModule(address indexed module);
-
-    /**
-     * @notice Add a module to the list of modules and call it's init function
-     * @dev Can only be called by self or a module
-     * @param moduleAndData bytes calldata - Address of the module and data to initialize it with
-     */
-    function addModule(bytes calldata moduleAndData) external onlySelfOrModule {
+    /// @inheritdoc IModuleManager
+    function addModule(bytes calldata moduleAndData) external override onlySelfOrModule {
         _addModule(moduleAndData);
     }
 
-    /**
-     * @notice Remove a module from the list of modules and call it's disable function
-     * @dev Can only be called by self or a module
-     * @param module address - Address of the module to remove
-     */
-    function removeModule(address module) external onlySelfOrModule {
+    /// @inheritdoc IModuleManager
+    function removeModule(address module) external override onlySelfOrModule {
         _removeModule(module);
     }
 
-    /**
-     * @notice Allow modules to execute arbitrary calls on behalf of the account
-     * @dev Can only be called by a module
-     * @param to address - Address to call
-     * @param value uint256 - Eth to send with call
-     * @param data bytes memory - Data to make the call with
-     */
-    function executeFromModule(address to, uint256 value, bytes memory data) external onlyModule {
+    /// @inheritdoc IModuleManager
+    function executeFromModule(
+        address to,
+        uint256 value,
+        bytes memory data
+    ) external override onlyModule {
         if (to == address(this)) revert Errors.RECUSIVE_MODULE_CALL();
 
         assembly {
@@ -75,20 +54,13 @@ abstract contract ModuleManager is Auth, IClave {
         }
     }
 
-    /**
-     * @notice Check if an address is in the list of modules
-     * @param addr address - Address to check
-     * @return bool - True if the address is a module, false otherwise
-     */
+    /// @inheritdoc IModuleManager
     function isModule(address addr) external view override returns (bool) {
         return _isModule(addr);
     }
 
-    /**
-     * @notice Get the list of modules
-     * @return moduleList address[] memory - List of modules
-     */
-    function listModules() external view returns (address[] memory moduleList) {
+    /// @inheritdoc IModuleManager
+    function listModules() external view override returns (address[] memory moduleList) {
         moduleList = _modulesLinkedList().list();
     }
 

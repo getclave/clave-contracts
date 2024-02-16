@@ -8,11 +8,12 @@ import {NONCE_HOLDER_SYSTEM_CONTRACT, DEPLOYER_SYSTEM_CONTRACT, INonceHolder} fr
 import {SystemContractsCaller} from '@matterlabs/zksync-contracts/l2/system-contracts/libraries/SystemContractsCaller.sol';
 import {Utils} from '@matterlabs/zksync-contracts/l2/system-contracts/libraries/Utils.sol';
 import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
-import {TokenCallbackHandler} from '@account-abstraction/contracts/samples/callback/TokenCallbackHandler.sol';
 
 import {HookManager} from './managers/HookManager.sol';
 import {ModuleManager} from './managers/ModuleManager.sol';
 import {UpgradeManager} from './managers/UpgradeManager.sol';
+
+import {TokenCallbackHandler, IERC165} from './helpers/TokenCallbackHandler.sol';
 
 import {Errors} from './libraries/Errors.sol';
 import {SignatureDecoder} from './libraries/SignatureDecoder.sol';
@@ -20,18 +21,20 @@ import {SignatureDecoder} from './libraries/SignatureDecoder.sol';
 import {ERC1271Handler} from './handlers/ERC1271Handler.sol';
 import {Call} from './batch/BatchCaller.sol';
 
+import {IClaveAccount} from './interfaces/IClave.sol';
+
 /**
  * @title Main account contract for the Clave wallet infrastructure in zkSync Era
  * @author https://getclave.io
  */
 contract ClaveImplementation is
     Initializable,
-    IAccount,
+    UpgradeManager,
     HookManager,
     ModuleManager,
-    UpgradeManager,
     ERC1271Handler,
-    TokenCallbackHandler
+    TokenCallbackHandler,
+    IClaveAccount
 {
     // Helper library for the Transaction struct
     using TransactionHelper for Transaction;
@@ -129,7 +132,7 @@ contract ClaveImplementation is
         bytes32,
         bytes32 suggestedSignedHash,
         Transaction calldata transaction
-    ) external payable onlyBootloader returns (bytes4 magic) {
+    ) external payable override onlyBootloader returns (bytes4 magic) {
         _incrementNonce(transaction.nonce);
 
         // The fact there is enough balance for the account
@@ -160,7 +163,7 @@ contract ClaveImplementation is
         bytes32,
         bytes32,
         Transaction calldata transaction
-    ) external payable onlyBootloader {
+    ) external payable override onlyBootloader {
         _executeTransaction(transaction);
     }
 
@@ -170,7 +173,9 @@ contract ClaveImplementation is
      * since it typically should not be trusted.
      * @param transaction Transaction calldata - The transaction itself
      */
-    function executeTransactionFromOutside(Transaction calldata transaction) external payable {
+    function executeTransactionFromOutside(
+        Transaction calldata transaction
+    ) external payable override {
         // Check if msg.sender is authorized
         if (!_k1IsOwner(msg.sender)) {
             revert Errors.UNAUTHORIZED_OUTSIDE_TRANSACTION();
@@ -203,7 +208,7 @@ contract ClaveImplementation is
         bytes32,
         bytes32,
         Transaction calldata transaction
-    ) external payable onlyBootloader {
+    ) external payable override onlyBootloader {
         bool success = transaction.payToTheBootloader();
 
         if (!success) {
@@ -222,8 +227,16 @@ contract ClaveImplementation is
         bytes32,
         bytes32,
         Transaction calldata transaction
-    ) external payable onlyBootloader {
+    ) external payable override onlyBootloader {
         transaction.processPaymasterInput();
+    }
+
+    /// @dev type(IClave).interfaceId indicates Clave accounts
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(IERC165, TokenCallbackHandler) returns (bool) {
+        return
+            interfaceId == type(IClaveAccount).interfaceId || super.supportsInterface(interfaceId);
     }
 
     function _validateTransaction(

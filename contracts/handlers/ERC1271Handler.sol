@@ -13,9 +13,9 @@ import {EIP712} from '../helpers/EIP712.sol';
  * @author https://getclave.io
  */
 abstract contract ERC1271Handler is
-    ValidationHandler,
     IERC1271Upgradeable,
-    EIP712('Clave1271', '1.0.0')
+    EIP712('Clave1271', '1.0.0'),
+    ValidationHandler
 {
     struct ClaveMessage {
         bytes32 signedHash;

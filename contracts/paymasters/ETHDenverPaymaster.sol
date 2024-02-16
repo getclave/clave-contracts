@@ -10,10 +10,10 @@ import {IClaveRegistry} from '../interfaces/IClaveRegistry.sol';
 import {BootloaderAuth} from '../auth/BootloaderAuth.sol';
 
 /**
- * @title GaslessPaymaster to pay for limited number of transactions' fees for Clave users
+ * @title GaslessPaymaster fork to pay for limited number of transactions' fees during ETHDenver
  * @author https://getclave.io
  */
-contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
+contract ETHDenverPaymaster is IPaymaster, Ownable, BootloaderAuth {
     // User tx limit per paymaster
     uint256 public userLimit;
     // Clave account registry contract
@@ -21,6 +21,7 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
 
     // Store users sponsored tx count
     mapping(address => uint256) public userSponsored;
+    mapping(address => bool) public ethDenverAddresses;
 
     // Event to be emitted when the balance is withdrawn
     event BalanceWithdrawn(address to, uint256 amount);
@@ -51,12 +52,6 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
         // By default we consider the transaction as accepted.
         magic = PAYMASTER_VALIDATION_SUCCESS_MAGIC;
 
-        // Get the user address
-        address userAddress = address(uint160(_transaction.from));
-
-        // Check if the account is a Clave account
-        if (!IClaveRegistry(claveRegistry).isClave(userAddress)) revert Errors.NOT_CLAVE_ACCOUNT();
-
         // Revert if standart paymaster input is shorter than 4 bytes
         if (_transaction.paymasterInput.length < 4) revert Errors.SHORT_PAYMASTER_INPUT();
 
@@ -65,10 +60,20 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
         if (paymasterInputSelector != IPaymasterFlow.general.selector)
             revert Errors.UNSUPPORTED_FLOW();
 
-        // Check the user sponsorship limit and decrease
-        uint256 txAmount = userSponsored[userAddress];
-        if (txAmount >= userLimit) revert Errors.USER_LIMIT_REACHED();
-        userSponsored[userAddress]++;
+        // Get the user address
+        address userAddress = address(uint160(_transaction.from));
+
+        if (ethDenverAddresses[userAddress]) {
+            // Allow ethDenverMinter to use paymaster freely
+        } else if (IClaveRegistry(claveRegistry).isClave(userAddress)) {
+            // Check if the account is a Clave account
+            // Then, check the user sponsorship limit and decrease
+            uint256 txAmount = userSponsored[userAddress];
+            if (txAmount >= userLimit) revert Errors.USER_LIMIT_REACHED();
+            userSponsored[userAddress]++;
+        } else {
+            revert Errors.NOT_CLAVE_ACCOUNT();
+        }
 
         // Required ETH and token to pay fees
         uint256 requiredETH = _transaction.gasLimit * _transaction.maxFeePerGas;
@@ -131,5 +136,35 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
     function updateUserLimit(uint256 updatingUserLimit) external onlyOwner {
         userLimit = updatingUserLimit;
         emit UserLimitChanged(updatingUserLimit);
+    }
+
+    /**
+     * @notice Add minter addresses to the whitelist
+     * @param addresses address[] - Array of addresses to be added
+     * @dev Only owner address can call this method
+     * @dev Given addresses should not be included in the list
+     */
+    function addETHDenverAddresses(address[] calldata addresses) external onlyOwner {
+        for (uint i = 0; i < addresses.length; i++) {
+            address addr = addresses[i];
+            require(addr != address(0) || !ethDenverAddresses[addr]);
+
+            ethDenverAddresses[addr] = true;
+        }
+    }
+
+    /**
+     * @notice Remove minter addresses from the whitelist
+     * @param addresses address[] - Array of addresses to be removed
+     * @dev Only owner address can call this method
+     * @dev Given addresses should be included in the list
+     */
+    function removeETHDenverAddresses(address[] calldata addresses) external onlyOwner {
+        for (uint i = 0; i < addresses.length; i++) {
+            address addr = addresses[i];
+            require(addr != address(0) || ethDenverAddresses[addr]);
+
+            delete (ethDenverAddresses[addr]);
+        }
     }
 }

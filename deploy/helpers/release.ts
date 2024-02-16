@@ -32,10 +32,10 @@ export async function loadAddress(
     key: AddressKey,
 ): Promise<string> {
     const constants = await import('@getclave/constants');
-    if (type === ReleaseType.production) {
-        return constants.CONSTANT_ADDRESSES_PRODUCTION[key];
-    } else {
+    if (type === ReleaseType.development) {
         return constants.CONSTANT_ADDRESSES_TEST[key];
+    } else {
+        return constants.CONSTANT_ADDRESSES_PRODUCTION[key];
     }
 }
 

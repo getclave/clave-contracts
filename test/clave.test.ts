@@ -71,6 +71,38 @@ let factory: AccountFactory;
 let account: CallableProxy;
 let registry: ClaveRegistry;
 
+async function getNonce(wallet: Wallet): Promise<number> {
+    return await wallet.getNonce();
+}
+
+async function getContractNonce(account: Contract | unknown): Promise<number> {
+    return await provider.getTransactionCount(
+        await (account as Contract).getAddress(),
+    );
+}
+
+async function waitTillNonceUpdate(
+    wallet: Wallet,
+    nonce: number,
+): Promise<void> {
+    while ((await wallet.getNonce()) === nonce) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+}
+
+async function waitTillNonceUpdateContract(
+    account: Contract | unknown,
+    nonce: number,
+): Promise<void> {
+    while (
+        (await provider.getTransactionCount(
+            await (account as Contract).getAddress(),
+        )) === nonce
+    ) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+}
+
 beforeEach(async () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -80,23 +112,38 @@ beforeEach(async () => {
     keyPair = genKey();
     const publicKey = encodePublicKey(keyPair);
 
+    let nonce = await getNonce(richWallet);
     batchCaller = await deployBatchCaller(richWallet);
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     verifier = await deployVerifier(richWallet);
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     teeValidator = await deployTeeValidator(
         richWallet,
         await verifier.getAddress(),
     );
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     implementation = await deployImplementation(
         richWallet,
         await batchCaller.getAddress(),
     );
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     registry = await deployRegistry(richWallet);
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     factory = await deployFactory(
         richWallet,
         await implementation.getAddress(),
         await registry.getAddress(),
     );
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     await registry.setFactory(await factory.getAddress());
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     account = await deployAccount(
         richWallet,
         await richWallet.getNonce(),
@@ -104,6 +151,8 @@ beforeEach(async () => {
         await teeValidator.getAddress(),
         publicKey,
     );
+    await waitTillNonceUpdate(richWallet, nonce);
+    nonce = await getNonce(richWallet);
     // 100 ETH transfered to Account
     await (
         await richWallet.sendTransaction({
@@ -111,6 +160,7 @@ beforeEach(async () => {
             value: parseEther('100'),
         })
     ).wait();
+    await waitTillNonceUpdate(richWallet, nonce);
 });
 
 describe('Account no module no hook TEE validator', function () {
@@ -1995,14 +2045,19 @@ describe('Account no module no hook TEE validator', function () {
         let subsidizerPaymaster: Contract;
 
         beforeEach(async function () {
+            let nonce = await getNonce(richWallet);
             mockToken = await deployMockStable(richWallet);
+            await waitTillNonceUpdate(richWallet, nonce);
 
+            nonce = await getNonce(richWallet);
             gaslessPaymaster = await deployGaslessPaymaster(
                 richWallet,
                 await registry.getAddress(),
                 2,
             );
+            await waitTillNonceUpdate(richWallet, nonce);
 
+            nonce = await getNonce(richWallet);
             erc20Paymaster = await deployERC20PaymasterMock(richWallet, [
                 {
                     tokenAddress: await mockToken.getAddress(),
@@ -2010,7 +2065,9 @@ describe('Account no module no hook TEE validator', function () {
                     priceMarkup: 20000,
                 },
             ]);
+            await waitTillNonceUpdate(richWallet, nonce);
 
+            nonce = await getNonce(richWallet);
             subsidizerPaymaster = await deploySubsidizerPaymasterMock(
                 richWallet,
                 [
@@ -2022,29 +2079,38 @@ describe('Account no module no hook TEE validator', function () {
                 ],
                 await registry.getAddress(),
             );
+            await waitTillNonceUpdate(richWallet, nonce);
 
+            nonce = await getNonce(richWallet);
             await mockToken.mint(await account.getAddress(), parseEther('100'));
+            await waitTillNonceUpdate(richWallet, nonce);
 
+            nonce = await getNonce(richWallet);
             await (
                 await richWallet.sendTransaction({
                     to: gaslessPaymaster.address,
                     value: parseEther('50'),
                 })
             ).wait();
+            await waitTillNonceUpdate(richWallet, nonce);
 
+            nonce = await getNonce(richWallet);
             await (
                 await richWallet.sendTransaction({
                     to: erc20Paymaster.address,
                     value: parseEther('50'),
                 })
             ).wait();
+            await waitTillNonceUpdate(richWallet, nonce);
 
+            nonce = await getNonce(richWallet);
             await (
                 await richWallet.sendTransaction({
                     to: subsidizerPaymaster.address,
                     value: parseEther('50'),
                 })
             ).wait();
+            await waitTillNonceUpdate(richWallet, nonce);
         });
 
         it('Should fund the account with mock token', async function () {

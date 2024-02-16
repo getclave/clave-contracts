@@ -35,6 +35,7 @@
   "scripts": {
     "test": "exit 0",
     "test-real": "hardhat test --network inMemoryNode",
+    "test-real-docker": "hardhat test --network dockerizedNode",
     "auto-test": "./test/bash/autotest.sh",
     "gas-report": "./test/bash/snapshot.sh",
     "release-dev": "npx hardhat deploy-zksync --script release-dev.ts",
@@ -43,7 +44,6 @@
     "lint": "npx prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'"
   },
   "dependencies": {
-    "@account-abstraction/contracts": "^0.6.0",
     "@matterlabs/zksync-contracts": "^0.6.1",
     "@nomad-xyz/excessively-safe-call": "github:nomad-xyz/ExcessivelySafeCall",
     "@openzeppelin/contracts": "4.6.0",
