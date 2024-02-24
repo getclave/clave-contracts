@@ -75,7 +75,7 @@ contract ClaveImplementation is
 
         if (initCall.target != address(0)) {
             uint128 value = Utils.safeCastToU128(initCall.value);
-            _executeCall(initCall.target, value, initCall.data, initCall.allowFailure);
+            _executeCall(initCall.target, value, initCall.callData, initCall.allowFailure);
         }
     }
 
