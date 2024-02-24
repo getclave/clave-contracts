@@ -74,7 +74,8 @@ contract ClaveImplementation is
         }
 
         if (initCall.target != address(0)) {
-            _executeCall(initCall);
+            uint128 value = Utils.safeCastToU128(initCall.value);
+            _executeCall(initCall.target, value, initCall.data, initCall.allowFailure);
         }
     }
 
@@ -235,29 +236,16 @@ contract ClaveImplementation is
         address to = _safeCastToAddress(transaction.to);
         uint128 value = Utils.safeCastToU128(transaction.value);
         bytes calldata data = transaction.data;
-        uint32 gas = Utils.safeCastToU32(gasleft());
 
-        if (to == address(DEPLOYER_SYSTEM_CONTRACT)) {
-            // Note, that the deployer contract can only be called
-            // with a "systemCall" flag.
-            SystemContractsCaller.systemCallWithPropagatedRevert(gas, to, value, data);
-        } else if (to == _BATCH_CALLER) {
-            bool success = EfficientCall.rawDelegateCall(gas, to, data);
-            if (!success) {
-                EfficientCall.propagateRevert();
-            }
-        } else {
-            bool success = EfficientCall.rawCall(gas, to, value, data, false);
-            if (!success) {
-                EfficientCall.propagateRevert();
-            }
-        }
+        _executeCall(to, value, data, false);
     }
 
-    function _executeCall(Call calldata call) internal {
-        address to = call.target;
-        uint128 value = Utils.safeCastToU128(call.value);
-        bytes calldata data = call.callData;
+    function _executeCall(
+        address to,
+        uint128 value,
+        bytes calldata data,
+        bool allowFailure
+    ) internal {
         uint32 gas = Utils.safeCastToU32(gasleft());
 
         if (to == address(DEPLOYER_SYSTEM_CONTRACT)) {
@@ -266,12 +254,12 @@ contract ClaveImplementation is
             SystemContractsCaller.systemCallWithPropagatedRevert(gas, to, value, data);
         } else if (to == _BATCH_CALLER) {
             bool success = EfficientCall.rawDelegateCall(gas, to, data);
-            if (!success) {
+            if (!success && !allowFailure) {
                 EfficientCall.propagateRevert();
             }
         } else {
             bool success = EfficientCall.rawCall(gas, to, value, data, false);
-            if (!success) {
+            if (!success && !allowFailure) {
                 EfficientCall.propagateRevert();
             }
         }
