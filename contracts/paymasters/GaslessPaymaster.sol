@@ -106,7 +106,7 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
         uint256 limit;
         uint256 sponsored = userSponsored[userAddress];
 
-        userLimit > sponsored ? limit = (userLimit - sponsored) : limit = 0;
+        limit = userLimit > sponsored ? (userLimit - sponsored) : 0;
 
         return limit;
     }
