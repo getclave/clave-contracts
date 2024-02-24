@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.12;
-
-/* solhint-disable no-empty-blocks */
-
 import '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 import '@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol';
@@ -50,7 +47,8 @@ contract TokenCallbackHandler is IERC721Receiver, IERC1155Receiver {
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId) external view virtual override returns (bool) {
+    /// @dev functon visibility changed to public to allow overriding
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return
             interfaceId == type(IERC721Receiver).interfaceId ||
             interfaceId == type(IERC1155Receiver).interfaceId ||
