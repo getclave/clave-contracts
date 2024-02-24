@@ -55,6 +55,8 @@ contract ClaveImplementation is
      * @param initialR1Owner bytes calldata - The initial r1 owner of the account
      * @param initialR1Validator address    - The initial r1 validator of the account
      * @param modules bytes[] calldata      - The list of modules to enable for the account
+     * @param initCall Call calldata        - The initial call to make during account deployment
+     * @param signature bytes calldata      - The signature required to validate the initial call information
      */
     function initialize(
         bytes calldata initialR1Owner,
