@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.12;
+pragma solidity 0.8.17;
 import '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 import '@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol';
@@ -9,15 +9,6 @@ import '@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol';
  *   Handles supported tokens' callbacks, allowing account receiving these tokens.
  */
 contract TokenCallbackHandler is IERC721Receiver, IERC1155Receiver {
-    function tokensReceived(
-        address,
-        address,
-        address,
-        uint256,
-        bytes calldata,
-        bytes calldata
-    ) external pure override {}
-
     function onERC721Received(
         address,
         address,
