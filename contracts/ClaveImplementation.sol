@@ -60,8 +60,7 @@ contract ClaveImplementation is
         bytes calldata initialR1Owner,
         address initialR1Validator,
         bytes[] calldata modules,
-        Call calldata initCall,
-        bytes calldata signature
+        Call calldata initCall
     ) external initializer {
         _r1AddOwner(initialR1Owner);
         _r1AddValidator(initialR1Validator);
@@ -73,43 +72,8 @@ contract ClaveImplementation is
             }
         }
 
-        if (signature.length > 0) {
-            bytes32 signedHash = keccak256(abi.encode(initCall));
-            bytes memory signatureAndValidator = abi.encode(signature, initialR1Validator);
-            bytes4 magicValue = isValidSignature(signedHash, signatureAndValidator);
-
-            if (magicValue == ACCOUNT_VALIDATION_SUCCESS_MAGIC) {
-                address to = initCall.target;
-                uint128 value = Utils.safeCastToU128(initCall.value);
-                bytes calldata data = initCall.callData;
-                uint32 gas = Utils.safeCastToU32(gasleft());
-
-                if (to == address(DEPLOYER_SYSTEM_CONTRACT)) {
-                    // Note, that the deployer contract can only be called
-                    // with a "systemCall" flag.
-                    (bool success, bytes memory returnData) = SystemContractsCaller
-                        .systemCallWithReturndata(gas, to, value, data);
-
-                    if (!success && !initCall.allowFailure) {
-                        assembly {
-                            let size := mload(returnData)
-                            revert(add(returnData, 0x20), size)
-                        }
-                    }
-                } else if (to == _BATCH_CALLER) {
-                    bool success = EfficientCall.rawDelegateCall(gas, to, data);
-
-                    if (!success && !initCall.allowFailure) {
-                        EfficientCall.propagateRevert();
-                    }
-                } else {
-                    bool success = EfficientCall.rawCall(gas, to, value, data, false);
-
-                    if (!success && !initCall.allowFailure) {
-                        EfficientCall.propagateRevert();
-                    }
-                }
-            }
+        if (initCall.target != address(0)) {
+            _executeCall(initCall);
         }
     }
 
@@ -270,6 +234,29 @@ contract ClaveImplementation is
         address to = _safeCastToAddress(transaction.to);
         uint128 value = Utils.safeCastToU128(transaction.value);
         bytes calldata data = transaction.data;
+        uint32 gas = Utils.safeCastToU32(gasleft());
+
+        if (to == address(DEPLOYER_SYSTEM_CONTRACT)) {
+            // Note, that the deployer contract can only be called
+            // with a "systemCall" flag.
+            SystemContractsCaller.systemCallWithPropagatedRevert(gas, to, value, data);
+        } else if (to == _BATCH_CALLER) {
+            bool success = EfficientCall.rawDelegateCall(gas, to, data);
+            if (!success) {
+                EfficientCall.propagateRevert();
+            }
+        } else {
+            bool success = EfficientCall.rawCall(gas, to, value, data, false);
+            if (!success) {
+                EfficientCall.propagateRevert();
+            }
+        }
+    }
+
+    function _executeCall(Call calldata call) internal {
+        address to = call.target;
+        uint128 value = Utils.safeCastToU128(call.value);
+        bytes calldata data = call.callData;
         uint32 gas = Utils.safeCastToU32(gasleft());
 
         if (to == address(DEPLOYER_SYSTEM_CONTRACT)) {
