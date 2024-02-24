@@ -144,7 +144,7 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
     function addLimitlessAddresses(address[] calldata addresses) external onlyOwner {
         for (uint i = 0; i < addresses.length; i++) {
             address addr = addresses[i];
-            require(addr != address(0) || !limitlessAddresses[addr]);
+            require(addr != address(0) && !limitlessAddresses[addr]);
 
             limitlessAddresses[addr] = true;
         }
@@ -159,7 +159,7 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
     function removeLimitlessAddresses(address[] calldata addresses) external onlyOwner {
         for (uint i = 0; i < addresses.length; i++) {
             address addr = addresses[i];
-            require(addr != address(0) || limitlessAddresses[addr]);
+            require(limitlessAddresses[addr]);
 
             delete (limitlessAddresses[addr]);
         }
