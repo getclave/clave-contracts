@@ -81,9 +81,6 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
         // Transfer fees to the bootloader
         (bool success, ) = payable(BOOTLOADER_FORMAL_ADDRESS).call{value: requiredETH}('');
         if (!success) revert Errors.FAILED_FEE_TRANSFER();
-
-        // No context needed
-        context = bytes('');
     }
 
     /// @inheritdoc IPaymaster
