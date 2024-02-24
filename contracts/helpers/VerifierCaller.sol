@@ -35,8 +35,9 @@ abstract contract VerifierCaller {
             assembly {
                 returnValue := mload(add(data, 0x20))
             }
-            if (returnValue == 1) return true;
+            return returnValue == 1;
         }
+
         // Otherwise return false for the unsucessful calls and invalid signatures
         return false;
     }
