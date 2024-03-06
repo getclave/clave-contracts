@@ -22,7 +22,7 @@ export default async function (
     const chainId = hre.network.config.chainId;
 
     const passkeyValidatorArtifact = await deployer.loadArtifact(
-        'PasskeyValidatorConstant',
+        'PasskeyValidator',
     );
 
     const passkeyValidator = await deployer.deploy(
