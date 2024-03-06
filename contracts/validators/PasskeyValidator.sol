@@ -94,6 +94,7 @@ contract PasskeyValidator is IR1Validator, VerifierCaller {
             return false;
         }
 
+        // check if the flags are set
         if (authenticatorData[32] & AUTH_DATA_MASK != AUTH_DATA_MASK) {
             return false;
         }
