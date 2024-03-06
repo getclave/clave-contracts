@@ -20,7 +20,7 @@ contract PasskeyValidatorTest is IR1Validator, VerifierCaller {
     // user presence and user verification flags
     bytes1 constant AUTH_DATA_MASK = 0x05;
     // maximum value for 's' in a secp256r1 signature
-    uint256 constant lowSmax = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
+    bytes32 constant lowSmax = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
 
     address immutable P256_VERIFIER;
 
