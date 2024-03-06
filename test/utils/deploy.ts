@@ -132,7 +132,9 @@ export async function deployTeeValidator(
     verifierAddress: string,
 ): Promise<TEEValidator> {
     const deployer: Deployer = new Deployer(hre, wallet);
-    const teeValidatorArtifact = await deployer.loadArtifact('TEEValidator');
+    const teeValidatorArtifact = await deployer.loadArtifact(
+        'TEEValidatorTest',
+    );
 
     const TEEValidator = await deployer.deploy(
         teeValidatorArtifact,
@@ -142,7 +144,7 @@ export async function deployTeeValidator(
     );
 
     return await hre.ethers.getContractAt(
-        'TEEValidator',
+        'TEEValidatorTest',
         await TEEValidator.getAddress(),
         wallet,
     );
