@@ -10,19 +10,23 @@ import {VerifierCaller} from '../helpers/VerifierCaller.sol';
  * @title validator contract for passkey r1 signatures
  * @author https://getclave.io
  */
-contract PasskeyValidatorConstant is IR1Validator, VerifierCaller {
-    address constant P256_VERIFIER = 0x840Fec7b1615375E66f9631aBdA962dADeBFFf20;
+contract PasskeyValidatorTest is IR1Validator, VerifierCaller {
     string constant ClIENT_DATA_PREFIX = '{"type":"webauthn.get","challenge":"';
     string constant IOS_ClIENT_DATA_SUFFIX = '","origin":"https://getclave.io"}';
     string constant ANDROID_ClIENT_DATA_SUFFIX =
         '","origin":"android:apk-key-hash:-sYXRdwJA3hvue3mKpYrOZ9zSPC7b4mbgzJmdZEDO5w","androidPackageName":"com.clave.mobile"}';
-    // hash of 'https://getclave.io' + (BE, BS, UP, UV) flags set + unincremented sign counter
     bytes constant AUTHENTICATOR_DATA =
         hex'175faf8504c2cdd7c01778a8b0efd4874ecb3aefd7ebb7079a941f7be8897d411d00000000';
-    // user presence and user verification flags
-    bytes1 constant AUTH_DATA_MASK = 0x05;
-    // maximum value for 's' in a secp256r1 signature
-    uint256 constant lowSmax = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
+
+    address immutable P256_VERIFIER;
+
+    /**
+     * @notice Constructor function of the validator
+     * @param p256VerifierAddress address - Address of the p256 verifier contract
+     */
+    constructor(address p256VerifierAddress) {
+        P256_VERIFIER = p256VerifierAddress;
+    }
 
     /// @inheritdoc IR1Validator
     function validateSignature(
@@ -51,12 +55,6 @@ contract PasskeyValidatorConstant is IR1Validator, VerifierCaller {
     ) private view returns (bool valid) {
         bool isAndroid = signature[0] == 0x00;
         bytes32[2] memory rs = abi.decode(signature[1:], (bytes32[2]));
-
-        // malleability check
-        if (rs[1] > lowSmax) {
-            return false;
-        }
-
         bytes memory challengeBase64 = bytes(Base64.encodeURL(bytes.concat(challenge)));
         bytes memory clientData;
         if (isAndroid) {
@@ -88,15 +86,6 @@ contract PasskeyValidatorConstant is IR1Validator, VerifierCaller {
             string memory clientDataSuffix,
             bytes32[2] memory rs
         ) = _decodeFatSignature(fatSignature);
-
-        // malleability check
-        if (rs[1] > lowSmax) {
-            return false;
-        }
-
-        if (authenticatorData[32] & AUTH_DATA_MASK != AUTH_DATA_MASK) {
-            return false;
-        }
 
         bytes memory challengeBase64 = bytes(Base64.encodeURL(bytes.concat(challenge)));
         bytes memory clientData = bytes.concat(

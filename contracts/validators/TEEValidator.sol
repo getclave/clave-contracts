@@ -11,15 +11,7 @@ import {VerifierCaller} from '../helpers/VerifierCaller.sol';
  */
 contract TEEValidator is IR1Validator, VerifierCaller {
     //dummy value
-    address immutable P256_VERIFIER;
-
-    /**
-     * @notice Constructor function of the validator
-     * @param p256VerifierAddress address - Address of the p256 verifier contract
-     */
-    constructor(address p256VerifierAddress) {
-        P256_VERIFIER = p256VerifierAddress;
-    }
+    address constant P256_VERIFIER = 0x4323cffC1Fda2da9928cB5A5A9dA45DC8Ee38a2f;
 
     /// @inheritdoc IR1Validator
     function validateSignature(
@@ -29,7 +21,7 @@ contract TEEValidator is IR1Validator, VerifierCaller {
     ) external view override returns (bool valid) {
         bytes32[2] memory rs = abi.decode(signature, (bytes32[2]));
 
-        valid = callVerifier(P256_VERIFIER, signedHash, rs, pubKey);
+        valid = callVerifier(P256_VERIFIER, sha256(abi.encodePacked(signedHash)), rs, pubKey);
     }
 
     /// @inheritdoc IERC165
