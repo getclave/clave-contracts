@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
-import {Base64Url} from '../helpers/Base64Url.sol';
+import {Base64} from '../helpers/Base64.sol';
 import {IR1Validator, IERC165} from '../interfaces/IValidator.sol';
 import {Errors} from '../libraries/Errors.sol';
 import {VerifierCaller} from '../helpers/VerifierCaller.sol';
@@ -55,7 +55,7 @@ contract PasskeyValidator is IR1Validator, VerifierCaller {
     ) private view returns (bool valid) {
         bool isAndroid = signature[0] == 0x00;
         bytes32[2] memory rs = abi.decode(signature[1:], (bytes32[2]));
-        bytes memory challengeBase64 = bytes(Base64Url.encode(bytes.concat(challenge)));
+        bytes memory challengeBase64 = bytes(Base64.encodeURL(bytes.concat(challenge)));
         bytes memory clientData;
         if (isAndroid) {
             clientData = bytes.concat(
@@ -87,7 +87,7 @@ contract PasskeyValidator is IR1Validator, VerifierCaller {
             bytes32[2] memory rs
         ) = _decodeFatSignature(fatSignature);
 
-        bytes memory challengeBase64 = bytes(Base64Url.encode(bytes.concat(challenge)));
+        bytes memory challengeBase64 = bytes(Base64.encodeURL(bytes.concat(challenge)));
         bytes memory clientData = bytes.concat(
             bytes(ClIENT_DATA_PREFIX),
             challengeBase64,
