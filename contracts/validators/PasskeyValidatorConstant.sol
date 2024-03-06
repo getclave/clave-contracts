@@ -16,8 +16,11 @@ contract PasskeyValidatorConstant is IR1Validator, VerifierCaller {
     string constant IOS_ClIENT_DATA_SUFFIX = '","origin":"https://getclave.io"}';
     string constant ANDROID_ClIENT_DATA_SUFFIX =
         '","origin":"android:apk-key-hash:-sYXRdwJA3hvue3mKpYrOZ9zSPC7b4mbgzJmdZEDO5w","androidPackageName":"com.clave.mobile"}';
+    // hash of 'https://getclave.io' + (BE, BS, UP, UV) flags set + unincremented sign counter
     bytes constant AUTHENTICATOR_DATA =
         hex'175faf8504c2cdd7c01778a8b0efd4874ecb3aefd7ebb7079a941f7be8897d411d00000000';
+    // user presence and user verification flags
+    bytes1 constant AUTH_DATA_MASK = 0x05;
 
     /// @inheritdoc IR1Validator
     function validateSignature(
@@ -77,6 +80,10 @@ contract PasskeyValidatorConstant is IR1Validator, VerifierCaller {
             string memory clientDataSuffix,
             bytes32[2] memory rs
         ) = _decodeFatSignature(fatSignature);
+
+        if (authenticatorData[32] & AUTH_DATA_MASK != AUTH_DATA_MASK) {
+            return false;
+        }
 
         bytes memory challengeBase64 = bytes(Base64Url.encode(bytes.concat(challenge)));
         bytes memory clientData = bytes.concat(
