@@ -14,6 +14,8 @@ import {BootloaderAuth} from '../auth/BootloaderAuth.sol';
  * @author https://getclave.io
  */
 contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
+    uint256 constant MAX_SPONSORED_ETH = 0.02 ether;
+
     // User tx limit per paymaster
     uint256 public userLimit;
     // Clave account registry contract
@@ -77,6 +79,9 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
 
         // Required ETH and token to pay fees
         uint256 requiredETH = _transaction.gasLimit * _transaction.maxFeePerGas;
+
+        // Check if the required ETH is less than the maximum sponsored ETH
+        if (requiredETH > MAX_SPONSORED_ETH) revert Errors.EXCEEDS_MAX_SPONSORED_ETH();
 
         // Transfer fees to the bootloader
         (bool success, ) = payable(BOOTLOADER_FORMAL_ADDRESS).call{value: requiredETH}('');
