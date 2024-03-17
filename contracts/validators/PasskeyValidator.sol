@@ -22,7 +22,7 @@ contract PasskeyValidator is IR1Validator, VerifierCaller {
     // user presence and user verification flags
     bytes1 constant AUTH_DATA_MASK = 0x05;
     // maximum value for 's' in a secp256r1 signature
-    bytes32 constant lowSmax = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
+    bytes32 constant lowSmax = 0x7fffffff800000007fffffffffffffffde737d56d38bcf4279dce5617e3192a8;
 
     /// @inheritdoc IR1Validator
     function validateSignature(
