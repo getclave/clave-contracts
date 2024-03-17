@@ -6,7 +6,7 @@
 import { Contract } from '@ethersproject/contracts';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
-import { ethers } from 'ethers';
+import { ZeroAddress, ethers } from 'ethers';
 import * as hre from 'hardhat';
 import type { Wallet } from 'zksync-ethers';
 import { utils } from 'zksync-ethers';
@@ -27,6 +27,7 @@ import type {
     SocialRecoveryModule,
     TEEValidator,
 } from '../../typechain-types';
+import type { CallStruct } from '../../typechain-types/contracts/batch/BatchCaller';
 import type { CallableProxy } from './proxy-helpers';
 
 export async function deployBatchCaller(wallet: Wallet): Promise<BatchCaller> {
@@ -279,27 +280,41 @@ export async function deployFactory(
 
 export async function deployAccount(
     wallet: Wallet,
-    nonce: number,
     accountFactory: AccountFactory,
     validatorAddress: string,
     initialR1Owner: string,
     modules: Array<ethers.BytesLike> = [],
 ): Promise<CallableProxy> {
     const salt = ethers.randomBytes(32);
+    const call: CallStruct = {
+        target: ZeroAddress,
+        allowFailure: false,
+        value: 0,
+        callData: '0x',
+    };
 
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     const initializer =
-        '0x1c6f4ceb' +
+        '0x77ba2e75' +
         abiCoder
             .encode(
-                ['bytes', 'address', 'bytes[]'],
-                [initialR1Owner, validatorAddress, modules],
+                [
+                    'bytes',
+                    'address',
+                    'bytes[]',
+                    'tuple(address target,bool allowFailure,uint256 value,bytes calldata)',
+                ],
+                [
+                    initialR1Owner,
+                    validatorAddress,
+                    modules,
+                    [call.target, call.allowFailure, call.value, call.callData],
+                ],
             )
             .slice(2);
 
     const tx = await accountFactory.deployAccount(salt, initializer, {
         gasLimit: 10_000_000,
-        nonce,
     });
     await tx.wait();
 
