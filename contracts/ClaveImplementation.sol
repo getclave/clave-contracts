@@ -251,7 +251,14 @@ contract ClaveImplementation is
         if (to == address(DEPLOYER_SYSTEM_CONTRACT)) {
             // Note, that the deployer contract can only be called
             // with a "systemCall" flag.
-            SystemContractsCaller.systemCallWithPropagatedRevert(gas, to, value, data);
+            (bool success, bytes memory returnData) = SystemContractsCaller
+                .systemCallWithReturndata(gas, to, value, data);
+            if (!success && !allowFailure) {
+                assembly {
+                    let size := mload(returnData)
+                    revert(add(returnData, 0x20), size)
+                }
+            }
         } else if (to == _BATCH_CALLER) {
             bool success = EfficientCall.rawDelegateCall(gas, to, data);
             if (!success && !allowFailure) {
