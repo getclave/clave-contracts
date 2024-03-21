@@ -17,13 +17,10 @@ dataSources:
           language: wasm/assemblyscript
           entities:
               - NewClaveAccount
-              - OwnershipTransferred
           abis:
               - name: AccountFactory
                 file: ./abis/AccountFactory.json
           eventHandlers:
               - event: NewClaveAccount(indexed address)
                 handler: handleNewClaveAccount
-              - event: OwnershipTransferred(indexed address,indexed address)
-                handler: handleOwnershipTransferred
           file: ./src/account-factory.ts
