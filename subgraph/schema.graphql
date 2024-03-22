@@ -1,7 +1,24 @@
-type NewClaveAccount @entity(immutable: true) {
+type ClaveAccount @entity {
+  "account address"
+  id: Bytes! 
+  "account deploy date"
+  deployDate: BigInt!
+  "account balances"
+  balances: [TokenBalance!]! @derivedFrom(field: "account")
+}
+
+type Token @entity(immutable: true) {
+  "token address"
   id: Bytes!
-  accountAddress: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
+  name: String!
+  symbol: String!
+  decimals: Int!
+}
+
+type TokenBalance @entity {
+  "account.id.concat(token.id)"
+  id: Bytes!
+  account: ClaveAccount!
+  token: Token!
+  amount: BigDecimal!
 }
