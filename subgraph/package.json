@@ -1,5 +1,5 @@
 {
-  "name": "clave",
+  "name": "clave-subgraph",
   "license": "UNLICENSED",
   "scripts": {
     "codegen": "graph codegen",
