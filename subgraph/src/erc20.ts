@@ -23,7 +23,7 @@ export function handleTransfer(event: TransferEvent): void {
     const toAccount = ClaveAccount.load(to);
 
     //not a Clave related transfer
-    if (fromAccount === null || toAccount === null) {
+    if (fromAccount === null && toAccount === null) {
         return;
     }
 
@@ -35,13 +35,19 @@ export function handleTransfer(event: TransferEvent): void {
         token.symbol = fetchTokenSymbol(tokenAddress);
         token.decimals = fetchTokenDecimals(tokenAddress) as i32;
     }
+    token.save();
 
     const amount = toDecimal(event.params.value, token.decimals);
-
-    const tokenBalanceFrom = decreaseAccountBalance(fromAccount, token, amount);
-    const tokenBalanceTo = increaseAccountBalance(toAccount, token, amount);
-
-    token.save();
-    tokenBalanceFrom.save();
-    tokenBalanceTo.save();
+    if (fromAccount !== null) {
+        const tokenBalanceFrom = decreaseAccountBalance(
+            fromAccount,
+            token,
+            amount,
+        );
+        tokenBalanceFrom.save();
+    }
+    if (toAccount !== null) {
+        const tokenBalanceTo = increaseAccountBalance(toAccount, token, amount);
+        tokenBalanceTo.save();
+    }
 }
