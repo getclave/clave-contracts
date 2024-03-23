@@ -34,8 +34,8 @@ describe('handleNewClaveAccount()', () => {
         assert.fieldEquals(
             'ClaveAccount',
             '0x0000000000000000000000000000000000000001',
-            'deployDate',
-            '1',
+            'id',
+            '0x0000000000000000000000000000000000000001',
         );
     });
 });
