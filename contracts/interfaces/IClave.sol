@@ -29,4 +29,6 @@ interface IClaveAccount is
     IValidatorManager,
     IUpgradeManager,
     IAccount
-{}
+{
+    event FeePaid();
+}

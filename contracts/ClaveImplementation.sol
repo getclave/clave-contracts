@@ -180,6 +180,8 @@ contract ClaveImplementation is
         if (!success) {
             revert Errors.FEE_PAYMENT_FAILED();
         }
+
+        emit FeePaid();
     }
 
     /**
