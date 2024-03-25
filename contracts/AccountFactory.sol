@@ -119,8 +119,15 @@ contract AccountFactory is Ownable {
         emit ClaveAccountDeployed(accountAddress);
     }
 
+    /**
+     * @notice To emit an event when a Clave account is created but not yet deployed
+     * @dev This event is so that we can index accounts that are created but not yet deployed
+     * @param accountAddress address - Address of the Clave account that was created
+     */
     function claveAccountCreated(address accountAddress) external {
-        require(msg.sender == DEPLOYER_SYSTEM_CONTRACT, Errors.NOT_FROM_DEPLOYER());
+        if (msg.sender != _deployer) {
+            revert Errors.NOT_FROM_DEPLOYER();
+        }
         emit ClaveAccountCreated(accountAddress);
     }
 
