@@ -1,13 +1,20 @@
 type ClaveAccount @entity {
   "account address"
-  id: Bytes! 
-  "account deploy date"
+  id: Bytes!
+  creationDate: BigInt!
   deployDate: BigInt!
-  "account balances"
-  balances: [TokenBalance!]! @derivedFrom(field: "account")
+  txCount: BigInt!
+  gweiSpentOnGas: BigInt!
+  recoveryCount: Int!
+  hasRecovery: Boolean!
+  isRecovering: Boolean!
+  erc20balances: [ERC20Balance!]! @derivedFrom(field: "account")
+  owners: [Owner!]! @derivedFrom(field: "account")
+  transactions: [ClaveTransaction!]! @derivedFrom(field: "sender")
+  inAppSwaps: [inAppSwap!]! @derivedFrom(field: "account")
 }
 
-type Token @entity(immutable: true) {
+type ERC20 @entity(immutable: true) {
   "token address"
   id: Bytes!
   name: String!
@@ -15,10 +22,56 @@ type Token @entity(immutable: true) {
   decimals: Int!
 }
 
-type TokenBalance @entity {
-  "account.id.concat(token.id)"
+type ERC20Balance @entity {
+  "account.id.concat(ERC20.id)"
   id: Bytes!
   account: ClaveAccount!
-  token: Token!
+  token: ERC20!
   amount: BigDecimal!
+}
+
+enum OwnerType {
+  "address"
+  k1
+  "public key"
+  r1
+}
+
+type Owner @entity(immutable: true) {
+  "account.id.concat(owner)"
+  id: Bytes!
+  account: ClaveAccount!
+  "k1 or r1"
+  ownerType: OwnerType!
+  "public key or address"
+  owner: Bytes!
+  "date added as owner to account"
+  dateAdded: BigInt!
+}
+
+type ClaveTransaction @entity(immutable: true) {
+  "transaction hash"
+  id: Bytes!
+  "tx.from"
+  sender: ClaveAccount!
+  "tx.to"
+  to: Bytes!
+  "tx.value"
+  value: BigInt!
+  "tx.gasPrice * tx.gasUsed"
+  gasCost: BigInt!
+  paymasterUsed: Boolean!
+  "block.timestamp"
+  date: BigInt!
+}
+
+type inAppSwap @entity(immutable: true) {
+  account: ClaveAccount!
+  tokenIn: Bytes!
+  amountIn: BigDecimal!
+  tokenOut: Bytes!
+  amountOut: BigDecimal!
+  "fee is collected in tokenOut"
+  feeCollected: BigDecimal!
+  date: BigInt!
 }
