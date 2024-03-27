@@ -14,7 +14,7 @@ import {IClaveRegistry} from './interfaces/IClaveRegistry.sol';
  */
 contract AccountFactory is Ownable {
     // Factory versioning
-    string public constant VERSION = '1.0.0';
+    string public constant VERSION = '1.1.0';
 
     // Addresses of the implementation and registry contract
     address private immutable _IMPLEMENTATION;
@@ -29,7 +29,13 @@ contract AccountFactory is Ownable {
      * @notice Event emmited when a new Clave account is created
      * @param accountAddress Address of the newly created Clave account
      */
-    event NewClaveAccount(address indexed accountAddress);
+    event ClaveAccountCreated(address indexed accountAddress);
+
+    /**
+     * @notice Event emmited when a new Clave account is deployed
+     * @param accountAddress Address of the newly deployed Clave account
+     */
+    event ClaveAccountDeployed(address indexed accountAddress);
 
     /**
      * @notice Constructor function of the factory contract
@@ -110,7 +116,19 @@ contract AccountFactory is Ownable {
 
         IClaveRegistry(_REGISTRY).register(accountAddress);
 
-        emit NewClaveAccount(accountAddress);
+        emit ClaveAccountDeployed(accountAddress);
+    }
+
+    /**
+     * @notice To emit an event when a Clave account is created but not yet deployed
+     * @dev This event is so that we can index accounts that are created but not yet deployed
+     * @param accountAddress address - Address of the Clave account that was created
+     */
+    function claveAccountCreated(address accountAddress) external {
+        if (msg.sender != _deployer) {
+            revert Errors.NOT_FROM_DEPLOYER();
+        }
+        emit ClaveAccountCreated(accountAddress);
     }
 
     /**

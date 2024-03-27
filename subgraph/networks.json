@@ -1,0 +1,8 @@
+{
+  "zksync-era": {
+    "AccountFactory": {
+      "address": "0x3B91C2eCEaAd96f5Ef3B08738B2aA202a4012a79",
+      "startBlock": 24799912
+    }
+  }
+}
