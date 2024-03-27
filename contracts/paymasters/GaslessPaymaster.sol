@@ -14,7 +14,7 @@ import {BootloaderAuth} from '../auth/BootloaderAuth.sol';
  * @author https://getclave.io
  */
 contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
-    uint256 constant MAX_SPONSORED_ETH = 0.02 ether;
+    uint256 constant MAX_SPONSORED_ETH = 0.005 ether;
 
     // User tx limit per paymaster
     uint256 public userLimit;

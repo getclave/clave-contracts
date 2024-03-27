@@ -46,7 +46,7 @@
     "lint": "npx prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "lint-check": "npx prettier --list-different --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "release-dev": "npx hardhat deploy-zksync --script release-dev.ts",
-    "release-prod": "npx hardhat deploy-zksync --script release-prod.ts",
+    "release-prod": "npx hardhat deploy-zksync --script release-prod.ts --network zkSyncMainnet",
     "test": "exit 0",
     "test-real": "hardhat test --network inMemoryNode",
     "test-real-docker": "hardhat test --network dockerizedNode"

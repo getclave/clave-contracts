@@ -102,7 +102,7 @@ export default async function (
             `GaslessPaymaster deployment address: ${gaslessPaymasterAddress}`,
         );
 
-        if (chainId === 0x12c) {
+        if (chainId === 0x12c || chainId === 0x144) {
             try {
                 const verificationIdGasless = await hre.run('verify:verify', {
                     address: gaslessPaymasterAddress,
