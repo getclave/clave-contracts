@@ -44,7 +44,7 @@ contract ClaveRegistry is Ownable, IClaveRegistry {
      * @dev Can only be called by the factory or owner
      * @param accounts address[] - Array of addresses to register
      */
-    function registerMultiple(address[] calldata accounts) external override {
+    function registerMultiple(address[] calldata accounts) external {
         if (!isFactory[msg.sender] && msg.sender != owner()) {
             revert Errors.NOT_FROM_FACTORY();
         }
@@ -59,7 +59,7 @@ contract ClaveRegistry is Ownable, IClaveRegistry {
      * @dev Can only be called by the factory or owner
      * @param account address - Address of the account to unregister
      */
-    function unregister(address account) external override {
+    function unregister(address account) external {
         if (!isFactory[msg.sender] && msg.sender != owner()) {
             revert Errors.NOT_FROM_FACTORY();
         }
@@ -72,7 +72,7 @@ contract ClaveRegistry is Ownable, IClaveRegistry {
      * @dev Can only be called by the factory or owner
      * @param accounts address[] - Array of addresses to unregister
      */
-    function unregisterMultiple(address[] calldata accounts) external override {
+    function unregisterMultiple(address[] calldata accounts) external {
         if (!isFactory[msg.sender] && msg.sender != owner()) {
             revert Errors.NOT_FROM_FACTORY();
         }
