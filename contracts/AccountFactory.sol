@@ -35,6 +35,12 @@ contract AccountFactory is Ownable {
     event ClaveAccountDeployed(address indexed accountAddress);
 
     /**
+     * @notice Event emmited when the deployer account is changed
+     * @param newDeployer Address of the new deployer account
+     */
+    event DeployerChanged(address indexed newDeployer);
+
+    /**
      * @notice Event emmited when the implementation contract is changed
      * @param newImplementation Address of the new implementation contract
      */
@@ -146,6 +152,8 @@ contract AccountFactory is Ownable {
      */
     function changeDeployer(address newDeployer) external onlyOwner {
         _deployer = newDeployer;
+
+        emit DeployerChanged(newDeployer);
     }
 
     /**
@@ -154,6 +162,8 @@ contract AccountFactory is Ownable {
      */
     function changeImplementation(address newImplementation) external onlyOwner {
         implementation = newImplementation;
+
+        emit ImplementationChanged(newImplementation);
     }
 
     /**
@@ -162,6 +172,8 @@ contract AccountFactory is Ownable {
      */
     function changeRegistry(address newRegistry) external onlyOwner {
         registry = newRegistry;
+
+        emit RegistryChanged(newRegistry);
     }
 
     /**
