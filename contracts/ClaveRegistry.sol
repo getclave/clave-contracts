@@ -28,16 +28,58 @@ contract ClaveRegistry is Ownable, IClaveRegistry {
 
     /**
      * @notice Registers an account as a Clave account
-     * @dev Can only be called by the factory
+     * @dev Can only be called by the factory or owner
      * @param account address - Address of the account to register
      */
     function register(address account) external override {
-        if (!isFactory[msg.sender]) {
+        if (!isFactory[msg.sender] && msg.sender != owner()) {
             revert Errors.NOT_FROM_FACTORY();
         }
 
         isClave[account] = true;
     }
+
+    /**
+     * @notice Registers multiple accounts as Clave accounts
+     * @dev Can only be called by the factory or owner
+     * @param accounts address[] - Array of addresses to register
+     */
+    function registerMultiple(address[] calldata accounts) external override {
+        if (!isFactory[msg.sender] && msg.sender != owner()) {
+            revert Errors.NOT_FROM_FACTORY();
+        }
+
+        for (uint256 i = 0; i < accounts.length; i++) {
+            isClave[accounts[i]] = true;
+        }
+    }
+
+    /**
+     * @notice Unregisters an account as a Clave account
+     * @dev Can only be called by the factory or owner
+     * @param account address - Address of the account to unregister
+     */
+    function unregister(address account) external override {
+        if (!isFactory[msg.sender] && msg.sender != owner()) {
+            revert Errors.NOT_FROM_FACTORY();
+        }
+
+        isClave[account] = false;
+    }
+
+    /**
+     * @notice Unregisters multiple accounts as Clave accounts
+     * @dev Can only be called by the factory or owner
+     * @param accounts address[] - Array of addresses to unregister
+     */
+    function unregisterMultiple(address[] calldata accounts) external override {
+        if (!isFactory[msg.sender] && msg.sender != owner()) {
+            revert Errors.NOT_FROM_FACTORY();
+        }
+
+        for (uint256 i = 0; i < accounts.length; i++) {
+            isClave[accounts[i]] = false;
+        }
 
     /**
      * @notice Sets a new factory contract
