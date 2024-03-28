@@ -20,6 +20,7 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
     uint256 public userLimit;
     // Clave account registry contract
     address public claveRegistry;
+    address public claveRegistry2;
 
     // Store users sponsored tx count
     mapping(address => uint256) public userSponsored;
@@ -67,7 +68,10 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
 
         if (limitlessAddresses[userAddress]) {
             // Allow limitlessAddresses to use paymaster freely
-        } else if (IClaveRegistry(claveRegistry).isClave(userAddress)) {
+        } else if (
+            IClaveRegistry(claveRegistry).isClave(userAddress) ||
+            IClaveRegistry(claveRegistry2).isClave(userAddress)
+        ) {
             // Check if the account is a Clave account
             // Then, check the user sponsorship limit and decrease
             uint256 txAmount = userSponsored[userAddress];
@@ -168,5 +172,23 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
 
             delete (limitlessAddresses[addr]);
         }
+    }
+
+    /**
+     * @notice Change the Clave registry address
+     * @param newRegistry address - New Clave registry address
+     * @dev Only owner address can call this method
+     */
+    function changeClaveRegistry(address newRegistry) external onlyOwner {
+        claveRegistry = newRegistry;
+    }
+
+    /**
+     * @notice Change the Clave registry2 address
+     * @param newRegistry address - New Clave registry2 address
+     * @dev Only owner address can call this method
+     */
+    function changeClaveRegistry2(address newRegistry) external onlyOwner {
+        claveRegistry2 = newRegistry;
     }
 }
