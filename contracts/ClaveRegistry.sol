@@ -80,6 +80,7 @@ contract ClaveRegistry is Ownable, IClaveRegistry {
         for (uint256 i = 0; i < accounts.length; i++) {
             isClave[accounts[i]] = false;
         }
+    }
 
     /**
      * @notice Sets a new factory contract
