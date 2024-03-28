@@ -54,8 +54,8 @@ contract AccountFactory is Ownable {
 
     /**
      * @notice Constructor function of the factory contract
-     * @param implementation address     - Address of the implementation contract
-     * @param registry address           - Address of the registry contract
+     * @param _implementation address     - Address of the implementation contract
+     * @param _registry address           - Address of the registry contract
      * @param _proxyBytecodeHash address - Hash of the bytecode of the clave proxy contract
      * @param deployer address           - Address of the account authorized to deploy Clave accounts
      */

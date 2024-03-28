@@ -32,7 +32,7 @@ contract ClaveRegistry is Ownable, IClaveRegistry {
      * @param account address - Address of the account to register
      */
     function register(address account) external override {
-        if (msg.sender != factory) {
+        if (!isFactory[msg.sender]) {
             revert Errors.NOT_FROM_FACTORY();
         }
 
