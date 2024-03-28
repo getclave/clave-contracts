@@ -13,12 +13,9 @@ import {IClaveRegistry} from './interfaces/IClaveRegistry.sol';
  * @author https://getclave.io
  */
 contract AccountFactory is Ownable {
-    // Factory versioning
-    string public constant VERSION = '1.1.0';
-
     // Addresses of the implementation and registry contract
-    address private immutable _IMPLEMENTATION;
-    address private immutable _REGISTRY;
+    address public implementation;
+    address public registry;
 
     // Account creation bytecode hash
     bytes32 public proxyBytecodeHash;
@@ -38,6 +35,18 @@ contract AccountFactory is Ownable {
     event ClaveAccountDeployed(address indexed accountAddress);
 
     /**
+     * @notice Event emmited when the implementation contract is changed
+     * @param newImplementation Address of the new implementation contract
+     */
+    event ImplementationChanged(address indexed newImplementation);
+
+    /**
+     * @notice Event emmited when the registry contract is changed
+     * @param newRegistry Address of the new registry contract
+     */
+    event RegistryChanged(address indexed newRegistry);
+
+    /**
      * @notice Constructor function of the factory contract
      * @param implementation address     - Address of the implementation contract
      * @param registry address           - Address of the registry contract
@@ -45,13 +54,13 @@ contract AccountFactory is Ownable {
      * @param deployer address           - Address of the account authorized to deploy Clave accounts
      */
     constructor(
-        address implementation,
-        address registry,
+        address _implementation,
+        address _registry,
         bytes32 _proxyBytecodeHash,
         address deployer
     ) Ownable() {
-        _IMPLEMENTATION = implementation;
-        _REGISTRY = registry;
+        implementation = _implementation;
+        registry = _registry;
         proxyBytecodeHash = _proxyBytecodeHash;
         _deployer = deployer;
     }
@@ -82,7 +91,7 @@ contract AccountFactory is Ownable {
                 (
                     salt,
                     proxyBytecodeHash,
-                    abi.encode(_IMPLEMENTATION),
+                    abi.encode(implementation),
                     IContractDeployer.AccountAbstractionVersion.Version1
                 )
             )
@@ -114,7 +123,7 @@ contract AccountFactory is Ownable {
             revert Errors.INITIALIZATION_FAILED();
         }
 
-        IClaveRegistry(_REGISTRY).register(accountAddress);
+        IClaveRegistry(registry).register(accountAddress);
 
         emit ClaveAccountDeployed(accountAddress);
     }
@@ -140,6 +149,22 @@ contract AccountFactory is Ownable {
     }
 
     /**
+     * @notice Changes the implementation contract address
+     * @param newImplementation address - Address of the new implementation contract
+     */
+    function changeImplementation(address newImplementation) external onlyOwner {
+        implementation = newImplementation;
+    }
+
+    /**
+     * @notice Changes the registry contract address
+     * @param newRegistry address - Address of the new registry contract
+     */
+    function changeRegistry(address newRegistry) external onlyOwner {
+        registry = newRegistry;
+    }
+
+    /**
      * @notice Returns the address of the Clave account that would be created with the given salt
      * @param salt bytes32 - Salt to be used for the account creation
      * @return accountAddress address - Address of the Clave account that would be created with the given salt
@@ -149,15 +174,25 @@ contract AccountFactory is Ownable {
             address(this),
             proxyBytecodeHash,
             salt,
-            abi.encode(_IMPLEMENTATION)
+            abi.encode(implementation)
         );
     }
 
     /**
-     * @notice Returns the address of the implementation contract
-     * @return address - Address of the implementation contract
+     * @notice Returns the address of the Clave account that would be created with the given salt and implementation
+     * @param salt bytes32 - Salt to be used for the account creation
+     * @param _implementation address - Address of the implementation contract
+     * @return accountAddress address - Address of the Clave account that would be created with the given salt and implementation
      */
-    function getImplementation() external view returns (address) {
-        return _IMPLEMENTATION;
+    function getAddressForSaltAndImplementation(
+        bytes32 salt,
+        address _implementation
+    ) external view returns (address accountAddress) {
+        accountAddress = IContractDeployer(DEPLOYER_SYSTEM_CONTRACT).getNewAddressCreate2(
+            address(this),
+            proxyBytecodeHash,
+            salt,
+            abi.encode(_implementation)
+        );
     }
 }
