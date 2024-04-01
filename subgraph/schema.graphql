@@ -1,40 +1,40 @@
 type ClaveAccount @entity {
   "account address"
   id: Bytes!
-  creationDate: BigInt!
-  deployDate: BigInt!
-  txCount: BigInt!
-  gweiSpentOnGas: BigInt!
+  creationDate: BigInt
+  deployDate: BigInt
   recoveryCount: Int!
   hasRecovery: Boolean!
   isRecovering: Boolean!
-  erc20balances: [ERC20Balance!]! @derivedFrom(field: "account")
+  "account implementation address"
+  implementation: Bytes!
+  # erc20balances: [ERC20Balance!]! @derivedFrom(field: "account")
   owners: [Owner!]! @derivedFrom(field: "account")
   transactions: [ClaveTransaction!]! @derivedFrom(field: "sender")
-  inAppSwaps: [inAppSwap!]! @derivedFrom(field: "account")
+  inAppSwaps: [InAppSwap!]! @derivedFrom(field: "account")
 }
 
-type ERC20 @entity(immutable: true) {
-  "token address"
-  id: Bytes!
-  name: String!
-  symbol: String!
-  decimals: Int!
-}
+# type ERC20 @entity(immutable: true) {
+#   "token address"
+#   id: Bytes!
+#   name: String!
+#   symbol: String!
+#   decimals: Int!
+# }
 
-type ERC20Balance @entity {
-  "account.id.concat(ERC20.id)"
-  id: Bytes!
-  account: ClaveAccount!
-  token: ERC20!
-  amount: BigDecimal!
-}
+# type ERC20Balance @entity {
+#   "account.id.concat(ERC20.id)"
+#   id: Bytes!
+#   account: ClaveAccount!
+#   token: ERC20!
+#   amount: BigDecimal!
+# }
 
 enum OwnerType {
-  "address"
-  k1
-  "public key"
-  r1
+  "k1"
+  Address
+  "r1"
+  PublicKey
 }
 
 type Owner @entity(immutable: true) {
@@ -49,6 +49,12 @@ type Owner @entity(immutable: true) {
   dateAdded: BigInt!
 }
 
+enum Paymaster {
+  None
+  ERC20
+  Gasless
+}
+
 type ClaveTransaction @entity(immutable: true) {
   "transaction hash"
   id: Bytes!
@@ -60,18 +66,18 @@ type ClaveTransaction @entity(immutable: true) {
   value: BigInt!
   "tx.gasPrice * tx.gasUsed"
   gasCost: BigInt!
-  paymasterUsed: Boolean!
+  "type of paymaster used"
+  paymaster: Paymaster!
   "block.timestamp"
   date: BigInt!
 }
 
-type inAppSwap @entity(immutable: true) {
+type InAppSwap @entity(immutable: true) {
+  id: Bytes!
   account: ClaveAccount!
   tokenIn: Bytes!
-  amountIn: BigDecimal!
+  amountIn: BigInt!
   tokenOut: Bytes!
-  amountOut: BigDecimal!
-  "fee is collected in tokenOut"
-  feeCollected: BigDecimal!
+  amountOut: BigInt!
   date: BigInt!
 }
