@@ -1,0 +1,337 @@
+[
+  {
+    "inputs": [
+      { "internalType": "address", "name": "registry", "type": "address" },
+      { "internalType": "uint256", "name": "limit", "type": "uint256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  { "inputs": [], "name": "EXCEEDS_MAX_SPONSORED_ETH", "type": "error" },
+  { "inputs": [], "name": "FAILED_FEE_TRANSFER", "type": "error" },
+  { "inputs": [], "name": "NOT_CLAVE_ACCOUNT", "type": "error" },
+  { "inputs": [], "name": "NOT_FROM_BOOTLOADER", "type": "error" },
+  { "inputs": [], "name": "SHORT_PAYMASTER_INPUT", "type": "error" },
+  { "inputs": [], "name": "UNAUTHORIZED_WITHDRAW", "type": "error" },
+  { "inputs": [], "name": "UNSUPPORTED_FLOW", "type": "error" },
+  { "inputs": [], "name": "USER_LIMIT_REACHED", "type": "error" },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "BalanceWithdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "FeeSponsored",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newUserLimit",
+        "type": "uint256"
+      }
+    ],
+    "name": "UserLimitChanged",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      { "internalType": "address[]", "name": "addresses", "type": "address[]" }
+    ],
+    "name": "addLimitlessAddresses",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "newRegistry", "type": "address" }
+    ],
+    "name": "changeClaveRegistry",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "newRegistry", "type": "address" }
+    ],
+    "name": "changeClaveRegistry2",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "claveRegistry",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "claveRegistry2",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "userAddress", "type": "address" }
+    ],
+    "name": "getRemainingUserLimit",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "limitlessAddresses",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes", "name": "", "type": "bytes" },
+      {
+        "components": [
+          { "internalType": "uint256", "name": "txType", "type": "uint256" },
+          { "internalType": "uint256", "name": "from", "type": "uint256" },
+          { "internalType": "uint256", "name": "to", "type": "uint256" },
+          { "internalType": "uint256", "name": "gasLimit", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "gasPerPubdataByteLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxFeePerGas",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxPriorityFeePerGas",
+            "type": "uint256"
+          },
+          { "internalType": "uint256", "name": "paymaster", "type": "uint256" },
+          { "internalType": "uint256", "name": "nonce", "type": "uint256" },
+          { "internalType": "uint256", "name": "value", "type": "uint256" },
+          {
+            "internalType": "uint256[4]",
+            "name": "reserved",
+            "type": "uint256[4]"
+          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          { "internalType": "bytes", "name": "signature", "type": "bytes" },
+          {
+            "internalType": "bytes32[]",
+            "name": "factoryDeps",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "bytes",
+            "name": "paymasterInput",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes",
+            "name": "reservedDynamic",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct Transaction",
+        "name": "_transaction",
+        "type": "tuple"
+      },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      { "internalType": "enum ExecutionResult", "name": "", "type": "uint8" },
+      { "internalType": "uint256", "name": "", "type": "uint256" }
+    ],
+    "name": "postTransaction",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address[]", "name": "addresses", "type": "address[]" }
+    ],
+    "name": "removeLimitlessAddresses",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "newOwner", "type": "address" }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "updatingUserLimit",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateUserLimit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "userLimit",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "userSponsored",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      {
+        "components": [
+          { "internalType": "uint256", "name": "txType", "type": "uint256" },
+          { "internalType": "uint256", "name": "from", "type": "uint256" },
+          { "internalType": "uint256", "name": "to", "type": "uint256" },
+          { "internalType": "uint256", "name": "gasLimit", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "gasPerPubdataByteLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxFeePerGas",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxPriorityFeePerGas",
+            "type": "uint256"
+          },
+          { "internalType": "uint256", "name": "paymaster", "type": "uint256" },
+          { "internalType": "uint256", "name": "nonce", "type": "uint256" },
+          { "internalType": "uint256", "name": "value", "type": "uint256" },
+          {
+            "internalType": "uint256[4]",
+            "name": "reserved",
+            "type": "uint256[4]"
+          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          { "internalType": "bytes", "name": "signature", "type": "bytes" },
+          {
+            "internalType": "bytes32[]",
+            "name": "factoryDeps",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "bytes",
+            "name": "paymasterInput",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes",
+            "name": "reservedDynamic",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct Transaction",
+        "name": "_transaction",
+        "type": "tuple"
+      }
+    ],
+    "name": "validateAndPayForPaymasterTransaction",
+    "outputs": [
+      { "internalType": "bytes4", "name": "magic", "type": "bytes4" },
+      { "internalType": "bytes", "name": "context", "type": "bytes" }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  { "stateMutability": "payable", "type": "receive" }
+]

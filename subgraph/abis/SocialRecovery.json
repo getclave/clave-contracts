@@ -1,0 +1,375 @@
+[
+  {
+    "inputs": [
+      { "internalType": "string", "name": "name", "type": "string" },
+      { "internalType": "string", "name": "version", "type": "string" },
+      { "internalType": "uint128", "name": "minTimelock", "type": "uint128" },
+      { "internalType": "uint128", "name": "minThreshold", "type": "uint128" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  { "inputs": [], "name": "ALREADY_INITED", "type": "error" },
+  { "inputs": [], "name": "GUARDIANS_MUST_BE_SORTED", "type": "error" },
+  { "inputs": [], "name": "INSUFFICIENT_GUARDIANS", "type": "error" },
+  { "inputs": [], "name": "INVALID_GUARDIAN", "type": "error" },
+  { "inputs": [], "name": "INVALID_RECOVERY_CONFIG", "type": "error" },
+  { "inputs": [], "name": "INVALID_RECOVERY_NONCE", "type": "error" },
+  { "inputs": [], "name": "InvalidShortString", "type": "error" },
+  { "inputs": [], "name": "MODULE_NOT_ADDED_CORRECTLY", "type": "error" },
+  { "inputs": [], "name": "MODULE_NOT_REMOVED_CORRECTLY", "type": "error" },
+  { "inputs": [], "name": "RECOVERY_IN_PROGRESS", "type": "error" },
+  { "inputs": [], "name": "RECOVERY_NOT_INITED", "type": "error" },
+  { "inputs": [], "name": "RECOVERY_NOT_STARTED", "type": "error" },
+  { "inputs": [], "name": "RECOVERY_TIMELOCK", "type": "error" },
+  {
+    "inputs": [{ "internalType": "string", "name": "str", "type": "string" }],
+    "name": "StringTooLong",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Disabled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "EIP712DomainChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Inited",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "newOwner",
+        "type": "bytes"
+      }
+    ],
+    "name": "RecoveryExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "newOwner",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timelockExpiry",
+        "type": "uint256"
+      }
+    ],
+    "name": "RecoveryStarted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "RecoveryStopped",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "components": [
+          { "internalType": "uint128", "name": "timelock", "type": "uint128" },
+          { "internalType": "uint128", "name": "threshold", "type": "uint128" },
+          {
+            "internalType": "address[]",
+            "name": "guardians",
+            "type": "address[]"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct SocialRecoveryModule.RecoveryConfig",
+        "name": "config",
+        "type": "tuple"
+      }
+    ],
+    "name": "UpdateConfig",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "MIN_THRESHOLD",
+    "outputs": [{ "internalType": "uint128", "name": "", "type": "uint128" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MIN_TIMELOCK",
+    "outputs": [{ "internalType": "uint128", "name": "", "type": "uint128" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "disable",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "eip712Domain",
+    "outputs": [
+      { "internalType": "bytes1", "name": "fields", "type": "bytes1" },
+      { "internalType": "string", "name": "name", "type": "string" },
+      { "internalType": "string", "name": "version", "type": "string" },
+      { "internalType": "uint256", "name": "chainId", "type": "uint256" },
+      {
+        "internalType": "address",
+        "name": "verifyingContract",
+        "type": "address"
+      },
+      { "internalType": "bytes32", "name": "salt", "type": "bytes32" },
+      { "internalType": "uint256[]", "name": "extensions", "type": "uint256[]" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "recoveringAddress",
+        "type": "address"
+      }
+    ],
+    "name": "executeRecovery",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "recoveringAddress",
+            "type": "address"
+          },
+          { "internalType": "bytes", "name": "newOwner", "type": "bytes" },
+          { "internalType": "uint256", "name": "nonce", "type": "uint256" }
+        ],
+        "internalType": "struct BaseRecovery.RecoveryData",
+        "name": "recoveryData",
+        "type": "tuple"
+      }
+    ],
+    "name": "getEip712Hash",
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "account", "type": "address" }
+    ],
+    "name": "getGuardians",
+    "outputs": [
+      { "internalType": "address[]", "name": "", "type": "address[]" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "account", "type": "address" }
+    ],
+    "name": "getThreshold",
+    "outputs": [{ "internalType": "uint128", "name": "", "type": "uint128" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "account", "type": "address" }
+    ],
+    "name": "getTimelock",
+    "outputs": [{ "internalType": "uint128", "name": "", "type": "uint128" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes", "name": "initData", "type": "bytes" }
+    ],
+    "name": "init",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "account", "type": "address" }
+    ],
+    "name": "isInited",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "account", "type": "address" }
+    ],
+    "name": "isRecovering",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "recoveryDataTypeHash",
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "recoveryNonces",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "recoveryStates",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "timelockExpiry",
+        "type": "uint256"
+      },
+      { "internalType": "bytes", "name": "newOwner", "type": "bytes" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "recoveringAddress",
+            "type": "address"
+          },
+          { "internalType": "bytes", "name": "newOwner", "type": "bytes" },
+          { "internalType": "uint256", "name": "nonce", "type": "uint256" }
+        ],
+        "internalType": "struct BaseRecovery.RecoveryData",
+        "name": "recoveryData",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          { "internalType": "address", "name": "guardian", "type": "address" },
+          { "internalType": "bytes", "name": "signature", "type": "bytes" }
+        ],
+        "internalType": "struct SocialRecoveryModule.GuardianData[]",
+        "name": "guardianData",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "startRecovery",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stopRecovery",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes4", "name": "interfaceId", "type": "bytes4" }
+    ],
+    "name": "supportsInterface",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          { "internalType": "uint128", "name": "timelock", "type": "uint128" },
+          { "internalType": "uint128", "name": "threshold", "type": "uint128" },
+          {
+            "internalType": "address[]",
+            "name": "guardians",
+            "type": "address[]"
+          }
+        ],
+        "internalType": "struct SocialRecoveryModule.RecoveryConfig",
+        "name": "config",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

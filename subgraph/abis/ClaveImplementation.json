@@ -1,161 +1,43 @@
 [
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "batchCaller",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "batchCaller", "type": "address" }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
+  { "inputs": [], "name": "ADDRESS_ALREADY_EXISTS", "type": "error" },
+  { "inputs": [], "name": "ADDRESS_NOT_EXISTS", "type": "error" },
+  { "inputs": [], "name": "BYTES_ALREADY_EXISTS", "type": "error" },
+  { "inputs": [], "name": "BYTES_NOT_EXISTS", "type": "error" },
+  { "inputs": [], "name": "EMPTY_HOOK_ADDRESS", "type": "error" },
+  { "inputs": [], "name": "EMPTY_MODULE_ADDRESS", "type": "error" },
+  { "inputs": [], "name": "EMPTY_R1_OWNERS", "type": "error" },
+  { "inputs": [], "name": "EMPTY_R1_VALIDATORS", "type": "error" },
+  { "inputs": [], "name": "FEE_PAYMENT_FAILED", "type": "error" },
+  { "inputs": [], "name": "HOOK_ERC165_FAIL", "type": "error" },
+  { "inputs": [], "name": "INSUFFICIENT_FUNDS", "type": "error" },
+  { "inputs": [], "name": "INVALID_ADDRESS", "type": "error" },
+  { "inputs": [], "name": "INVALID_BYTES", "type": "error" },
+  { "inputs": [], "name": "INVALID_KEY", "type": "error" },
+  { "inputs": [], "name": "INVALID_PUBKEY_LENGTH", "type": "error" },
+  { "inputs": [], "name": "InvalidShortString", "type": "error" },
+  { "inputs": [], "name": "MODULE_ERC165_FAIL", "type": "error" },
+  { "inputs": [], "name": "NOT_FROM_BOOTLOADER", "type": "error" },
+  { "inputs": [], "name": "NOT_FROM_HOOK", "type": "error" },
+  { "inputs": [], "name": "NOT_FROM_MODULE", "type": "error" },
+  { "inputs": [], "name": "NOT_FROM_SELF", "type": "error" },
+  { "inputs": [], "name": "NOT_FROM_SELF_OR_MODULE", "type": "error" },
+  { "inputs": [], "name": "RECUSIVE_MODULE_CALL", "type": "error" },
+  { "inputs": [], "name": "SAME_IMPLEMENTATION", "type": "error" },
   {
-    "inputs": [],
-    "name": "ADDRESS_ALREADY_EXISTS",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ADDRESS_NOT_EXISTS",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "BYTES_ALREADY_EXISTS",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "BYTES_NOT_EXISTS",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "EMPTY_HOOK_ADDRESS",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "EMPTY_MODULE_ADDRESS",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "EMPTY_R1_OWNERS",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "EMPTY_R1_VALIDATORS",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "FEE_PAYMENT_FAILED",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "HOOK_ERC165_FAIL",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "INSUFFICIENT_FUNDS",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "INVALID_ADDRESS",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "INVALID_BYTES",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "INVALID_KEY",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "INVALID_PUBKEY_LENGTH",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidShortString",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "MODULE_ERC165_FAIL",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NOT_FROM_BOOTLOADER",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NOT_FROM_HOOK",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NOT_FROM_MODULE",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NOT_FROM_SELF",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NOT_FROM_SELF_OR_MODULE",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "RECUSIVE_MODULE_CALL",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "SAME_IMPLEMENTATION",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "str",
-        "type": "string"
-      }
-    ],
+    "inputs": [{ "internalType": "string", "name": "str", "type": "string" }],
     "name": "StringTooLong",
     "type": "error"
   },
-  {
-    "inputs": [],
-    "name": "UNAUTHORIZED_OUTSIDE_TRANSACTION",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "VALIDATION_HOOK_FAILED",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "VALIDATOR_ERC165_FAIL",
-    "type": "error"
-  },
+  { "inputs": [], "name": "UNAUTHORIZED_OUTSIDE_TRANSACTION", "type": "error" },
+  { "inputs": [], "name": "VALIDATION_HOOK_FAILED", "type": "error" },
+  { "inputs": [], "name": "VALIDATOR_ERC165_FAIL", "type": "error" },
   {
     "anonymous": false,
     "inputs": [
@@ -188,6 +70,7 @@
     "name": "EIP712DomainChanged",
     "type": "event"
   },
+  { "anonymous": false, "inputs": [], "name": "FeePaid", "type": "event" },
   {
     "anonymous": false,
     "inputs": [
@@ -331,12 +214,7 @@
     "name": "RemoveModule",
     "type": "event"
   },
-  {
-    "anonymous": false,
-    "inputs": [],
-    "name": "ResetOwners",
-    "type": "event"
-  },
+  { "anonymous": false, "inputs": [], "name": "ResetOwners", "type": "event" },
   {
     "anonymous": false,
     "inputs": [
@@ -358,16 +236,8 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "hookAndData",
-        "type": "bytes"
-      },
-      {
-        "internalType": "bool",
-        "name": "isValidation",
-        "type": "bool"
-      }
+      { "internalType": "bytes", "name": "hookAndData", "type": "bytes" },
+      { "internalType": "bool", "name": "isValidation", "type": "bool" }
     ],
     "name": "addHook",
     "outputs": [],
@@ -376,11 +246,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "moduleAndData",
-        "type": "bytes"
-      }
+      { "internalType": "bytes", "name": "moduleAndData", "type": "bytes" }
     ],
     "name": "addModule",
     "outputs": [],
@@ -390,13 +256,7 @@
   {
     "inputs": [],
     "name": "claveMessageTypeHash",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
     "stateMutability": "pure",
     "type": "function"
   },
@@ -404,62 +264,26 @@
     "inputs": [],
     "name": "eip712Domain",
     "outputs": [
-      {
-        "internalType": "bytes1",
-        "name": "fields",
-        "type": "bytes1"
-      },
-      {
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "version",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
+      { "internalType": "bytes1", "name": "fields", "type": "bytes1" },
+      { "internalType": "string", "name": "name", "type": "string" },
+      { "internalType": "string", "name": "version", "type": "string" },
+      { "internalType": "uint256", "name": "chainId", "type": "uint256" },
       {
         "internalType": "address",
         "name": "verifyingContract",
         "type": "address"
       },
-      {
-        "internalType": "bytes32",
-        "name": "salt",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "extensions",
-        "type": "uint256[]"
-      }
+      { "internalType": "bytes32", "name": "salt", "type": "bytes32" },
+      { "internalType": "uint256[]", "name": "extensions", "type": "uint256[]" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "value",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
-      }
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "value", "type": "uint256" },
+      { "internalType": "bytes", "name": "data", "type": "bytes" }
     ],
     "name": "executeFromModule",
     "outputs": [],
@@ -468,38 +292,14 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
       {
         "components": [
-          {
-            "internalType": "uint256",
-            "name": "txType",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "from",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "to",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "gasLimit",
-            "type": "uint256"
-          },
+          { "internalType": "uint256", "name": "txType", "type": "uint256" },
+          { "internalType": "uint256", "name": "from", "type": "uint256" },
+          { "internalType": "uint256", "name": "to", "type": "uint256" },
+          { "internalType": "uint256", "name": "gasLimit", "type": "uint256" },
           {
             "internalType": "uint256",
             "name": "gasPerPubdataByteLimit",
@@ -515,36 +315,16 @@
             "name": "maxPriorityFeePerGas",
             "type": "uint256"
           },
-          {
-            "internalType": "uint256",
-            "name": "paymaster",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nonce",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
-          },
+          { "internalType": "uint256", "name": "paymaster", "type": "uint256" },
+          { "internalType": "uint256", "name": "nonce", "type": "uint256" },
+          { "internalType": "uint256", "name": "value", "type": "uint256" },
           {
             "internalType": "uint256[4]",
             "name": "reserved",
             "type": "uint256[4]"
           },
-          {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          { "internalType": "bytes", "name": "signature", "type": "bytes" },
           {
             "internalType": "bytes32[]",
             "name": "factoryDeps",
@@ -575,26 +355,10 @@
     "inputs": [
       {
         "components": [
-          {
-            "internalType": "uint256",
-            "name": "txType",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "from",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "to",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "gasLimit",
-            "type": "uint256"
-          },
+          { "internalType": "uint256", "name": "txType", "type": "uint256" },
+          { "internalType": "uint256", "name": "from", "type": "uint256" },
+          { "internalType": "uint256", "name": "to", "type": "uint256" },
+          { "internalType": "uint256", "name": "gasLimit", "type": "uint256" },
           {
             "internalType": "uint256",
             "name": "gasPerPubdataByteLimit",
@@ -610,36 +374,16 @@
             "name": "maxPriorityFeePerGas",
             "type": "uint256"
           },
-          {
-            "internalType": "uint256",
-            "name": "paymaster",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nonce",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
-          },
+          { "internalType": "uint256", "name": "paymaster", "type": "uint256" },
+          { "internalType": "uint256", "name": "nonce", "type": "uint256" },
+          { "internalType": "uint256", "name": "value", "type": "uint256" },
           {
             "internalType": "uint256[4]",
             "name": "reserved",
             "type": "uint256[4]"
           },
-          {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          { "internalType": "bytes", "name": "signature", "type": "bytes" },
           {
             "internalType": "bytes32[]",
             "name": "factoryDeps",
@@ -670,11 +414,7 @@
     "inputs": [
       {
         "components": [
-          {
-            "internalType": "bytes32",
-            "name": "signedHash",
-            "type": "bytes32"
-          }
+          { "internalType": "bytes32", "name": "signedHash", "type": "bytes32" }
         ],
         "internalType": "struct ERC1271Handler.ClaveMessage",
         "name": "claveMessage",
@@ -682,92 +422,42 @@
       }
     ],
     "name": "getEip712Hash",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "hook",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "key",
-        "type": "bytes32"
-      }
+      { "internalType": "address", "name": "hook", "type": "address" },
+      { "internalType": "bytes32", "name": "key", "type": "bytes32" }
     ],
     "name": "getHookData",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
+    "outputs": [{ "internalType": "bytes", "name": "", "type": "bytes" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "implementation",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "initialR1Owner",
-        "type": "bytes"
-      },
+      { "internalType": "bytes", "name": "initialR1Owner", "type": "bytes" },
       {
         "internalType": "address",
         "name": "initialR1Validator",
         "type": "address"
       },
-      {
-        "internalType": "bytes[]",
-        "name": "modules",
-        "type": "bytes[]"
-      },
+      { "internalType": "bytes[]", "name": "modules", "type": "bytes[]" },
       {
         "components": [
-          {
-            "internalType": "address",
-            "name": "target",
-            "type": "address"
-          },
-          {
-            "internalType": "bool",
-            "name": "allowFailure",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes",
-            "name": "callData",
-            "type": "bytes"
-          }
+          { "internalType": "address", "name": "target", "type": "address" },
+          { "internalType": "bool", "name": "allowFailure", "type": "bool" },
+          { "internalType": "uint256", "name": "value", "type": "uint256" },
+          { "internalType": "bytes", "name": "callData", "type": "bytes" }
         ],
         "internalType": "struct Call",
         "name": "initCall",
@@ -781,49 +471,25 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "addr",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "addr", "type": "address" }
     ],
     "name": "isHook",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "addr",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "addr", "type": "address" }
     ],
     "name": "isModule",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "signedHash",
-        "type": "bytes32"
-      },
+      { "internalType": "bytes32", "name": "signedHash", "type": "bytes32" },
       {
         "internalType": "bytes",
         "name": "signatureAndValidator",
@@ -832,22 +498,14 @@
     ],
     "name": "isValidSignature",
     "outputs": [
-      {
-        "internalType": "bytes4",
-        "name": "magicValue",
-        "type": "bytes4"
-      }
+      { "internalType": "bytes4", "name": "magicValue", "type": "bytes4" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "addr",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "addr", "type": "address" }
     ],
     "name": "k1AddOwner",
     "outputs": [],
@@ -856,11 +514,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "validator",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "validator", "type": "address" }
     ],
     "name": "k1AddValidator",
     "outputs": [],
@@ -869,39 +523,19 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "addr",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "addr", "type": "address" }
     ],
     "name": "k1IsOwner",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "validator",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "validator", "type": "address" }
     ],
     "name": "k1IsValidator",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -933,11 +567,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "addr",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "addr", "type": "address" }
     ],
     "name": "k1RemoveOwner",
     "outputs": [],
@@ -946,11 +576,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "validator",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "validator", "type": "address" }
     ],
     "name": "k1RemoveValidator",
     "outputs": [],
@@ -959,19 +585,11 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bool",
-        "name": "isValidation",
-        "type": "bool"
-      }
+      { "internalType": "bool", "name": "isValidation", "type": "bool" }
     ],
     "name": "listHooks",
     "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "hookList",
-        "type": "address[]"
-      }
+      { "internalType": "address[]", "name": "hookList", "type": "address[]" }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -980,161 +598,59 @@
     "inputs": [],
     "name": "listModules",
     "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "moduleList",
-        "type": "address[]"
-      }
+      { "internalType": "address[]", "name": "moduleList", "type": "address[]" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "uint256[]", "name": "", "type": "uint256[]" },
+      { "internalType": "uint256[]", "name": "", "type": "uint256[]" },
+      { "internalType": "bytes", "name": "", "type": "bytes" }
     ],
     "name": "onERC1155BatchReceived",
-    "outputs": [
-      {
-        "internalType": "bytes4",
-        "name": "",
-        "type": "bytes4"
-      }
-    ],
+    "outputs": [{ "internalType": "bytes4", "name": "", "type": "bytes4" }],
     "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "bytes", "name": "", "type": "bytes" }
     ],
     "name": "onERC1155Received",
-    "outputs": [
-      {
-        "internalType": "bytes4",
-        "name": "",
-        "type": "bytes4"
-      }
-    ],
+    "outputs": [{ "internalType": "bytes4", "name": "", "type": "bytes4" }],
     "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "bytes", "name": "", "type": "bytes" }
     ],
     "name": "onERC721Received",
-    "outputs": [
-      {
-        "internalType": "bytes4",
-        "name": "",
-        "type": "bytes4"
-      }
-    ],
+    "outputs": [{ "internalType": "bytes4", "name": "", "type": "bytes4" }],
     "stateMutability": "pure",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
       {
         "components": [
-          {
-            "internalType": "uint256",
-            "name": "txType",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "from",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "to",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "gasLimit",
-            "type": "uint256"
-          },
+          { "internalType": "uint256", "name": "txType", "type": "uint256" },
+          { "internalType": "uint256", "name": "from", "type": "uint256" },
+          { "internalType": "uint256", "name": "to", "type": "uint256" },
+          { "internalType": "uint256", "name": "gasLimit", "type": "uint256" },
           {
             "internalType": "uint256",
             "name": "gasPerPubdataByteLimit",
@@ -1150,36 +666,16 @@
             "name": "maxPriorityFeePerGas",
             "type": "uint256"
           },
-          {
-            "internalType": "uint256",
-            "name": "paymaster",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nonce",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
-          },
+          { "internalType": "uint256", "name": "paymaster", "type": "uint256" },
+          { "internalType": "uint256", "name": "nonce", "type": "uint256" },
+          { "internalType": "uint256", "name": "value", "type": "uint256" },
           {
             "internalType": "uint256[4]",
             "name": "reserved",
             "type": "uint256[4]"
           },
-          {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          { "internalType": "bytes", "name": "signature", "type": "bytes" },
           {
             "internalType": "bytes32[]",
             "name": "factoryDeps",
@@ -1208,38 +704,14 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
       {
         "components": [
-          {
-            "internalType": "uint256",
-            "name": "txType",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "from",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "to",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "gasLimit",
-            "type": "uint256"
-          },
+          { "internalType": "uint256", "name": "txType", "type": "uint256" },
+          { "internalType": "uint256", "name": "from", "type": "uint256" },
+          { "internalType": "uint256", "name": "to", "type": "uint256" },
+          { "internalType": "uint256", "name": "gasLimit", "type": "uint256" },
           {
             "internalType": "uint256",
             "name": "gasPerPubdataByteLimit",
@@ -1255,36 +727,16 @@
             "name": "maxPriorityFeePerGas",
             "type": "uint256"
           },
-          {
-            "internalType": "uint256",
-            "name": "paymaster",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nonce",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
-          },
+          { "internalType": "uint256", "name": "paymaster", "type": "uint256" },
+          { "internalType": "uint256", "name": "nonce", "type": "uint256" },
+          { "internalType": "uint256", "name": "value", "type": "uint256" },
           {
             "internalType": "uint256[4]",
             "name": "reserved",
             "type": "uint256[4]"
           },
-          {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          { "internalType": "bytes", "name": "signature", "type": "bytes" },
           {
             "internalType": "bytes32[]",
             "name": "factoryDeps",
@@ -1312,13 +764,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "pubKey",
-        "type": "bytes"
-      }
-    ],
+    "inputs": [{ "internalType": "bytes", "name": "pubKey", "type": "bytes" }],
     "name": "r1AddOwner",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1326,11 +772,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "validator",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "validator", "type": "address" }
     ],
     "name": "r1AddValidator",
     "outputs": [],
@@ -1338,40 +780,18 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "pubKey",
-        "type": "bytes"
-      }
-    ],
+    "inputs": [{ "internalType": "bytes", "name": "pubKey", "type": "bytes" }],
     "name": "r1IsOwner",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "validator",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "validator", "type": "address" }
     ],
     "name": "r1IsValidator",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -1379,11 +799,7 @@
     "inputs": [],
     "name": "r1ListOwners",
     "outputs": [
-      {
-        "internalType": "bytes[]",
-        "name": "r1OwnerList",
-        "type": "bytes[]"
-      }
+      { "internalType": "bytes[]", "name": "r1OwnerList", "type": "bytes[]" }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -1402,13 +818,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "pubKey",
-        "type": "bytes"
-      }
-    ],
+    "inputs": [{ "internalType": "bytes", "name": "pubKey", "type": "bytes" }],
     "name": "r1RemoveOwner",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1416,11 +826,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "validator",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "validator", "type": "address" }
     ],
     "name": "r1RemoveValidator",
     "outputs": [],
@@ -1429,16 +835,8 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "hook",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "isValidation",
-        "type": "bool"
-      }
+      { "internalType": "address", "name": "hook", "type": "address" },
+      { "internalType": "bool", "name": "isValidation", "type": "bool" }
     ],
     "name": "removeHook",
     "outputs": [],
@@ -1447,11 +845,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "module",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "module", "type": "address" }
     ],
     "name": "removeModule",
     "outputs": [],
@@ -1459,13 +853,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "pubKey",
-        "type": "bytes"
-      }
-    ],
+    "inputs": [{ "internalType": "bytes", "name": "pubKey", "type": "bytes" }],
     "name": "resetOwners",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1473,16 +861,8 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "key",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
-      }
+      { "internalType": "bytes32", "name": "key", "type": "bytes32" },
+      { "internalType": "bytes", "name": "data", "type": "bytes" }
     ],
     "name": "setHookData",
     "outputs": [],
@@ -1491,20 +871,10 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes4",
-        "name": "interfaceId",
-        "type": "bytes4"
-      }
+      { "internalType": "bytes4", "name": "interfaceId", "type": "bytes4" }
     ],
     "name": "supportsInterface",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -1523,11 +893,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
       {
         "internalType": "bytes32",
         "name": "suggestedSignedHash",
@@ -1535,26 +901,10 @@
       },
       {
         "components": [
-          {
-            "internalType": "uint256",
-            "name": "txType",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "from",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "to",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "gasLimit",
-            "type": "uint256"
-          },
+          { "internalType": "uint256", "name": "txType", "type": "uint256" },
+          { "internalType": "uint256", "name": "from", "type": "uint256" },
+          { "internalType": "uint256", "name": "to", "type": "uint256" },
+          { "internalType": "uint256", "name": "gasLimit", "type": "uint256" },
           {
             "internalType": "uint256",
             "name": "gasPerPubdataByteLimit",
@@ -1570,36 +920,16 @@
             "name": "maxPriorityFeePerGas",
             "type": "uint256"
           },
-          {
-            "internalType": "uint256",
-            "name": "paymaster",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nonce",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
-          },
+          { "internalType": "uint256", "name": "paymaster", "type": "uint256" },
+          { "internalType": "uint256", "name": "nonce", "type": "uint256" },
+          { "internalType": "uint256", "name": "value", "type": "uint256" },
           {
             "internalType": "uint256[4]",
             "name": "reserved",
             "type": "uint256[4]"
           },
-          {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
-          },
-          {
-            "internalType": "bytes",
-            "name": "signature",
-            "type": "bytes"
-          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          { "internalType": "bytes", "name": "signature", "type": "bytes" },
           {
             "internalType": "bytes32[]",
             "name": "factoryDeps",
@@ -1623,17 +953,10 @@
     ],
     "name": "validateTransaction",
     "outputs": [
-      {
-        "internalType": "bytes4",
-        "name": "magic",
-        "type": "bytes4"
-      }
+      { "internalType": "bytes4", "name": "magic", "type": "bytes4" }
     ],
     "stateMutability": "payable",
     "type": "function"
   },
-  {
-    "stateMutability": "payable",
-    "type": "receive"
-  }
+  { "stateMutability": "payable", "type": "receive" }
 ]
