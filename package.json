@@ -27,7 +27,7 @@
     "@types/mocha": "^10.0.1",
     "chai": "^4.3.7",
     "dotenv": "^16.0.3",
-    "elliptic": "^6.5.4",
+    "elliptic": "6.5.4",
     "ethers": "^6.9.2",
     "hardhat": "^2.19.2",
     "mocha": "^10.2.0",
