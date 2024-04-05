@@ -3,6 +3,7 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
+
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import { Swap as SwapEvent } from '../generated/OdosRouter/OdosRouter';
 import { ClaveAccount, InAppSwap } from '../generated/schema';
