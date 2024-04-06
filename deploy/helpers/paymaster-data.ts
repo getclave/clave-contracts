@@ -10,7 +10,7 @@ export const paymasterData = {
     deploys: [false, true],
     fund: [parseEther('0'), parseEther('0')],
     // GaslessPaymaster free tx limit
-    gaslessPaymaster_txLimit: 50,
+    gaslessPaymaster_txLimit: 30,
     // ERC20Paymaster token inputs
     tokenInput: [
         {
