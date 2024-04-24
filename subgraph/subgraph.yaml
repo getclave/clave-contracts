@@ -5,6 +5,26 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
+    name: erc20
+    network: zksync-era
+    source:
+      abi: ERC20
+      startBlock: 24799912
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ERC20
+        - ERC20Balance
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/erc20.ts
+  - kind: ethereum
     name: OdosRouter
     network: zksync-era
     source:
@@ -17,6 +37,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - InAppSwap
+        - WeeklySwappedTo
       abis:
         - name: OdosRouter
           file: ./abis/OdosRouter.json
@@ -37,12 +58,17 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveAccount
+        - Week
       abis:
         - name: AccountFactory
           file: ./abis/AccountFactory.json
       eventHandlers:
         - event: NewClaveAccount(indexed address)
           handler: handleNewClaveAccount
+      blockHandlers:
+        - handler: handleOnce
+          filter:
+            kind: once
       file: ./src/account-factory.ts
   - kind: ethereum
     name: AccountFactoryV2
@@ -57,6 +83,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveAccount
+        - Week
       abis:
         - name: AccountFactoryV2
           file: ./abis/AccountFactoryV2.json
@@ -79,6 +106,8 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveTransaction
+        - Week
+        - WeekAccount
       abis:
         - name: GaslessPaymaster
           file: ./abis/GaslessPaymaster.json
@@ -100,6 +129,31 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveTransaction
+        - Week
+        - WeekAccount
+      abis:
+        - name: GaslessPaymaster
+          file: ./abis/GaslessPaymaster.json
+      eventHandlers:
+        - event: FeeSponsored(address)
+          handler: handleFeeSponsored
+          receipt: true
+      file: ./src/gasless-paymaster.ts
+  - kind: ethereum
+    name: GaslessPaymasterV3
+    network: zksync-era
+    source:
+      address: '0xCBf1367699d8704a320ADF06E23c294AC089270B'
+      abi: GaslessPaymaster
+      startBlock: 24799936
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ClaveTransaction
+        - Week
+        - WeekAccount
       abis:
         - name: GaslessPaymaster
           file: ./abis/GaslessPaymaster.json
@@ -121,6 +175,8 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveTransaction
+        - Week
+        - WeekAccount
       abis:
         - name: ERC20Paymaster
           file: ./abis/ERC20Paymaster.json
@@ -170,6 +226,8 @@ templates:
       entities:
         - Owner
         - ClaveTransaction
+        - Week
+        - WeekAccount
       abis:
         - name: ClaveImplementation
           file: ./abis/ClaveImplementation.json
