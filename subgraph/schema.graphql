@@ -1,34 +1,68 @@
+type Week @entity {
+  "week start timestamp"
+  id: Bytes!
+  createdAccounts: Int!
+  deployedAccounts: Int!
+  activeAccounts: Int!
+  transactions: Int!
+  swappedTo: [WeeklySwappedTo!]! @derivedFrom(field: "week")
+}
+
+# type WeeklySwappedFrom @entity {
+#   id: Bytes!
+#   week: Week!
+#   erc20: ERC20!
+#   amount: BigInt!
+# }
+
+type WeeklySwappedTo @entity {
+  "week.id.concat(erc20.id)"
+  id: Bytes!
+  week: Week!
+  erc20: ERC20!
+  amount: BigInt!
+}
+
 type ClaveAccount @entity {
   "account address"
   id: Bytes!
-  creationDate: BigInt
+  creationDate: BigInt!
   deployDate: BigInt
   recoveryCount: Int!
   hasRecovery: Boolean!
   isRecovering: Boolean!
   "account implementation address"
-  implementation: Bytes!
-  # erc20balances: [ERC20Balance!]! @derivedFrom(field: "account")
+  implementation: Bytes
+  erc20balances: [ERC20Balance!]! @derivedFrom(field: "account")
   owners: [Owner!]! @derivedFrom(field: "account")
   transactions: [ClaveTransaction!]! @derivedFrom(field: "sender")
   inAppSwaps: [InAppSwap!]! @derivedFrom(field: "account")
+  activeWeeks: [WeekAccount!]! @derivedFrom(field: "account")
 }
 
-# type ERC20 @entity(immutable: true) {
-#   "token address"
-#   id: Bytes!
-#   name: String!
-#   symbol: String!
-#   decimals: Int!
-# }
+type WeekAccount @entity(immutable: true) {
+  "account.id.concat(week.id)"
+  id: Bytes!
+  account: ClaveAccount!
+  week: Week!
+}
 
-# type ERC20Balance @entity {
-#   "account.id.concat(ERC20.id)"
-#   id: Bytes!
-#   account: ClaveAccount!
-#   token: ERC20!
-#   amount: BigDecimal!
-# }
+type ERC20 @entity {
+  "token address"
+  id: Bytes!
+  name: String!
+  symbol: String!
+  decimals: Int!
+  totalAmount: BigInt!
+}
+
+type ERC20Balance @entity {
+  "account.id.concat(ERC20.id)"
+  id: Bytes!
+  account: ClaveAccount!
+  token: ERC20!
+  amount: BigInt!
+}
 
 enum OwnerType {
   "k1"
