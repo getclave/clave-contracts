@@ -8,10 +8,18 @@
 import { BigInt } from '@graphprotocol/graph-ts';
 
 import { FeeSponsored as FeeSponsoredEvent } from '../generated/GaslessPaymaster/GaslessPaymaster';
-import { ClaveTransaction } from '../generated/schema';
+import { ClaveAccount, ClaveTransaction } from '../generated/schema';
+import { getOrCreateWeek, getOrCreateWeekAccount } from './helpers';
 
 export function handleFeeSponsored(event: FeeSponsoredEvent): void {
     const transaction = new ClaveTransaction(event.transaction.hash);
+    const week = getOrCreateWeek(event.block.timestamp);
+    const account = ClaveAccount.load(event.address);
+    if (account != null) {
+        const weekAccount = getOrCreateWeekAccount(account, week);
+        weekAccount.save();
+    }
+    week.transactions = week.transactions + 1;
     transaction.sender = event.transaction.from;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     transaction.to = event.transaction.to!;
@@ -25,5 +33,6 @@ export function handleFeeSponsored(event: FeeSponsoredEvent): void {
     transaction.paymaster = 'Gasless';
     transaction.date = event.block.timestamp;
 
+    week.save();
     transaction.save();
 }
