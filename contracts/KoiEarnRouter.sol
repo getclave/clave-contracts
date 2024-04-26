@@ -158,7 +158,74 @@ contract KoiEarnRouter {
         tokenA.safeApprove(address(koiRouter), 0);
     }
 
-    function withdraw() external {}
+    /**
+     * @notice Withdraw tokenA from the tokenA and tokenB pair for the LP token
+     *
+     * @param tokenAAddress address - Withdrawing token address in the pair
+     * @param tokenBAddress address - Side token address in the pair
+     * @param lpTokenAmount uint256 - LP token amount to withdraw
+     * @param isStable bool         - Stable pair or not
+     * @param slippageRate  uint256 - Slippage rate over 10_000
+     *
+     * @dev Input 9_950 for slippage rate for 0,5% slippage
+     */
+    function withdraw(
+        address tokenAAddress,
+        address tokenBAddress,
+        uint256 lpTokenAmount,
+        bool isStable,
+        uint256 slippageRate
+    ) external {
+        address pairAddress = koiRouter.pairFor(tokenAAddress, tokenBAddress, isStable);
+
+        IERC20Metadata lpToken = IERC20Metadata(pairAddress);
+        IERC20Metadata tokenA = IERC20Metadata(tokenAAddress);
+        IERC20Metadata tokenB = IERC20Metadata(tokenBAddress);
+
+        uint256 totalSupplyLP = lpToken.totalSupply();
+        (uint256 tokenAReserve, uint256 tokenBReserve) = koiRouter.getReserves(
+            tokenAAddress,
+            tokenBAddress,
+            isStable
+        );
+
+        uint256 amountADesired = (tokenAReserve * lpTokenAmount) / totalSupplyLP;
+        uint256 amountBDesired = (tokenBReserve * lpTokenAmount) / totalSupplyLP;
+
+        lpToken.safeTransferFrom(msg.sender, address(this), lpTokenAmount);
+        lpToken.safeApprove(address(koiRouter), lpTokenAmount);
+
+        (uint256 amountA, uint256 amountB) = koiRouter.removeLiquidity(
+            tokenAAddress,
+            tokenBAddress,
+            lpTokenAmount,
+            (amountADesired * slippageRate) / 10_000,
+            (amountBDesired * slippageRate) / 10_000,
+            address(this),
+            block.timestamp + 10_000,
+            isStable
+        );
+
+        address[] memory swapPath = new address[](2);
+        swapPath[0] = tokenBAddress;
+        swapPath[1] = tokenAAddress;
+
+        bool[] memory isStableArr = new bool[](1);
+        isStableArr[0] = isStable;
+
+        tokenB.safeApprove(address(koiRouter), amountB);
+
+        uint256 swappedAmount = koiRouter.swapExactTokensForTokens(
+            amountB,
+            0,
+            swapPath,
+            msg.sender,
+            block.timestamp + 10_000,
+            isStableArr
+        )[1];
+
+        tokenA.safeTransfer(msg.sender, amountA + swappedAmount);
+    }
 
     /**
      *
