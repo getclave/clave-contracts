@@ -51,8 +51,6 @@ interface IKoiRouter {
     ) external view returns (uint256 reserveA, uint256 reserveB);
 }
 
-interface IKoiLP {}
-
 contract KoiEarnRouter {
     using SafeERC20 for IERC20Metadata;
 
