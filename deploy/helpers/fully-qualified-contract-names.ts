@@ -25,5 +25,4 @@ export const contractNames = {
         'contracts/paymasters/GaslessPaymaster.sol:GaslessPaymaster',
     ethdenverPaymaster:
         'contracts/paymasters/ETHDenverPaymaster.sol:ETHDenverPaymaster',
-    buidlToken: 'contracts/BUIDL.sol:BUIDLBucks',
 };
