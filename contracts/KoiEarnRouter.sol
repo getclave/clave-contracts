@@ -6,37 +6,37 @@ import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IER
 
 interface IKoiRouter {
     function swapExactTokensForTokens(
-        uint amountIn,
-        uint amountOutMin,
+        uint256 amountIn,
+        uint256 amountOutMin,
         address[] calldata path,
         address to,
-        uint deadline,
+        uint256 deadline,
         bool[] calldata stable
-    ) external returns (uint[] memory amounts);
+    ) external returns (uint256[] memory amounts);
 
     function addLiquidity(
         address tokenA,
         address tokenB,
-        uint amountADesired,
-        uint amountBDesired,
-        uint amountAMin,
-        uint amountBMin,
+        uint256 amountADesired,
+        uint256 amountBDesired,
+        uint256 amountAMin,
+        uint256 amountBMin,
         address to,
-        uint deadline,
-        uint feeType,
+        uint256 deadline,
+        uint256 feeType,
         bool stable
-    ) external returns (uint amountA, uint amountB, uint liquidity);
+    ) external returns (uint256 amountA, uint256 amountB, uint256 liquidity);
 
     function removeLiquidity(
         address tokenA,
         address tokenB,
-        uint liquidity,
-        uint amountAMin,
-        uint amountBMin,
+        uint256 liquidity,
+        uint256 amountAMin,
+        uint256 amountBMin,
         address to,
-        uint deadline,
+        uint256 deadline,
         bool stable
-    ) external returns (uint amountA, uint amountB);
+    ) external returns (uint256 amountA, uint256 amountB);
 
     function pairFor(
         address tokenA,
@@ -48,7 +48,7 @@ interface IKoiRouter {
         address tokenA,
         address tokenB,
         bool stable
-    ) external view returns (uint reserveA, uint reserveB);
+    ) external view returns (uint256 reserveA, uint256 reserveB);
 }
 
 interface IKoiLP {}
