@@ -154,24 +154,32 @@ contract KoiEarnRouter {
             isStableArr
         )[1];
 
-        tokenA.safeTransfer(msg.sender, desiredA - amountA);
+        tokenA.safeTransfer(msg.sender, desiredA - amountA + swappedAmount);
         tokenA.safeApprove(address(koiRouter), 0);
     }
 
     function withdraw() external {}
 
+    /**
+     *
+     * @param tokenAmount uint256 - LP token amount
+     * @param reserveA uint256    - tokenA reserve amount
+     * @param reserveB uint256    - tokenB reserve amount
+     * @param decimalA uint8      - tokenA decimals
+     * @param decimalB uint8      - tokenB decimals
+     * @return desiredA uint256 - Desired tokenA return amount
+     * @return desiredB uint256 - Desired tokenB return amount
+     */
     function desiredAmounts(
         uint256 tokenAmount,
         uint256 reserveA,
         uint256 reserveB,
         uint8 decimalA,
         uint8 decimalB
-    ) private returns (uint256 desiredA, uint256 desiredB) {
+    ) private pure returns (uint256 desiredA, uint256 desiredB) {
         uint256 total = reserveA * uint256(decimalB) + reserveB * uint256(decimalA);
 
-        desiredA =
-            (tokenAmount * reserveA * decimalB) /
-            (reserveA * decimalB + reserveB * decimalA);
+        desiredA = (tokenAmount * reserveA * decimalB) / total;
         desiredB = ((tokenAmount - desiredA) * decimalB) / decimalA;
 
         return (desiredA, desiredB);
