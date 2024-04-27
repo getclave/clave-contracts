@@ -51,6 +51,10 @@ interface IKoiRouter {
     ) external view returns (uint256 reserveA, uint256 reserveB);
 }
 
+/**
+ * @title KoiEarnRouter
+ * @author https://getclave.io
+ */
 contract KoiEarnRouter {
     using SafeERC20 for IERC20Metadata;
 
@@ -143,14 +147,17 @@ contract KoiEarnRouter {
         dustPath[0] = tokenBAddress;
         dustPath[1] = tokenAAddress;
 
-        uint256 swappedAmount = koiRouter.swapExactTokensForTokens(
-            receivedBAmount - amountB,
-            0,
-            dustPath,
-            msg.sender,
-            block.timestamp + 10_000,
-            isStableArr
-        )[1];
+        uint256 swappedAmount;
+        if (receivedBAmount > amountB) {
+            swappedAmount = koiRouter.swapExactTokensForTokens(
+                receivedBAmount - amountB,
+                0,
+                dustPath,
+                msg.sender,
+                block.timestamp + 10_000,
+                isStableArr
+            )[1];
+        }
 
         tokenA.safeTransfer(msg.sender, desiredA - amountA + swappedAmount);
         tokenA.safeApprove(address(koiRouter), 0);
@@ -230,22 +237,19 @@ contract KoiEarnRouter {
      * @param tokenAmount uint256 - LP token amount
      * @param reserveA uint256    - tokenA reserve amount
      * @param reserveB uint256    - tokenB reserve amount
-     * @param decimalA uint8      - tokenA decimals
-     * @param decimalB uint8      - tokenB decimals
      * @return desiredA uint256 - Desired tokenA return amount
      * @return desiredB uint256 - Desired tokenB return amount
+     * TODO: Modify to work with tokens with different decimals
      */
     function desiredAmounts(
         uint256 tokenAmount,
         uint256 reserveA,
-        uint256 reserveB,
-        uint8 decimalA,
-        uint8 decimalB
+        uint256 reserveB
     ) private pure returns (uint256 desiredA, uint256 desiredB) {
-        uint256 total = reserveA * uint256(decimalB) + reserveB * uint256(decimalA);
+        uint256 total = reserveA + reserveB;
 
-        desiredA = (tokenAmount * reserveA * decimalB) / total;
-        desiredB = ((tokenAmount - desiredA) * decimalB) / decimalA;
+        desiredA = (tokenAmount * reserveA) / total;
+        desiredB = tokenAmount - desiredA;
 
         return (desiredA, desiredB);
     }
