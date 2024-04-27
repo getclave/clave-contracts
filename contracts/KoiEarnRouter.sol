@@ -219,7 +219,7 @@ contract KoiEarnRouter {
 
         uint256 swappedAmount = koiRouter.swapExactTokensForTokens(
             amountB,
-            0,
+            0, // TODO: set minimum amount for slippage
             swapPath,
             msg.sender,
             block.timestamp + 10_000,
