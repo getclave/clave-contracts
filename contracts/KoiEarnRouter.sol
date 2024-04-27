@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.17;
 
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {SafeERC20, IERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 interface IKoiRouter {
     function swapExactTokensForTokens(
@@ -56,7 +55,7 @@ interface IKoiRouter {
  * @author https://getclave.io
  */
 contract KoiEarnRouter {
-    using SafeERC20 for IERC20Metadata;
+    using SafeERC20 for IERC20;
 
     IKoiRouter private koiRouter;
 
@@ -91,8 +90,8 @@ contract KoiEarnRouter {
         bool isStable,
         uint256 slippageRate
     ) external {
-        IERC20Metadata tokenA = IERC20Metadata(tokenAAddress);
-        IERC20Metadata tokenB = IERC20Metadata(tokenBAddress);
+        IERC20 tokenA = IERC20(tokenAAddress);
+        IERC20 tokenB = IERC20(tokenBAddress);
 
         tokenA.safeTransferFrom(msg.sender, address(this), tokenAmount);
 
@@ -105,9 +104,7 @@ contract KoiEarnRouter {
         (uint256 desiredA, uint256 desiredB) = desiredAmounts(
             tokenAmount,
             tokenAReserve,
-            tokenBReserve,
-            tokenA.decimals(),
-            tokenB.decimals()
+            tokenBReserve
         );
 
         tokenA.safeApprove(address(koiRouter), tokenAmount);
@@ -183,9 +180,9 @@ contract KoiEarnRouter {
     ) external {
         address pairAddress = koiRouter.pairFor(tokenAAddress, tokenBAddress, isStable);
 
-        IERC20Metadata lpToken = IERC20Metadata(pairAddress);
-        IERC20Metadata tokenA = IERC20Metadata(tokenAAddress);
-        IERC20Metadata tokenB = IERC20Metadata(tokenBAddress);
+        IERC20 lpToken = IERC20(pairAddress);
+        IERC20 tokenA = IERC20(tokenAAddress);
+        IERC20 tokenB = IERC20(tokenBAddress);
 
         uint256 totalSupplyLP = lpToken.totalSupply();
         (uint256 tokenAReserve, uint256 tokenBReserve) = koiRouter.getReserves(
