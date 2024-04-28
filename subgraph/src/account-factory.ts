@@ -11,7 +11,7 @@ import { BigInt, Bytes, ethereum, json } from '@graphprotocol/graph-ts';
 import { NewClaveAccount as NewClaveAccountEvent } from '../generated/AccountFactory/AccountFactory';
 import { ClaveAccount } from '../generated/schema';
 import { wallets } from '../wallets';
-import { getOrCreateWeek } from './helpers';
+import { ZERO, getOrCreateWeek } from './helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function handleOnce(_block: ethereum.Block): void {
@@ -46,6 +46,7 @@ export function handleNewClaveAccount(event: NewClaveAccountEvent): void {
         account.hasRecovery = false;
         account.isRecovering = false;
         account.recoveryCount = 0;
+        account.creationDate = ZERO;
     }
     account.implementation = Bytes.fromHexString(
         '0xdd4dD37B22Fc16DBFF3daB6Ecd681798c459f275',
