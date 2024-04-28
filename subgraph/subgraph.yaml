@@ -41,6 +41,8 @@ dataSources:
       abis:
         - name: OdosRouter
           file: ./abis/OdosRouter.json
+        - name: ERC20
+          file: ./abis/ERC20.json
       eventHandlers:
         - event: Swap(address,uint256,address,uint256,address,int256,uint32)
           handler: handleSwap
