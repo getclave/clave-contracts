@@ -50,11 +50,30 @@ interface IKoiRouter {
     ) external view returns (uint256 reserveA, uint256 reserveB);
 }
 
+interface IKoiEarnRouter {
+    function deposit(
+        address tokenAAddress,
+        address tokenBAddress,
+        uint256 tokenAmount,
+        uint256 feeType,
+        bool isStable,
+        uint256 slippageRate
+    ) external virtual;
+
+    function withdraw(
+        address tokenAAddress,
+        address tokenBAddress,
+        uint256 lpTokenAmount,
+        bool isStable,
+        uint256 slippageRate
+    ) external virtual;
+}
+
 /**
  * @title KoiEarnRouter
  * @author https://getclave.io
  */
-contract KoiEarnRouter {
+contract KoiEarnRouter is IKoiEarnRouter {
     using SafeERC20 for IERC20;
 
     IKoiRouter private koiRouter;
@@ -89,7 +108,7 @@ contract KoiEarnRouter {
         uint256 feeType,
         bool isStable,
         uint256 slippageRate
-    ) external {
+    ) external override {
         IERC20 tokenA = IERC20(tokenAAddress);
         IERC20 tokenB = IERC20(tokenBAddress);
 
@@ -177,7 +196,7 @@ contract KoiEarnRouter {
         uint256 lpTokenAmount,
         bool isStable,
         uint256 slippageRate
-    ) external {
+    ) external override {
         address pairAddress = koiRouter.pairFor(tokenAAddress, tokenBAddress, isStable);
 
         IERC20 lpToken = IERC20(pairAddress);
@@ -230,6 +249,7 @@ contract KoiEarnRouter {
     }
 
     /**
+     * @notice Calculate desired token amounts for the LP token considering the reserves
      *
      * @param tokenAmount uint256 - LP token amount
      * @param reserveA uint256    - tokenA reserve amount
