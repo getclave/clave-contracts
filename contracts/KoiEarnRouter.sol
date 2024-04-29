@@ -217,16 +217,16 @@ contract KoiEarnRouter {
 
         tokenB.safeApprove(address(koiRouter), amountB);
 
-        uint256 swappedAmount = koiRouter.swapExactTokensForTokens(
+        koiRouter.swapExactTokensForTokens(
             amountB,
             0, // TODO: set minimum amount for slippage
             swapPath,
             msg.sender,
             block.timestamp + 10_000,
             isStableArr
-        )[1];
+        );
 
-        tokenA.safeTransfer(msg.sender, amountA + swappedAmount);
+        tokenA.safeTransfer(msg.sender, amountA);
     }
 
     /**
