@@ -251,7 +251,7 @@ contract KoiEarnRouter is IKoiEarnRouter {
     /**
      * @notice Calculate desired token amounts for the LP token considering the reserves
      *
-     * @param tokenAmount uint256 - LP token amount
+     * @param tokenAmount uint256 - Depositing token amount
      * @param reserveA uint256    - tokenA reserve amount
      * @param reserveB uint256    - tokenB reserve amount
      * @return desiredA uint256 - Desired tokenA return amount
