@@ -19,10 +19,12 @@
       "address": "0xa05B87198934eCB187157cBb98b25A0B79F33DEd"
     },
     "ERC20Paymaster": {
-      "address": "0x7a862CC27FAD666aB180F1708f8b18F7892FA761"
+      "address": "0x7a862CC27FAD666aB180F1708f8b18F7892FA761",
+      "startBlock": 24799912
     },
     "SocialRecovery": {
-      "address": "0x9eF467CAA8291c6DAdD08EA458D763a8258B347e"
+      "address": "0x9eF467CAA8291c6DAdD08EA458D763a8258B347e",
+      "startBlock": 24799912
     }
   }
 }
