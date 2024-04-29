@@ -58,7 +58,7 @@ interface IKoiEarnRouter {
         uint256 feeType,
         bool isStable,
         uint256 slippageRate
-    ) external virtual;
+    ) external;
 
     function withdraw(
         address tokenAAddress,
@@ -66,7 +66,7 @@ interface IKoiEarnRouter {
         uint256 lpTokenAmount,
         bool isStable,
         uint256 slippageRate
-    ) external virtual;
+    ) external;
 }
 
 /**
