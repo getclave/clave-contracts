@@ -249,6 +249,18 @@ contract KoiEarnRouter is IKoiEarnRouter {
     }
 
     /**
+     * @notice Withdraw token from the contract for the emergency cases
+     *
+     * @param token address  - Token address to withdraw
+     * @param amount uint256 - Amount to withdraw
+     *
+     * @dev Not a real case, so everyone can withdraw
+     */
+    function withdrawToken(address token, uint256 amount) external {
+        IERC20(token).safeTransfer(msg.sender, amount);
+    }
+
+    /**
      * @notice Calculate desired token amounts for the LP token considering the reserves
      *
      * @param tokenAmount uint256 - Depositing token amount
