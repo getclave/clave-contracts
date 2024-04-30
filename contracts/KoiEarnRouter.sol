@@ -57,7 +57,8 @@ interface IKoiEarnRouter {
         uint256 tokenAmount,
         uint256 feeType,
         bool isStable,
-        uint256 slippageRate
+        uint256 minDesiredA,
+        uint256 minDesiredB
     ) external;
 
     function withdraw(
@@ -99,7 +100,8 @@ contract KoiEarnRouter is IKoiEarnRouter {
      * @param tokenBAddress address      - Side token address in the pair
      * @param tokenAmount uint256        - Depositing token amount
      * @param isStable bool              - Stable pair or not
-     * @param slippageRate uint256       - Slippage rate over 10_000
+     * @param minDesiredA uint256        - Minimum desired tokenA amount
+     * @param minDesiredB uint256        - Minimum desired tokenB amount
      *
      * @dev Input 9_950 for slippage rate for 0,5% slippage
      */
@@ -109,7 +111,8 @@ contract KoiEarnRouter is IKoiEarnRouter {
         uint256 tokenAmount,
         uint256 feeType,
         bool isStable,
-        uint256 slippageRate
+        uint256 minDesiredA,
+        uint256 minDesiredB
     ) external override {
         IERC20 tokenA = IERC20(tokenAAddress);
         IERC20 tokenB = IERC20(tokenBAddress);
@@ -139,7 +142,7 @@ contract KoiEarnRouter is IKoiEarnRouter {
 
         uint256 receivedBAmount = koiRouter.swapExactTokensForTokens(
             tokenAmount - desiredA,
-            (desiredB * slippageRate) / 10_000,
+            minDesiredB,
             swapPath,
             address(this),
             block.timestamp + 10_000,
@@ -153,8 +156,8 @@ contract KoiEarnRouter is IKoiEarnRouter {
             tokenBAddress,
             desiredA,
             receivedBAmount,
-            (desiredA * slippageRate) / 10_000,
-            (receivedBAmount * slippageRate) / 10_000,
+            minDesiredA,
+            minDesiredB,
             msg.sender,
             block.timestamp + 10_000,
             feeType,
