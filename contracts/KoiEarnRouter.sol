@@ -125,11 +125,7 @@ contract KoiEarnRouter is IKoiEarnRouter {
             isStable
         );
 
-        (uint256 desiredA, uint256 desiredB) = desiredAmounts(
-            tokenAmount,
-            tokenAReserve,
-            tokenBReserve
-        );
+        (uint256 desiredA, ) = desiredAmounts(tokenAmount, tokenAReserve, tokenBReserve);
 
         tokenA.safeApprove(address(koiRouter), tokenAmount);
 
@@ -200,7 +196,7 @@ contract KoiEarnRouter is IKoiEarnRouter {
         address tokenBAddress,
         uint256 lpTokenAmount,
         bool isStable,
-        uint256 minimumA qount
+        uint256 minimumAmount
     ) external override {
         address pairAddress = koiRouter.pairFor(tokenAAddress, tokenBAddress, isStable);
 
