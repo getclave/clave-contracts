@@ -65,7 +65,7 @@ interface IKoiEarnRouter {
         address tokenBAddress,
         uint256 lpTokenAmount,
         bool isStable,
-        uint256 slippageRate
+        uint256 minimumAmount
     ) external;
 }
 
@@ -77,6 +77,8 @@ contract KoiEarnRouter is IKoiEarnRouter {
     using SafeERC20 for IERC20;
 
     IKoiRouter private koiRouter;
+
+    error INSUFFICIENT_AMOUNT();
 
     constructor(address koiRouterAddress) {
         koiRouter = IKoiRouter(koiRouterAddress);
@@ -186,7 +188,7 @@ contract KoiEarnRouter is IKoiEarnRouter {
      * @param tokenBAddress address - Side token address in the pair
      * @param lpTokenAmount uint256 - LP token amount to withdraw
      * @param isStable bool         - Stable pair or not
-     * @param slippageRate  uint256 - Slippage rate over 10_000
+     * @param minimumAmount uint256 - Minimum amount to withdraw
      *
      * @dev Input 9_950 for slippage rate for 0,5% slippage
      */
@@ -195,23 +197,13 @@ contract KoiEarnRouter is IKoiEarnRouter {
         address tokenBAddress,
         uint256 lpTokenAmount,
         bool isStable,
-        uint256 slippageRate
+        uint256 minimumAmount
     ) external override {
         address pairAddress = koiRouter.pairFor(tokenAAddress, tokenBAddress, isStable);
 
         IERC20 lpToken = IERC20(pairAddress);
         IERC20 tokenA = IERC20(tokenAAddress);
         IERC20 tokenB = IERC20(tokenBAddress);
-
-        uint256 totalSupplyLP = lpToken.totalSupply();
-        (uint256 tokenAReserve, uint256 tokenBReserve) = koiRouter.getReserves(
-            tokenAAddress,
-            tokenBAddress,
-            isStable
-        );
-
-        uint256 amountADesired = (tokenAReserve * lpTokenAmount) / totalSupplyLP;
-        uint256 amountBDesired = (tokenBReserve * lpTokenAmount) / totalSupplyLP;
 
         lpToken.safeTransferFrom(msg.sender, address(this), lpTokenAmount);
         lpToken.safeApprove(address(koiRouter), lpTokenAmount);
@@ -220,8 +212,8 @@ contract KoiEarnRouter is IKoiEarnRouter {
             tokenAAddress,
             tokenBAddress,
             lpTokenAmount,
-            (amountADesired * slippageRate) / 10_000,
-            (amountBDesired * slippageRate) / 10_000,
+            0,
+            0,
             address(this),
             block.timestamp + 10_000,
             isStable
@@ -236,16 +228,20 @@ contract KoiEarnRouter is IKoiEarnRouter {
 
         tokenB.safeApprove(address(koiRouter), amountB);
 
-        koiRouter.swapExactTokensForTokens(
+        uint256 swappedAmount = koiRouter.swapExactTokensForTokens(
             amountB,
-            0, // TODO: set minimum amount for slippage
+            0,
             swapPath,
             msg.sender,
             block.timestamp + 10_000,
             isStableArr
-        );
+        )[1];
 
         tokenA.safeTransfer(msg.sender, amountA);
+
+        if (amountA + swappedAmount < minimumAmount) {
+            revert INSUFFICIENT_AMOUNT();
+        }
     }
 
     /**
