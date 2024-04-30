@@ -180,7 +180,7 @@ contract KoiEarnRouter is IKoiEarnRouter {
             )[1];
         }
 
-        tokenA.safeTransfer(msg.sender, desiredA - amountA + swappedAmount);
+        tokenA.safeTransfer(msg.sender, desiredA - amountA);
         tokenA.safeApprove(address(koiRouter), 0);
     }
 
@@ -200,7 +200,7 @@ contract KoiEarnRouter is IKoiEarnRouter {
         address tokenBAddress,
         uint256 lpTokenAmount,
         bool isStable,
-        uint256 minimumAmount
+        uint256 minimumA qount
     ) external override {
         address pairAddress = koiRouter.pairFor(tokenAAddress, tokenBAddress, isStable);
 
