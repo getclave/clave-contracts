@@ -3,6 +3,16 @@ pragma solidity ^0.8.17;
 
 import {SafeERC20, IERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
+interface KOISwitchERC20Dynamic is IERC20 {
+    function index0(address recipient) external view returns (uint);
+
+    function index1(address recipient) external view returns (uint);
+
+    function supplyIndex0(address recipient) external view returns (uint);
+
+    function supplyIndex1(address recipient) external view returns (uint);
+}
+
 interface IKoiRouter {
     function swapExactTokensForTokens(
         uint256 amountIn,
@@ -68,6 +78,8 @@ interface IKoiEarnRouter {
         bool isStable,
         uint256 minimumAmount
     ) external;
+
+    function claimFeesView(address recipient) external view returns (uint claimed0, uint claimed1);
 }
 
 /**
@@ -281,11 +293,15 @@ contract KoiEarnRouter is IKoiEarnRouter {
 
     /**
      * @notice Calculate claimable fees amount
+
+     * @param recipient address - Recipient address
+     * @return claimed0 uint256 - Claimable tokenA amount
+     * @return claimed1 uint256 - Claimable tokenB amount
      */
     function claimFeesView(address recipient) external view returns (uint claimed0, uint claimed1) {
         address pairAddress = koiRouter.pairFor(tokenAAddress, tokenBAddress, isStable);
 
-        IERC20 lpToken = IERC20(pairAddress);
+        IERC20 lpToken = KOISwitchERC20Dynamic(pairAddress);
 
           uint _supplied = lpToken.balanceOf[recipient];
         if (_supplied > 0) {
