@@ -95,7 +95,7 @@ type ClaveTransaction @entity(immutable: true) {
   "tx.from"
   sender: ClaveAccount!
   "tx.to"
-  to: Bytes!
+  to: Bytes
   "tx.value"
   value: BigInt!
   "tx.gasPrice * tx.gasUsed"

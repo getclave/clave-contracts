@@ -5,7 +5,7 @@
  */
 
 /* eslint-disable @typescript-eslint/consistent-type-imports */
-import { BigInt, Bytes } from '@graphprotocol/graph-ts';
+import { BigInt } from '@graphprotocol/graph-ts';
 
 import { FeeSponsored as FeeSponsoredEvent } from '../generated/GaslessPaymaster/GaslessPaymaster';
 import { ClaveAccount, ClaveTransaction } from '../generated/schema';
@@ -22,11 +22,10 @@ export function handleFeeSponsored(event: FeeSponsoredEvent): void {
         week.transactions = week.transactions + 1;
         transaction.sender = event.transaction.from;
 
-        if (event.transaction.to != null) {
+        if (event.transaction.to) {
             transaction.to = event.transaction.to;
-        } else {
-            transaction.to = Bytes.fromHexString('0x');
         }
+
         transaction.value = event.transaction.value;
         let gasUsed = BigInt.fromI32(0);
         const receipt = event.receipt;
