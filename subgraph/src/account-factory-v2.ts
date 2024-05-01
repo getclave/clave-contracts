@@ -17,7 +17,11 @@ import { ZERO, getOrCreateWeek } from './helpers';
 export function handleClaveAccountCreated(
     event: ClaveAccountCreatedEvent,
 ): void {
-    const account = new ClaveAccount(event.params.accountAddress);
+    let account = ClaveAccount.load(event.params.accountAddress);
+    if (account) {
+        return;
+    }
+    account = new ClaveAccount(event.params.accountAddress);
     const week = getOrCreateWeek(event.block.timestamp);
 
     week.createdAccounts = week.createdAccounts + 1;
