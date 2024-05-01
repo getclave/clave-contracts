@@ -277,4 +277,32 @@ contract KoiEarnRouter is IKoiEarnRouter {
 
         return (desiredA, desiredB);
     }
+    }
+
+    /**
+     * @notice Calculate claimable fees amount
+     */
+    function claimFeesView(address recipient) external view returns (uint claimed0, uint claimed1) {
+        address pairAddress = koiRouter.pairFor(tokenAAddress, tokenBAddress, isStable);
+
+        IERC20 lpToken = IERC20(pairAddress);
+
+          uint _supplied = lpToken.balanceOf[recipient];
+        if (_supplied > 0) {
+            uint _supplyIndex0 = lpToken.supplyIndex0[recipient];
+            uint _supplyIndex1 = lpToken.supplyIndex1[recipient];
+            uint _index0 = lpToken.index0;
+            uint _index1 = lpToken.index1;
+            uint _delta0 = _index0 - _supplyIndex0;
+            uint _delta1 = _index1 - _supplyIndex1;
+            if (_delta0 > 0) {
+                uint _share = _supplied * _delta0 / 1e18;
+                claimed0 = claimable0[recipient] + _share;
+            }
+            if (_delta1 > 0) {
+                uint _share = _supplied * _delta1 / 1e18;
+                claimed1 = claimable1[recipient] + _share;
+            }
+        }
+    }
 }
