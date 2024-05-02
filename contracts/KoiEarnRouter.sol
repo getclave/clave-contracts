@@ -127,6 +127,8 @@ contract KoiEarnRouter is IKoiEarnRouter {
         address tokenB,
         bool isStable
     ) external view returns (uint256 claimed0, uint256 claimed1) {
+        bool reversed = tokenA < tokenB ? false : true;
+
         address pairAddress = koiRouter.pairFor(tokenA, tokenB, isStable);
         IKoiPair pair = IKoiPair(pairAddress);
 
@@ -146,6 +148,10 @@ contract KoiEarnRouter is IKoiEarnRouter {
                 uint _share = (_supplied * _delta1) / 1e18;
                 claimed1 = pair.claimable1(recipient) + _share;
             }
+        }
+
+        if (reversed) {
+            (claimed0, claimed1) = (claimed1, claimed0);
         }
     }
 
