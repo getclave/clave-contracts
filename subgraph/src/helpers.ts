@@ -17,6 +17,9 @@ import {
     ClaveAccount,
     ERC20,
     ERC20Balance,
+    Month,
+    MonthAccount,
+    Total,
     Week,
     WeekAccount,
 } from '../generated/schema';
@@ -27,6 +30,7 @@ export const ZERO = BigInt.fromI32(0);
 export const ONE = BigInt.fromI32(1);
 const START_TIMESTAMP = BigInt.fromU32(1706045075);
 const WEEK = BigInt.fromU32(604_800);
+const MONTH = BigInt.fromU32(2_592_000);
 
 export function fetchTokenSymbol(tokenAddress: Address): string {
     let contract = ERC20Class.bind(tokenAddress);
@@ -148,4 +152,62 @@ export function getOrCreateWeekAccount(
     weekAccount.week = week.id;
 
     return weekAccount;
+}
+
+export function getOrCreateMonth(timestamp: BigInt): Month {
+    let monthNumber = timestamp.minus(START_TIMESTAMP).div(MONTH);
+    let monthId = Bytes.fromByteArray(
+        Bytes.fromBigInt(START_TIMESTAMP.plus(monthNumber.times(MONTH))),
+    ).concat(Bytes.fromHexString('0x00'));
+    let month = Month.load(monthId);
+
+    if (month !== null) {
+        return month;
+    }
+
+    month = new Month(monthId);
+    month.createdAccounts = 0;
+    month.deployedAccounts = 0;
+    month.activeAccounts = 0;
+    month.transactions = 0;
+
+    return month;
+}
+
+export function getOrCreateMonthAccount(
+    account: ClaveAccount,
+    month: Month,
+): MonthAccount {
+    let monthAccountId = account.id.concat(month.id);
+    let monthAccount = MonthAccount.load(monthAccountId);
+
+    if (monthAccount != null) {
+        return monthAccount;
+    }
+
+    month.activeAccounts = month.activeAccounts + 1;
+
+    monthAccount = new MonthAccount(monthAccountId);
+    monthAccount.account = account.id;
+    monthAccount.month = month.id;
+
+    return monthAccount;
+}
+
+export function getTotal(): Total {
+    const totalId = Bytes.fromHexString('0x746f74616c');
+    let total = Total.load(totalId);
+
+    if (total !== null) {
+        return total;
+    }
+
+    total = new Total(totalId);
+    total.createdAccounts = 0;
+    total.deployedAccounts = 0;
+    total.transactions = 0;
+    total.backedUp = 0;
+    total.gasSponsored = ZERO;
+
+    return total;
 }
