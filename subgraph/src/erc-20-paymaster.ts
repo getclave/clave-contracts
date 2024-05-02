@@ -9,7 +9,13 @@ import { BigInt } from '@graphprotocol/graph-ts';
 
 import { ERC20PaymasterUsed as ERC20PaymasterUsedEvent } from '../generated/ERC20Paymaster/ERC20Paymaster';
 import { ClaveAccount, ClaveTransaction } from '../generated/schema';
-import { getOrCreateWeek, getOrCreateWeekAccount } from './helpers';
+import {
+    getOrCreateMonth,
+    getOrCreateMonthAccount,
+    getOrCreateWeek,
+    getOrCreateWeekAccount,
+    getTotal,
+} from './helpers';
 
 export function handleERC20PaymasterUsed(event: ERC20PaymasterUsedEvent): void {
     const account = ClaveAccount.load(event.params.user);
@@ -18,10 +24,16 @@ export function handleERC20PaymasterUsed(event: ERC20PaymasterUsedEvent): void {
     }
 
     const week = getOrCreateWeek(event.block.timestamp);
+    const month = getOrCreateMonth(event.block.timestamp);
+    const total = getTotal();
     week.transactions = week.transactions + 1;
+    month.transactions = month.transactions + 1;
+    total.transactions = total.transactions + 1;
 
     const weekAccount = getOrCreateWeekAccount(account, week);
     weekAccount.save();
+    const monthAccount = getOrCreateMonthAccount(account, month);
+    monthAccount.save();
 
     const transaction = new ClaveTransaction(event.transaction.hash);
     transaction.sender = event.transaction.from;
@@ -37,6 +49,11 @@ export function handleERC20PaymasterUsed(event: ERC20PaymasterUsedEvent): void {
     transaction.paymaster = 'ERC20';
     transaction.date = event.block.timestamp;
 
+    account.txCount = account.txCount + 1;
+    account.save();
+
     week.save();
+    month.save();
+    total.save();
     transaction.save();
 }

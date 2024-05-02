@@ -12,7 +12,7 @@ import {
     ClaveAccountDeployed as ClaveAccountDeployedEvent,
 } from '../generated/Contract/Contract';
 import { ClaveAccount } from '../generated/schema';
-import { ZERO, getOrCreateWeek } from './helpers';
+import { ZERO, getOrCreateMonth, getOrCreateWeek, getTotal } from './helpers';
 
 export function handleClaveAccountCreated(
     event: ClaveAccountCreatedEvent,
@@ -23,14 +23,21 @@ export function handleClaveAccountCreated(
     }
     account = new ClaveAccount(event.params.accountAddress);
     const week = getOrCreateWeek(event.block.timestamp);
+    const month = getOrCreateMonth(event.block.timestamp);
+    const total = getTotal();
 
     week.createdAccounts = week.createdAccounts + 1;
+    month.createdAccounts = month.createdAccounts + 1;
+    total.createdAccounts = total.createdAccounts + 1;
     account.creationDate = event.block.timestamp;
     account.hasRecovery = false;
     account.isRecovering = false;
     account.recoveryCount = 0;
+    account.txCount = 0;
 
     week.save();
+    month.save();
+    total.save();
     account.save();
 }
 
@@ -39,13 +46,18 @@ export function handleClaveAccountDeployed(
 ): void {
     let account = ClaveAccount.load(event.params.accountAddress);
     const week = getOrCreateWeek(event.block.timestamp);
+    const month = getOrCreateMonth(event.block.timestamp);
+    const total = getTotal();
     week.deployedAccounts = week.deployedAccounts + 1;
+    month.deployedAccounts = month.deployedAccounts + 1;
+    total.deployedAccounts = total.deployedAccounts + 1;
     if (!account) {
         account = new ClaveAccount(event.params.accountAddress);
 
         account.hasRecovery = false;
         account.isRecovering = false;
         account.recoveryCount = 0;
+        account.txCount = 0;
         account.creationDate = ZERO;
     }
 
@@ -55,5 +67,7 @@ export function handleClaveAccountDeployed(
     account.deployDate = event.block.timestamp;
 
     week.save();
+    month.save();
+    total.save();
     account.save();
 }

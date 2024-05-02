@@ -11,7 +11,7 @@ import { BigInt, Bytes, ethereum, json } from '@graphprotocol/graph-ts';
 import { NewClaveAccount as NewClaveAccountEvent } from '../generated/AccountFactory/AccountFactory';
 import { ClaveAccount } from '../generated/schema';
 import { wallets } from '../wallets';
-import { ZERO, getOrCreateWeek } from './helpers';
+import { ZERO, getOrCreateMonth, getOrCreateWeek, getTotal } from './helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function handleOnce(_block: ethereum.Block): void {
@@ -24,14 +24,21 @@ export function handleOnce(_block: ethereum.Block): void {
         ).div(BigInt.fromU32(1000));
         const account = new ClaveAccount(Bytes.fromHexString(accountAddress));
         const week = getOrCreateWeek(createdAtDate);
+        const month = getOrCreateMonth(createdAtDate);
+        const total = getTotal();
 
         week.createdAccounts = week.createdAccounts + 1;
+        month.createdAccounts = month.createdAccounts + 1;
+        total.createdAccounts = total.createdAccounts + 1;
         account.creationDate = createdAtDate;
         account.hasRecovery = false;
         account.isRecovering = false;
         account.recoveryCount = 0;
+        account.txCount = 0;
 
         week.save();
+        month.save();
+        total.save();
         account.save();
     });
 }
@@ -39,13 +46,18 @@ export function handleOnce(_block: ethereum.Block): void {
 export function handleNewClaveAccount(event: NewClaveAccountEvent): void {
     let account = ClaveAccount.load(event.params.accountAddress);
     const week = getOrCreateWeek(event.block.timestamp);
+    const month = getOrCreateMonth(event.block.timestamp);
+    const total = getTotal();
     week.deployedAccounts = week.deployedAccounts + 1;
+    month.deployedAccounts = month.deployedAccounts + 1;
+    total.deployedAccounts = total.deployedAccounts + 1;
     if (!account) {
         account = new ClaveAccount(event.params.accountAddress);
 
         account.hasRecovery = false;
         account.isRecovering = false;
         account.recoveryCount = 0;
+        account.txCount = 0;
         account.creationDate = ZERO;
     }
     account.implementation = Bytes.fromHexString(
@@ -54,5 +66,7 @@ export function handleNewClaveAccount(event: NewClaveAccountEvent): void {
     account.deployDate = event.block.timestamp;
 
     week.save();
+    month.save();
+    total.save();
     account.save();
 }

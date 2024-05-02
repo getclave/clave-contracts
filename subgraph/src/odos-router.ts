@@ -17,6 +17,7 @@ import {
     fetchTokenDecimals,
     fetchTokenName,
     fetchTokenSymbol,
+    getOrCreateMonth,
     getOrCreateWeek,
 } from './helpers';
 
@@ -27,6 +28,7 @@ export function handleSwap(event: SwapEvent): void {
     }
 
     const week = getOrCreateWeek(event.block.timestamp);
+    const month = getOrCreateMonth(event.block.timestamp);
 
     const tokenOutAddress = event.params.outputToken;
     let tokenOut = ERC20.load(tokenOutAddress);
@@ -52,6 +54,19 @@ export function handleSwap(event: SwapEvent): void {
         event.params.amountOut,
     );
 
+    const monthlySwappedToId = month.id.concat(tokenOut.id);
+    let monthlySwappedTo = WeeklySwappedTo.load(monthlySwappedToId);
+    if (!monthlySwappedTo) {
+        monthlySwappedTo = new WeeklySwappedTo(monthlySwappedToId);
+        monthlySwappedTo.week = month.id;
+        monthlySwappedTo.erc20 = tokenOut.id;
+        monthlySwappedTo.amount = ZERO;
+    }
+
+    monthlySwappedTo.amount = monthlySwappedTo.amount.plus(
+        event.params.amountOut,
+    );
+
     const inAppSwap = new InAppSwap(
         event.transaction.hash.concatI32(event.logIndex.toI32()),
     );
@@ -64,5 +79,6 @@ export function handleSwap(event: SwapEvent): void {
     inAppSwap.date = event.block.timestamp;
 
     weeklySwappedTo.save();
+    monthlySwappedTo.save();
     inAppSwap.save();
 }

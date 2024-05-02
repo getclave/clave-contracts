@@ -13,6 +13,7 @@ import {
     RecoveryStopped as RecoveryStoppedEvent,
 } from '../generated/SocialRecovery/SocialRecovery';
 import { ClaveAccount } from '../generated/schema';
+import { getTotal } from './helpers';
 
 export function handleDisabled(event: DisabledEvent): void {
     const account = ClaveAccount.load(event.params.account);
@@ -21,9 +22,13 @@ export function handleDisabled(event: DisabledEvent): void {
         return;
     }
 
+    const total = getTotal();
+    total.backedUp = total.backedUp - 1;
+
     account.hasRecovery = false;
     account.isRecovering = false;
 
+    total.save();
     account.save();
 }
 
@@ -34,9 +39,13 @@ export function handleInited(event: InitedEvent): void {
         return;
     }
 
+    const total = getTotal();
+    total.backedUp = total.backedUp + 1;
+
     account.hasRecovery = true;
     account.isRecovering = false;
 
+    total.save();
     account.save();
 }
 
