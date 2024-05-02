@@ -3,6 +3,16 @@ pragma solidity ^0.8.17;
 
 import {SafeERC20, IERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
+interface KOISwitchERC20Dynamic is IERC20 {
+    function index0(address recipient) external view returns (uint);
+
+    function index1(address recipient) external view returns (uint);
+
+    function supplyIndex0(address recipient) external view returns (uint);
+
+    function supplyIndex1(address recipient) external view returns (uint);
+}
+
 interface IKoiRouter {
     function swapExactTokensForTokens(
         uint256 amountIn,
@@ -75,6 +85,8 @@ interface IKoiEarnRouter {
         bool isStable,
         uint256 minimumAmount
     ) external;
+
+    function claimFeesView(address recipient) external view returns (uint claimed0, uint claimed1);
 }
 
 interface IKoiPair is IERC20 {
@@ -332,5 +344,37 @@ contract KoiEarnRouter is IKoiEarnRouter {
         desiredB = tokenAmount - desiredA;
 
         return (desiredA, desiredB);
+    }
+    }
+
+    /**
+     * @notice Calculate claimable fees amount
+
+     * @param recipient address - Recipient address
+     * @return claimed0 uint256 - Claimable tokenA amount
+     * @return claimed1 uint256 - Claimable tokenB amount
+     */
+    function claimFeesView(address recipient) external view returns (uint claimed0, uint claimed1) {
+        address pairAddress = koiRouter.pairFor(tokenAAddress, tokenBAddress, isStable);
+
+        IERC20 lpToken = KOISwitchERC20Dynamic(pairAddress);
+
+          uint _supplied = lpToken.balanceOf[recipient];
+        if (_supplied > 0) {
+            uint _supplyIndex0 = lpToken.supplyIndex0[recipient];
+            uint _supplyIndex1 = lpToken.supplyIndex1[recipient];
+            uint _index0 = lpToken.index0;
+            uint _index1 = lpToken.index1;
+            uint _delta0 = _index0 - _supplyIndex0;
+            uint _delta1 = _index1 - _supplyIndex1;
+            if (_delta0 > 0) {
+                uint _share = _supplied * _delta0 / 1e18;
+                claimed0 = claimable0[recipient] + _share;
+            }
+            if (_delta1 > 0) {
+                uint _share = _supplied * _delta1 / 1e18;
+                claimed1 = claimable1[recipient] + _share;
+            }
+        }
     }
 }
