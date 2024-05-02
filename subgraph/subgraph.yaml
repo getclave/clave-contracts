@@ -38,6 +38,7 @@ dataSources:
       entities:
         - InAppSwap
         - WeeklySwappedTo
+        - MonthlySwappedTo
       abis:
         - name: OdosRouter
           file: ./abis/OdosRouter.json
@@ -61,6 +62,8 @@ dataSources:
       entities:
         - ClaveAccount
         - Week
+        - Month
+        - Total
       abis:
         - name: AccountFactory
           file: ./abis/AccountFactory.json
@@ -86,6 +89,8 @@ dataSources:
       entities:
         - ClaveAccount
         - Week
+        - Month
+        - Total
       abis:
         - name: AccountFactoryV2
           file: ./abis/AccountFactoryV2.json
@@ -110,6 +115,10 @@ dataSources:
         - ClaveTransaction
         - Week
         - WeekAccount
+        - Month
+        - MonthAccount
+        - Total
+        - ClaveAccount
       abis:
         - name: GaslessPaymaster
           file: ./abis/GaslessPaymaster.json
@@ -133,6 +142,10 @@ dataSources:
         - ClaveTransaction
         - Week
         - WeekAccount
+        - Month
+        - MonthAccount
+        - Total
+        - ClaveAccount
       abis:
         - name: GaslessPaymaster
           file: ./abis/GaslessPaymaster.json
@@ -156,6 +169,10 @@ dataSources:
         - ClaveTransaction
         - Week
         - WeekAccount
+        - Month
+        - MonthAccount
+        - Total
+        - ClaveAccount
       abis:
         - name: GaslessPaymaster
           file: ./abis/GaslessPaymaster.json
@@ -179,6 +196,10 @@ dataSources:
         - ClaveTransaction
         - Week
         - WeekAccount
+        - Month
+        - MonthAccount
+        - Total
+        - ClaveAccount
       abis:
         - name: ERC20Paymaster
           file: ./abis/ERC20Paymaster.json
@@ -200,6 +221,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveAccount
+        - Total
       abis:
         - name: SocialRecovery
           file: ./abis/SocialRecovery.json
@@ -230,6 +252,10 @@ templates:
         - ClaveTransaction
         - Week
         - WeekAccount
+        - Month
+        - MonthAccount
+        - Total
+        - ClaveAccount
       abis:
         - name: ClaveImplementation
           file: ./abis/ClaveImplementation.json
