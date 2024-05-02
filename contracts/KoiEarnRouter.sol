@@ -101,6 +101,24 @@ contract KoiEarnRouter is IKoiEarnRouter {
 
     IKoiRouter private koiRouter;
 
+    // Event to be emitted when a user deposits tokenA to the pair
+    event Deposit(
+        address indexed user,
+        address indexed tokenA,
+        uint256 indexed amount,
+        address tokenB,
+        bool isStable
+    );
+
+    // Event to be emitted when a user withdraws tokenA from the pair
+    event Withdraw(
+        address indexed user,
+        address indexed tokenA,
+        uint256 indexed amount,
+        address tokenB,
+        bool isStable
+    );
+
     error INSUFFICIENT_AMOUNT();
 
     constructor(address koiRouterAddress) {
@@ -240,6 +258,14 @@ contract KoiEarnRouter is IKoiEarnRouter {
 
         tokenA.safeTransfer(msg.sender, desiredA - amountA);
         tokenA.safeApprove(address(koiRouter), 0);
+
+        emit Deposit(
+            msg.sender,
+            tokenAAddress,
+            tokenAmount - swappedAmount,
+            tokenBAddress,
+            isStable
+        );
     }
 
     /**
@@ -300,9 +326,12 @@ contract KoiEarnRouter is IKoiEarnRouter {
 
         tokenA.safeTransfer(msg.sender, amountA);
 
-        if (amountA + swappedAmount < minimumAmount) {
+        uint256 withdrawAmount = amountA + swappedAmount;
+        if (withdrawAmount < minimumAmount) {
             revert INSUFFICIENT_AMOUNT();
         }
+
+        emit Withdraw(msg.sender, tokenAAddress, withdrawAmount, tokenBAddress, isStable);
     }
 
     /**
