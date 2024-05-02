@@ -48,6 +48,13 @@ interface IKoiRouter {
         address tokenB,
         bool stable
     ) external view returns (uint256 reserveA, uint256 reserveB);
+
+    function claimFeesView(
+        address recipient,
+        address tokenA,
+        address tokenB,
+        bool isStable
+    ) external view returns (uint256 claimed0, uint256 claimed1);
 }
 
 interface IKoiEarnRouter {
@@ -70,12 +77,27 @@ interface IKoiEarnRouter {
     ) external;
 }
 
+interface IKoiPair is IERC20 {
+    function index0() external view returns (uint256);
+
+    function index1() external view returns (uint256);
+
+    function supplyIndex0(address recipient) external view returns (uint256);
+
+    function supplyIndex1(address recipient) external view returns (uint256);
+
+    function claimable0(address recipient) external view returns (uint256);
+
+    function claimable1(address recipient) external view returns (uint256);
+}
+
 /**
  * @title KoiEarnRouter
  * @author https://getclave.io
  */
 contract KoiEarnRouter is IKoiEarnRouter {
     using SafeERC20 for IERC20;
+    using SafeERC20 for IKoiPair;
 
     IKoiRouter private koiRouter;
 
@@ -91,6 +113,40 @@ contract KoiEarnRouter is IKoiEarnRouter {
 
     receive() external payable {
         revert();
+    }
+
+    /**
+     * @notice View claimable fees for tokenA and tokenB pair
+     *
+     * @dev Copied and modified from this source, as it has bug
+     * https://github.com/muteio/switch-core/blob/4f08af924c60b8d0a8037997988bf2f71d72d264/contracts/dynamic/MuteSwitchPairDynamic.sol#L469
+     */
+    function claimFeesView(
+        address recipient,
+        address tokenA,
+        address tokenB,
+        bool isStable
+    ) external view returns (uint256 claimed0, uint256 claimed1) {
+        address pairAddress = koiRouter.pairFor(tokenA, tokenB, isStable);
+        IKoiPair pair = IKoiPair(pairAddress);
+
+        uint _supplied = pair.balanceOf(recipient); // get LP balance of `recipient`
+        if (_supplied > 0) {
+            uint _supplyIndex0 = pair.supplyIndex0(recipient); // get last adjusted index0 for recipient
+            uint _supplyIndex1 = pair.supplyIndex1(recipient);
+            uint _index0 = pair.index0(); // get global index0 for accumulated fees
+            uint _index1 = pair.index1();
+            uint _delta0 = _index0 - _supplyIndex0; // see if there is any difference that need to be accrued
+            uint _delta1 = _index1 - _supplyIndex1;
+            if (_delta0 > 0) {
+                uint _share = (_supplied * _delta0) / 1e18; // add accrued difference for each supplied token
+                claimed0 = pair.claimable0(recipient) + _share;
+            }
+            if (_delta1 > 0) {
+                uint _share = (_supplied * _delta1) / 1e18;
+                claimed1 = pair.claimable1(recipient) + _share;
+            }
+        }
     }
 
     /**
@@ -200,7 +256,7 @@ contract KoiEarnRouter is IKoiEarnRouter {
     ) external override {
         address pairAddress = koiRouter.pairFor(tokenAAddress, tokenBAddress, isStable);
 
-        IERC20 lpToken = IERC20(pairAddress);
+        IKoiPair lpToken = IKoiPair(pairAddress);
         IERC20 tokenA = IERC20(tokenAAddress);
         IERC20 tokenB = IERC20(tokenBAddress);
 
