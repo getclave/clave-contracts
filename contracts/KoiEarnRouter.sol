@@ -48,13 +48,6 @@ interface IKoiRouter {
         address tokenB,
         bool stable
     ) external view returns (uint256 reserveA, uint256 reserveB);
-
-    function claimFeesView(
-        address recipient,
-        address tokenA,
-        address tokenB,
-        bool isStable
-    ) external view returns (uint256 claimed0, uint256 claimed1);
 }
 
 interface IKoiEarnRouter {
@@ -75,6 +68,20 @@ interface IKoiEarnRouter {
         bool isStable,
         uint256 minimumAmount
     ) external;
+
+    function claimFeesView(
+        address recipient,
+        address tokenA,
+        address tokenB,
+        bool isStable
+    ) external view returns (uint256 claimed0, uint256 claimed1);
+
+    function stakePositions(
+        address recipient,
+        address tokenA,
+        address tokenB,
+        bool isStable
+    ) external view returns (uint256[] memory tokensInPosition, uint256[] memory rewards);
 }
 
 interface IKoiPair is IERC20 {
@@ -144,22 +151,22 @@ contract KoiEarnRouter is IKoiEarnRouter {
         address tokenA,
         address tokenB,
         bool isStable
-    ) external view returns (uint256 claimed0, uint256 claimed1) {
+    ) public view returns (uint256 claimed0, uint256 claimed1) {
         bool reversed = tokenA < tokenB ? false : true;
 
         address pairAddress = koiRouter.pairFor(tokenA, tokenB, isStable);
         IKoiPair pair = IKoiPair(pairAddress);
 
-        uint _supplied = pair.balanceOf(recipient); // get LP balance of `recipient`
+        uint _supplied = pair.balanceOf(recipient);
         if (_supplied > 0) {
-            uint _supplyIndex0 = pair.supplyIndex0(recipient); // get last adjusted index0 for recipient
+            uint _supplyIndex0 = pair.supplyIndex0(recipient);
             uint _supplyIndex1 = pair.supplyIndex1(recipient);
-            uint _index0 = pair.index0(); // get global index0 for accumulated fees
+            uint _index0 = pair.index0();
             uint _index1 = pair.index1();
-            uint _delta0 = _index0 - _supplyIndex0; // see if there is any difference that need to be accrued
+            uint _delta0 = _index0 - _supplyIndex0;
             uint _delta1 = _index1 - _supplyIndex1;
             if (_delta0 > 0) {
-                uint _share = (_supplied * _delta0) / 1e18; // add accrued difference for each supplied token
+                uint _share = (_supplied * _delta0) / 1e18;
                 claimed0 = pair.claimable0(recipient) + _share;
             }
             if (_delta1 > 0) {
@@ -171,6 +178,50 @@ contract KoiEarnRouter is IKoiEarnRouter {
         if (reversed) {
             (claimed0, claimed1) = (claimed1, claimed0);
         }
+    }
+
+    /**
+     * @notice View deposited token amounts for the tokenA and tokenB pair
+     * @notice View claimable fees for tokenA and tokenB pair
+     *
+     * @param recipient address           - Recipient address
+     * @param tokenA address              - Depositing token address in the pair
+     * @param tokenB address              - Side token address in the pair
+     * @param isStable bool               - Stable pair or not
+     * @return tokensInPosition uint256[] - Deposited token amounts
+     * @return rewards uint256[]          - Claimable fees
+    */
+     function stakePositions(
+        address recipient,
+        address tokenA,
+        address tokenB,
+        bool isStable
+    ) external view returns (uint256[] memory tokensInPosition, uint256[] memory rewards) {
+        address pairAddress = koiRouter.pairFor(tokenA, tokenB, isStable);
+        IKoiPair pair = IKoiPair(pairAddress);
+
+        uint256 lpTokenBalance = pair.balanceOf(recipient);
+
+        uint256 totalSupply = pair.totalSupply();
+
+        (uint256 tokenAReserve, uint256 tokenBReserve) = koiRouter.getReserves(
+            tokenA,
+            tokenB,
+            isStable
+        );
+
+        uint256 tokenAAmount = (lpTokenBalance * tokenAReserve) / totalSupply;
+        uint256 tokenBAmount = (lpTokenBalance * tokenBReserve) / totalSupply;
+
+        tokensInPosition = new uint256[](2);
+        tokensInPosition[0] = tokenAAmount;
+        tokensInPosition[1] = tokenBAmount;
+
+        (uint256 claimed0, uint256 claimed1) = claimFeesView(recipient, tokenA, tokenB, isStable);
+
+        rewards = new uint256[](2);
+        rewards[0] = claimed0;
+        rewards[1] = claimed1;
     }
 
     /**

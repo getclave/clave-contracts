@@ -3,14 +3,12 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-import type { AddressKey } from '@getclave/constants';
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Wallet } from 'zksync-ethers';
 
 import { contractNames } from './helpers/fully-qualified-contract-names';
 import type { ReleaseType } from './helpers/release';
-import { updateAddress } from './helpers/release';
 
 const KoiRouter = '0x8b791913eb07c32779a16750e3868aa8495f5964';
 
