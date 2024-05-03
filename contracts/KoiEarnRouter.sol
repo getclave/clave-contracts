@@ -150,8 +150,8 @@ contract KoiEarnRouter is IKoiEarnRouter {
      * @param isStable bool               - Stable pair or not
      * @return tokensInPosition uint256[] - Deposited token amounts
      * @return rewards uint256[]          - Claimable fees
-    */
-     function stakePositions(
+     */
+    function stakePositions(
         address recipient,
         address tokenA,
         address tokenB,
