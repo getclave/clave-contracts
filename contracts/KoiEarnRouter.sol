@@ -51,6 +51,20 @@ interface IKoiRouter {
 }
 
 interface IKoiEarnRouter {
+    function stakePositions(
+        address recipient,
+        address tokenA,
+        address tokenB,
+        bool isStable
+    ) external view returns (uint256[] memory tokensInPosition, uint256[] memory rewards);
+
+    function claimFeesView(
+        address recipient,
+        address tokenA,
+        address tokenB,
+        bool isStable
+    ) external view returns (uint256 claimed0, uint256 claimed1);
+
     function deposit(
         address tokenAAddress,
         address tokenBAddress,
@@ -68,20 +82,6 @@ interface IKoiEarnRouter {
         bool isStable,
         uint256 minimumAmount
     ) external;
-
-    function claimFeesView(
-        address recipient,
-        address tokenA,
-        address tokenB,
-        bool isStable
-    ) external view returns (uint256 claimed0, uint256 claimed1);
-
-    function stakePositions(
-        address recipient,
-        address tokenA,
-        address tokenB,
-        bool isStable
-    ) external view returns (uint256[] memory tokensInPosition, uint256[] memory rewards);
 }
 
 interface IKoiPair is IERC20 {
@@ -141,46 +141,6 @@ contract KoiEarnRouter is IKoiEarnRouter {
     }
 
     /**
-     * @notice View claimable fees for tokenA and tokenB pair
-     *
-     * @dev Copied and modified from this source, as it has bug
-     * https://github.com/muteio/switch-core/blob/4f08af924c60b8d0a8037997988bf2f71d72d264/contracts/dynamic/MuteSwitchPairDynamic.sol#L469
-     */
-    function claimFeesView(
-        address recipient,
-        address tokenA,
-        address tokenB,
-        bool isStable
-    ) public view returns (uint256 claimed0, uint256 claimed1) {
-        bool reversed = tokenA < tokenB ? false : true;
-
-        address pairAddress = koiRouter.pairFor(tokenA, tokenB, isStable);
-        IKoiPair pair = IKoiPair(pairAddress);
-
-        uint _supplied = pair.balanceOf(recipient);
-        if (_supplied > 0) {
-            uint _supplyIndex0 = pair.supplyIndex0(recipient);
-            uint _supplyIndex1 = pair.supplyIndex1(recipient);
-            uint _index0 = pair.index0();
-            uint _index1 = pair.index1();
-            uint _delta0 = _index0 - _supplyIndex0;
-            uint _delta1 = _index1 - _supplyIndex1;
-            if (_delta0 > 0) {
-                uint _share = (_supplied * _delta0) / 1e18;
-                claimed0 = pair.claimable0(recipient) + _share;
-            }
-            if (_delta1 > 0) {
-                uint _share = (_supplied * _delta1) / 1e18;
-                claimed1 = pair.claimable1(recipient) + _share;
-            }
-        }
-
-        if (reversed) {
-            (claimed0, claimed1) = (claimed1, claimed0);
-        }
-    }
-
-    /**
      * @notice View deposited token amounts for the tokenA and tokenB pair
      * @notice View claimable fees for tokenA and tokenB pair
      *
@@ -222,6 +182,46 @@ contract KoiEarnRouter is IKoiEarnRouter {
         rewards = new uint256[](2);
         rewards[0] = claimed0;
         rewards[1] = claimed1;
+    }
+
+    /**
+     * @notice View claimable fees for tokenA and tokenB pair
+     *
+     * @dev Copied and modified from this source, as it has bug
+     * https://github.com/muteio/switch-core/blob/4f08af924c60b8d0a8037997988bf2f71d72d264/contracts/dynamic/MuteSwitchPairDynamic.sol#L469
+     */
+    function claimFeesView(
+        address recipient,
+        address tokenA,
+        address tokenB,
+        bool isStable
+    ) public view returns (uint256 claimed0, uint256 claimed1) {
+        bool reversed = tokenA < tokenB ? false : true;
+
+        address pairAddress = koiRouter.pairFor(tokenA, tokenB, isStable);
+        IKoiPair pair = IKoiPair(pairAddress);
+
+        uint _supplied = pair.balanceOf(recipient);
+        if (_supplied > 0) {
+            uint _supplyIndex0 = pair.supplyIndex0(recipient);
+            uint _supplyIndex1 = pair.supplyIndex1(recipient);
+            uint _index0 = pair.index0();
+            uint _index1 = pair.index1();
+            uint _delta0 = _index0 - _supplyIndex0;
+            uint _delta1 = _index1 - _supplyIndex1;
+            if (_delta0 > 0) {
+                uint _share = (_supplied * _delta0) / 1e18;
+                claimed0 = pair.claimable0(recipient) + _share;
+            }
+            if (_delta1 > 0) {
+                uint _share = (_supplied * _delta1) / 1e18;
+                claimed1 = pair.claimable1(recipient) + _share;
+            }
+        }
+
+        if (reversed) {
+            (claimed0, claimed1) = (claimed1, claimed0);
+        }
     }
 
     /**
