@@ -15,6 +15,7 @@ type Week @entity {
   deployedAccounts: Int!
   activeAccounts: Int!
   transactions: Int!
+  gasSponsored: BigInt!
   swappedTo: [WeeklySwappedTo!]! @derivedFrom(field: "week")
 }
 
@@ -25,6 +26,7 @@ type Month @entity {
   deployedAccounts: Int!
   activeAccounts: Int!
   transactions: Int!
+  gasSponsored: BigInt!
   swappedTo: [MonthlySwappedTo!]! @derivedFrom(field: "month")
 }
 
