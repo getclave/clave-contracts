@@ -240,14 +240,6 @@ templates:
       eventHandlers:
         - event: FeePaid()
           handler: handleFeePaid
-        - event: K1AddOwner(indexed address)
-          handler: handleK1AddOwner
-        - event: K1RemoveOwner(indexed address)
-          handler: handleK1RemoveOwner
-        - event: R1AddOwner(bytes)
-          handler: handleR1AddOwner
-        - event: R1RemoveOwner(bytes)
-          handler: handleR1RemoveOwner
-        - event: ResetOwners()
-          handler: handleResetOwners
+        - event: Upgraded(indexed address,indexed address)
+          handler: handleUpgraded
       file: ./src/account.ts
