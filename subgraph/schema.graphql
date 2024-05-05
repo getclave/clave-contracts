@@ -71,28 +71,10 @@ type ClaveAccount @entity {
   txCount: Int!
   "account implementation address"
   implementation: Bytes
-  erc20balances: [ERC20Balance!]! @derivedFrom(field: "account")
   owners: [Owner!]! @derivedFrom(field: "account")
   transactions: [ClaveTransaction!]! @derivedFrom(field: "sender")
   inAppSwaps: [InAppSwap!]! @derivedFrom(field: "account")
   activeWeeks: [WeekAccount!]! @derivedFrom(field: "account")
-}
-
-type ERC20 @entity {
-  "token address"
-  id: Bytes!
-  name: String!
-  symbol: String!
-  decimals: Int!
-  totalAmount: BigInt!
-}
-
-type ERC20Balance @entity {
-  "account.id.concat(ERC20.id)"
-  id: Bytes!
-  account: ClaveAccount!
-  token: ERC20!
-  amount: BigInt!
 }
 
 enum OwnerType {
