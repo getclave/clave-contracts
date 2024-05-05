@@ -47,7 +47,7 @@ export function handleOnce(_block: ethereum.Block): void {
         month.save();
         total.save();
         account.save();
-        Account.create(Address.fromHexString(accountAddress));
+        Account.create(Address.fromBytes(Bytes.fromHexString(accountAddress)));
     });
 }
 
