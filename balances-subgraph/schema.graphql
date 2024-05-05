@@ -1,5 +1,22 @@
-type ExampleEntity @entity {
+type ClaveAccount @entity {
+  "account address"
   id: Bytes!
-  count: BigInt!
-  accountAddress: Bytes! # address
+  erc20balances: [ERC20Balance!]! @derivedFrom(field: "account")
+}
+
+type ERC20 @entity {
+  "token address"
+  id: Bytes!
+  name: String!
+  symbol: String!
+  decimals: Int!
+  totalAmount: BigInt!
+}
+
+type ERC20Balance @entity {
+  "account.id.concat(ERC20.id)"
+  id: Bytes!
+  account: ClaveAccount!
+  token: ERC20!
+  amount: BigInt!
 }
