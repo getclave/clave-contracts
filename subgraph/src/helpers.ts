@@ -43,6 +43,7 @@ export function getOrCreateWeek(timestamp: BigInt): Week {
     week.deployedAccounts = 0;
     week.activeAccounts = 0;
     week.transactions = 0;
+    week.gasSponsored = ZERO;
 
     return week;
 }
@@ -83,6 +84,7 @@ export function getOrCreateMonth(timestamp: BigInt): Month {
     month.deployedAccounts = 0;
     month.activeAccounts = 0;
     month.transactions = 0;
+    month.gasSponsored = ZERO;
 
     return month;
 }

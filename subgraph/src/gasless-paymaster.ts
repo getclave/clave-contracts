@@ -44,6 +44,8 @@ export function handleFeeSponsored(event: FeeSponsoredEvent): void {
             gasUsed = receipt.gasUsed;
         }
         const gasCost = event.transaction.gasPrice.times(gasUsed);
+        week.gasSponsored = week.gasSponsored.plus(gasCost);
+        month.gasSponsored = month.gasSponsored.plus(gasCost);
         total.gasSponsored = total.gasSponsored.plus(gasCost);
         transaction.gasCost = gasCost;
         transaction.paymaster = 'Gasless';
