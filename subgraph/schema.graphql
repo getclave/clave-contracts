@@ -31,18 +31,18 @@ type Month @entity {
 }
 
 type WeeklySwappedTo @entity {
-  "week.id.concat(erc20.id)"
+  "week.id.concat(erc20)"
   id: Bytes!
   week: Week!
-  erc20: ERC20!
+  erc20: Bytes!
   amount: BigInt!
 }
 
 type MonthlySwappedTo @entity {
-  "month.id.concat(erc20.id)"
+  "month.id.concat(erc20)"
   id: Bytes!
   month: Month!
-  erc20: ERC20!
+  erc20: Bytes!
   amount: BigInt!
 }
 
