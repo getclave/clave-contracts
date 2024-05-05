@@ -6,20 +6,8 @@
 
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import { Swap as SwapEvent } from '../generated/OdosRouter/OdosRouter';
-import {
-    ClaveAccount,
-    ERC20,
-    InAppSwap,
-    WeeklySwappedTo,
-} from '../generated/schema';
-import {
-    ZERO,
-    fetchTokenDecimals,
-    fetchTokenName,
-    fetchTokenSymbol,
-    getOrCreateMonth,
-    getOrCreateWeek,
-} from './helpers';
+import { ClaveAccount, InAppSwap, WeeklySwappedTo } from '../generated/schema';
+import { ZERO, getOrCreateMonth, getOrCreateWeek } from './helpers';
 
 export function handleSwap(event: SwapEvent): void {
     const account = ClaveAccount.load(event.params.sender);
@@ -31,22 +19,12 @@ export function handleSwap(event: SwapEvent): void {
     const month = getOrCreateMonth(event.block.timestamp);
 
     const tokenOutAddress = event.params.outputToken;
-    let tokenOut = ERC20.load(tokenOutAddress);
-    if (!tokenOut) {
-        tokenOut = new ERC20(tokenOutAddress);
-        tokenOut.name = fetchTokenName(tokenOutAddress);
-        tokenOut.symbol = fetchTokenSymbol(tokenOutAddress);
-        tokenOut.decimals = fetchTokenDecimals(tokenOutAddress) as i32;
-        tokenOut.totalAmount = ZERO;
-        tokenOut.save();
-    }
-
-    const weeklySwappedToId = week.id.concat(tokenOut.id);
+    const weeklySwappedToId = week.id.concat(tokenOutAddress);
     let weeklySwappedTo = WeeklySwappedTo.load(weeklySwappedToId);
     if (!weeklySwappedTo) {
         weeklySwappedTo = new WeeklySwappedTo(weeklySwappedToId);
         weeklySwappedTo.week = week.id;
-        weeklySwappedTo.erc20 = tokenOut.id;
+        weeklySwappedTo.erc20 = tokenOutAddress;
         weeklySwappedTo.amount = ZERO;
     }
 
@@ -54,12 +32,12 @@ export function handleSwap(event: SwapEvent): void {
         event.params.amountOut,
     );
 
-    const monthlySwappedToId = month.id.concat(tokenOut.id);
+    const monthlySwappedToId = month.id.concat(tokenOutAddress);
     let monthlySwappedTo = WeeklySwappedTo.load(monthlySwappedToId);
     if (!monthlySwappedTo) {
         monthlySwappedTo = new WeeklySwappedTo(monthlySwappedToId);
         monthlySwappedTo.week = month.id;
-        monthlySwappedTo.erc20 = tokenOut.id;
+        monthlySwappedTo.erc20 = tokenOutAddress;
         monthlySwappedTo.amount = ZERO;
     }
 
