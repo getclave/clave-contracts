@@ -12,6 +12,7 @@ import {
     ClaveAccountDeployed as ClaveAccountDeployedEvent,
 } from '../generated/Contract/Contract';
 import { ClaveAccount } from '../generated/schema';
+import { Account } from '../generated/templates';
 import { ZERO, getOrCreateMonth, getOrCreateWeek, getTotal } from './helpers';
 
 export function handleClaveAccountCreated(
@@ -39,6 +40,7 @@ export function handleClaveAccountCreated(
     month.save();
     total.save();
     account.save();
+    Account.create(event.params.accountAddress);
 }
 
 export function handleClaveAccountDeployed(

@@ -5,11 +5,18 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-import { BigInt, Bytes, ethereum, json } from '@graphprotocol/graph-ts';
+import {
+    Address,
+    BigInt,
+    Bytes,
+    ethereum,
+    json,
+} from '@graphprotocol/graph-ts';
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import { NewClaveAccount as NewClaveAccountEvent } from '../generated/AccountFactory/AccountFactory';
 import { ClaveAccount } from '../generated/schema';
+import { Account } from '../generated/templates';
 import { wallets } from '../wallets';
 import { ZERO, getOrCreateMonth, getOrCreateWeek, getTotal } from './helpers';
 
@@ -40,6 +47,7 @@ export function handleOnce(_block: ethereum.Block): void {
         month.save();
         total.save();
         account.save();
+        Account.create(Address.fromHexString(accountAddress));
     });
 }
 
