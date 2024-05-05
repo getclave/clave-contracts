@@ -7,9 +7,6 @@ type ClaveAccount @entity {
 type ERC20 @entity {
   "token address"
   id: Bytes!
-  name: String!
-  symbol: String!
-  decimals: Int!
   totalAmount: BigInt!
 }
 
