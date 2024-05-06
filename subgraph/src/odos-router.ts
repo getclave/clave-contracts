@@ -6,7 +6,12 @@
 
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import { Swap as SwapEvent } from '../generated/OdosRouter/OdosRouter';
-import { ClaveAccount, InAppSwap, WeeklySwappedTo } from '../generated/schema';
+import {
+    ClaveAccount,
+    InAppSwap,
+    MonthlySwappedTo,
+    WeeklySwappedTo,
+} from '../generated/schema';
 import { ZERO, getOrCreateMonth, getOrCreateWeek } from './helpers';
 
 export function handleSwap(event: SwapEvent): void {
@@ -33,10 +38,10 @@ export function handleSwap(event: SwapEvent): void {
     );
 
     const monthlySwappedToId = month.id.concat(tokenOutAddress);
-    let monthlySwappedTo = WeeklySwappedTo.load(monthlySwappedToId);
+    let monthlySwappedTo = MonthlySwappedTo.load(monthlySwappedToId);
     if (!monthlySwappedTo) {
-        monthlySwappedTo = new WeeklySwappedTo(monthlySwappedToId);
-        monthlySwappedTo.week = month.id;
+        monthlySwappedTo = new MonthlySwappedTo(monthlySwappedToId);
+        monthlySwappedTo.month = month.id;
         monthlySwappedTo.erc20 = tokenOutAddress;
         monthlySwappedTo.amount = ZERO;
     }
