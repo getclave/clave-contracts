@@ -412,11 +412,7 @@ contract KoiEarnRouter is IKoiEarnRouter {
         uint256 reserveA,
         uint256 reserveB
     ) private pure returns (uint256 desiredA, uint256 desiredB) {
-        uint256 total = reserveA + reserveB;
-
-        desiredA = (tokenAmount * reserveA) / total;
-        desiredB = tokenAmount - desiredA;
-
-        return (desiredA, desiredB);
+        desiredB = (tokenAmount * reserveB) / (reserveA + reserveB + tokenAmount);
+        desiredA = tokenAmount - desiredB;
     }
 }
