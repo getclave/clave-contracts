@@ -6,6 +6,8 @@ type Total @entity {
   transactions: Int!
   backedUp: Int!
   gasSponsored: BigInt!
+  invested: BigInt!
+  realizedGain: BigInt!
 }
 
 type Week @entity {
@@ -16,6 +18,9 @@ type Week @entity {
   activeAccounts: Int!
   transactions: Int!
   gasSponsored: BigInt!
+  investIn: BigInt!
+  investOut: BigInt!
+  realizedGain: BigInt!
   swappedTo: [WeeklySwappedTo!]! @derivedFrom(field: "week")
 }
 
@@ -27,6 +32,9 @@ type Month @entity {
   activeAccounts: Int!
   transactions: Int!
   gasSponsored: BigInt!
+  investIn: BigInt!
+  investOut: BigInt!
+  realizedGain: BigInt!
   swappedTo: [MonthlySwappedTo!]! @derivedFrom(field: "month")
 }
 
@@ -71,6 +79,8 @@ type ClaveAccount @entity {
   txCount: Int!
   "account implementation address"
   implementation: Bytes
+  invested: BigInt!
+  realizedGain: BigInt!
   transactions: [ClaveTransaction!]! @derivedFrom(field: "sender")
   inAppSwaps: [InAppSwap!]! @derivedFrom(field: "account")
   activeWeeks: [WeekAccount!]! @derivedFrom(field: "account")
