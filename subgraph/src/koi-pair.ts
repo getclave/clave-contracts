@@ -14,7 +14,7 @@ import { ClaveAccount } from '../generated/schema';
 import { getOrCreateMonth, getOrCreateWeek, getTotal } from './helpers';
 
 export function handleMint(event: MintEvent): void {
-    const account = ClaveAccount.load(event.params.sender);
+    const account = ClaveAccount.load(event.transaction.from);
     if (!account) {
         return;
     }
@@ -37,7 +37,7 @@ export function handleMint(event: MintEvent): void {
 }
 
 export function handleBurn(event: BurnEvent): void {
-    const account = ClaveAccount.load(event.params.sender);
+    const account = ClaveAccount.load(event.transaction.from);
     if (!account) {
         return;
     }
