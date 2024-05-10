@@ -40,6 +40,9 @@ contract SyncEarnRouter is ISyncEarnRouter {
     ISyncRouter private syncRouter;
     ISyncStaking private syncStaking;
 
+    // Event to be emitted when a user deposits tokenA to the pair
+    event Deposit(address indexed user, address indexed tokenA, uint256 indexed amount);
+
     error InvalidValue();
 
     constructor(address syncRouterAddress, address syncStakingAddress) {
@@ -58,7 +61,7 @@ contract SyncEarnRouter is ISyncEarnRouter {
         ISyncRouter.TokenInput[] memory inputs = new ISyncRouter.TokenInput[](1);
         inputs[0] = ISyncRouter.TokenInput({token: address(0), amount: msg.value, useVault: false});
 
-        uint256 liquidity = syncRouter.addLiquidity2(
+        uint256 liquidity = syncRouter.addLiquidity2{value: msg.value}(
             pairAddress,
             inputs,
             abi.encode(address(this)),
@@ -73,5 +76,24 @@ contract SyncEarnRouter is ISyncEarnRouter {
 
         // Stake LP tokens
         syncStaking.stake(liquidity, msg.sender);
+
+        emit Deposit(msg.sender, address(0), msg.value);
+    }
+
+    /**
+     * @notice Withdraw token from the contract for the emergency cases
+     *
+     * @param token address  - Token address to withdraw
+     * @param amount uint256 - Amount to withdraw
+     *
+     * @dev Not a real case, so everyone can withdraw
+     * @dev token = address(0) if ETH
+     */
+    function withdrawToken(address token, uint256 amount) external {
+        if (token == address(0)) {
+            payable(msg.sender).transfer(amount);
+        } else {
+            IERC20(token).safeTransfer(msg.sender, amount);
+        }
     }
 }
