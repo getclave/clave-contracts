@@ -43,6 +43,9 @@ export function getOrCreateWeek(timestamp: BigInt): Week {
     week.deployedAccounts = 0;
     week.activeAccounts = 0;
     week.transactions = 0;
+    week.investIn = ZERO;
+    week.investOut = ZERO;
+    week.realizedGain = ZERO;
     week.gasSponsored = ZERO;
 
     return week;
@@ -84,6 +87,9 @@ export function getOrCreateMonth(timestamp: BigInt): Month {
     month.deployedAccounts = 0;
     month.activeAccounts = 0;
     month.transactions = 0;
+    month.investIn = ZERO;
+    month.investOut = ZERO;
+    month.realizedGain = ZERO;
     month.gasSponsored = ZERO;
 
     return month;
@@ -122,6 +128,8 @@ export function getTotal(): Total {
     total.deployedAccounts = 0;
     total.transactions = 0;
     total.backedUp = 0;
+    total.invested = ZERO;
+    total.realizedGain = ZERO;
     total.gasSponsored = ZERO;
 
     return total;

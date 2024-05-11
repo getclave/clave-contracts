@@ -35,6 +35,8 @@ export function handleClaveAccountCreated(
     account.isRecovering = false;
     account.recoveryCount = 0;
     account.txCount = 0;
+    account.invested = ZERO;
+    account.realizedGain = ZERO;
 
     week.save();
     month.save();
@@ -61,6 +63,8 @@ export function handleClaveAccountDeployed(
         account.recoveryCount = 0;
         account.txCount = 0;
         account.creationDate = ZERO;
+        account.invested = ZERO;
+        account.realizedGain = ZERO;
     }
 
     account.implementation = Bytes.fromHexString(

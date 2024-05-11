@@ -4,6 +4,53 @@ indexerHints:
 schema:
   file: ./schema.graphql
 dataSources:
+  # - kind: ethereum
+  #   name: KoiFactory
+  #   network: zksync-era
+  #   source:
+  #     address: '0x40be1cBa6C5B47cDF9da7f963B6F761F4C60627D'
+  #     abi: KoiFactory
+  #     startBlock: 9672
+  #   mapping:
+  #     kind: ethereum/events
+  #     apiVersion: 0.0.7
+  #     language: wasm/assemblyscript
+  #     entities:
+  #       - KoiPair
+  #     abis:
+  #       - name: KoiFactory
+  #         file: ./abis/KoiFactory.json
+  #     eventHandlers:
+  #       - event: PairCreated(address indexed token0, address indexed token1, bool stable, address pair, uint, uint fee)
+  #         handler: handlePairCreated
+  #     file: ./src/koi-factory.ts
+  - kind: ethereum
+    name: KoiUsdceUsdt
+    network: zksync-era
+    source:
+      address: '0x9d2811b85c1d736427722817b69e4d1e98016bb0'
+      abi: KoiPair
+      startBlock: 24799912
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Total
+        - Week
+        - Month
+        - ClaveAccount
+      abis:
+        - name: KoiPair
+          file: ./abis/KoiPair.json
+      eventHandlers:
+        - event: Mint(indexed address,uint256,uint256)
+          handler: handleMint
+        - event: Burn(indexed address,uint256,uint256,indexed address)
+          handler: handleBurn
+        - event: Claim(indexed address,indexed address,uint256,uint256)
+          handler: handleClaim
+      file: ./src/koi-pair.ts
   - kind: ethereum
     name: OdosRouter
     network: zksync-era
