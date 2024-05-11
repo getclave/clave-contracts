@@ -28,10 +28,19 @@ interface ISyncRouter {
 
 interface ISyncStaking {
     function stake(uint256 amount, address to) external returns (uint256);
+    function userStaked(address recipient) external view returns (uint256);
 }
 
 interface ISyncEarnRouter {
     function deposit(address pairAddress, uint256 minLiquidity) external payable;
+    function stakePositions(
+        address pairAddress,
+        address recipient
+    ) external view returns (uint256[] memory tokensInPosition, uint256[] memory rewards);
+}
+
+interface ISyncPair is IERC20 {
+    function getReserves() external view returns (uint256, uint256);
 }
 
 contract SyncEarnRouter is ISyncEarnRouter {
@@ -48,6 +57,41 @@ contract SyncEarnRouter is ISyncEarnRouter {
     constructor(address syncRouterAddress, address syncStakingAddress) {
         syncRouter = ISyncRouter(syncRouterAddress);
         syncStaking = ISyncStaking(syncStakingAddress);
+    }
+
+    /**
+     * @notice View deposited token amounts for the tokenA and tokenB pair
+     * @notice View claimable fees for tokenA and tokenB pair
+     *
+     * @param pairAddress address         - Depositing token address in the pair
+     * @param recipient address           - Recipient address
+     * @return tokensInPosition uint256[] - Deposited token amounts
+     * @return rewards uint256[]          - Claimable fees
+     */
+    function stakePositions(
+        address pairAddress,
+        address recipient
+    ) external view override returns (uint256[] memory tokensInPosition, uint256[] memory rewards) {
+        ISyncPair pair = ISyncPair(pairAddress);
+
+        uint256 lpTokenBalance = syncStaking.userStaked(recipient);
+
+        uint256 totalSupply = pair.totalSupply();
+
+        (uint256 tokenAReserve, uint256 tokenBReserve) = pair.getReserves();
+
+        uint256 tokenAAmount = (lpTokenBalance * tokenAReserve) / totalSupply;
+        uint256 tokenBAmount = (lpTokenBalance * tokenBReserve) / totalSupply;
+
+        tokensInPosition = new uint256[](2);
+
+        tokensInPosition[0] = tokenAAmount;
+        tokensInPosition[1] = tokenBAmount;
+
+        rewards = new uint256[](2);
+
+        rewards[0] = 0;
+        rewards[1] = 0;
     }
 
     function deposit(address pairAddress, uint256 minLiquidity) external payable override {
