@@ -24,4 +24,5 @@ export const contractNames = {
     gaslessPaymaster:
         'contracts/paymasters/GaslessPaymaster.sol:GaslessPaymaster',
     koiEarnRouter: 'contracts/KoiEarnRouter.sol:KoiEarnRouter',
+    smoothieStore: 'contracts/berlin/SmoothieStore.sol:SmoothieStore',
 };
