@@ -34,7 +34,7 @@ contract SmoothieStore is Ownable {
      * @dev The caller's smoothie balance must be less than or equal to the smoothie limit
      */
     function buySmoothie(uint256 smoothieId) external {
-        require(smoothieBalance[msg.sender] <= smoothieLimit, 'SmoothieStore: limit exceeded');
+        require(smoothieBalance[msg.sender] < smoothieLimit, 'SmoothieStore: limit exceeded');
 
         smoothieBalance[msg.sender] += 1;
 
