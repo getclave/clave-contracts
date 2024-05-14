@@ -18,7 +18,7 @@ contract SmoothieStore is Ownable {
      */
     uint256 public smoothieLimit;
 
-    event BougthSmoothie(uint256 smoothieId);
+    event BoughtSmoothie(address buyer, uint256 smoothieId);
 
     /**
      * @notice Constructor to initialize the smoothie limit when the contract is deployed
@@ -38,7 +38,7 @@ contract SmoothieStore is Ownable {
 
         smoothieBalance[msg.sender] += 1;
 
-        emit BougthSmoothie(smoothieId);
+        emit BoughtSmoothie(msg.sender, smoothieId);
     }
 
     /**
