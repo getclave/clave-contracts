@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.17;
 
-
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 /**
@@ -33,7 +32,7 @@ contract SmoothieStore is Ownable {
      * @dev The caller's smoothie balance must be less than or equal to the smoothie limit
      */
     function buySmoothie() external {
-        require(smoothieBalance[msg.sender] <= smoothieLimit, "SmoothieStore: limit exceeded");
+        require(smoothieBalance[msg.sender] <= smoothieLimit, 'SmoothieStore: limit exceeded');
 
         smoothieBalance[msg.sender] += 1;
     }
@@ -42,7 +41,7 @@ contract SmoothieStore is Ownable {
      * @notice Function to set a new smoothie limit
      * @param _smoothieLimit uint256 - The new limit of smoothies that an address can buy
      */
-    function setSmoothieLimit(uint256 _smoothieLimit) external onlyOwner{
+    function setSmoothieLimit(uint256 _smoothieLimit) external onlyOwner {
         smoothieLimit = _smoothieLimit;
     }
 }
