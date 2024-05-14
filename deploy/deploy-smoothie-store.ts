@@ -19,7 +19,7 @@ export default async function (
     const wallet = new Wallet(privateKey);
     const deployer = new Deployer(hre, wallet);
     const chainId = hre.network.config.chainId;
-    const SMOOTHIE_LIMIT = 3;
+    const SMOOTHIE_LIMIT = 1000;
 
     const smoothieStore = await deployer.loadArtifact('SmoothieStore');
 

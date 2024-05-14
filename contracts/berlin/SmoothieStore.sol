@@ -18,6 +18,8 @@ contract SmoothieStore is Ownable {
      */
     uint256 public smoothieLimit;
 
+    event BougthSmoothie(uint256 smoothieId);
+
     /**
      * @notice Constructor to initialize the smoothie limit when the contract is deployed
      * @param _smoothieLimit uint256 - The initial limit of smoothies that an address can buy
@@ -31,10 +33,12 @@ contract SmoothieStore is Ownable {
      * @dev The function increments the caller's smoothie balance by 1 if the limit is not exceeded
      * @dev The caller's smoothie balance must be less than or equal to the smoothie limit
      */
-    function buySmoothie() external {
+    function buySmoothie(uint256 smoothieId) external {
         require(smoothieBalance[msg.sender] <= smoothieLimit, 'SmoothieStore: limit exceeded');
 
         smoothieBalance[msg.sender] += 1;
+
+        emit BougthSmoothie(smoothieId);
     }
 
     /**
