@@ -313,7 +313,7 @@ contract KoiEarnRouter is IKoiEarnRouter {
         emit Deposit(
             msg.sender,
             tokenAAddress,
-            tokenAmount - swappedAmount,
+            tokenAmount - swappedAmount - desiredA + amountA,
             tokenBAddress,
             isStable
         );
