@@ -9,9 +9,17 @@ import {VerifierCaller} from '../helpers/VerifierCaller.sol';
  * @title secp256r1 ec keys' signature validator contract implementing its interface
  * @author https://getclave.io
  */
-contract TEEValidatorConstant is IR1Validator, VerifierCaller {
+contract TEEValidatorTest is IR1Validator, VerifierCaller {
     //dummy value
-    address constant P256_VERIFIER = 0x4323cffC1Fda2da9928cB5A5A9dA45DC8Ee38a2f;
+    address immutable P256_VERIFIER;
+
+    /**
+     * @notice Constructor function of the validator
+     * @param p256VerifierAddress address - Address of the p256 verifier contract
+     */
+    constructor(address p256VerifierAddress) {
+        P256_VERIFIER = p256VerifierAddress;
+    }
 
     /// @inheritdoc IR1Validator
     function validateSignature(
@@ -21,7 +29,7 @@ contract TEEValidatorConstant is IR1Validator, VerifierCaller {
     ) external view override returns (bool valid) {
         bytes32[2] memory rs = abi.decode(signature, (bytes32[2]));
 
-        valid = callVerifier(P256_VERIFIER, sha256(abi.encodePacked(signedHash)), rs, pubKey);
+        valid = callVerifier(P256_VERIFIER, signedHash, rs, pubKey);
     }
 
     /// @inheritdoc IERC165

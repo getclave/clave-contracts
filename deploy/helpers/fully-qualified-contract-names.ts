@@ -11,7 +11,7 @@ export const contractNames = {
     teeValidator:
         'contracts/validators/TEEValidatorConstant.sol:TEEValidatorConstant',
     passkeyValidator:
-        'contracts/validators/PasskeyValidatorConstant.sol:PasskeyValidatorConstant',
+        'contracts/validators/PasskeyValidator.sol:PasskeyValidator',
     account: 'contracts/ClaveProxy.sol:ClaveProxy',
     registry: 'contracts/ClaveRegistry.sol:ClaveRegistry',
     socialRecovery:
@@ -23,7 +23,7 @@ export const contractNames = {
         'contracts/test/ERC20PaymasterMock.sol:ERC20PaymasterMock',
     gaslessPaymaster:
         'contracts/paymasters/GaslessPaymaster.sol:GaslessPaymaster',
-    ethdenverPaymaster:
-        'contracts/paymasters/ETHDenverPaymaster.sol:ETHDenverPaymaster',
-    buidlToken: 'contracts/BUIDL.sol:BUIDLBucks',
+    koiEarnRouter: 'contracts/KoiEarnRouter.sol:KoiEarnRouter',
+    syncEarnRouter: 'contracts/SyncEarnRouter.sol:SyncEarnRouter',
+    smoothieStore: 'contracts/berlin/SmoothieStore.sol:SmoothieStore',
 };

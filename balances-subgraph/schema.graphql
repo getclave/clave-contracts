@@ -1,0 +1,19 @@
+type ClaveAccount @entity {
+  "account address"
+  id: Bytes!
+  erc20balances: [ERC20Balance!]! @derivedFrom(field: "account")
+}
+
+type ERC20 @entity {
+  "token address"
+  id: Bytes!
+  totalAmount: BigInt!
+}
+
+type ERC20Balance @entity {
+  "account.id.concat(ERC20.id)"
+  id: Bytes!
+  account: ClaveAccount!
+  token: ERC20!
+  amount: BigInt!
+}

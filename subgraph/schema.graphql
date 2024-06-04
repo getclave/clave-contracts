@@ -1,0 +1,120 @@
+type Total @entity {
+  "0x746f74616c"
+  id: Bytes!
+  createdAccounts: Int!
+  deployedAccounts: Int!
+  transactions: Int!
+  backedUp: Int!
+  gasSponsored: BigInt!
+  invested: BigInt!
+  realizedGain: BigInt!
+}
+
+type Week @entity {
+  "week start timestamp"
+  id: Bytes!
+  createdAccounts: Int!
+  deployedAccounts: Int!
+  activeAccounts: Int!
+  transactions: Int!
+  gasSponsored: BigInt!
+  investIn: BigInt!
+  investOut: BigInt!
+  realizedGain: BigInt!
+  swappedTo: [WeeklySwappedTo!]! @derivedFrom(field: "week")
+}
+
+type Month @entity {
+  "month start timestamp concat 0x00"
+  id: Bytes!
+  createdAccounts: Int!
+  deployedAccounts: Int!
+  activeAccounts: Int!
+  transactions: Int!
+  gasSponsored: BigInt!
+  investIn: BigInt!
+  investOut: BigInt!
+  realizedGain: BigInt!
+  swappedTo: [MonthlySwappedTo!]! @derivedFrom(field: "month")
+}
+
+type WeeklySwappedTo @entity {
+  "week.id.concat(erc20)"
+  id: Bytes!
+  week: Week!
+  erc20: Bytes!
+  amount: BigInt!
+}
+
+type MonthlySwappedTo @entity {
+  "month.id.concat(erc20)"
+  id: Bytes!
+  month: Month!
+  erc20: Bytes!
+  amount: BigInt!
+}
+
+type WeekAccount @entity(immutable: true) {
+  "account.id.concat(week.id)"
+  id: Bytes!
+  account: ClaveAccount!
+  week: Week!
+}
+
+type MonthAccount @entity(immutable: true) {
+  "account.id.concat(month.id)"
+  id: Bytes!
+  account: ClaveAccount!
+  month: Month!
+}
+
+type ClaveAccount @entity {
+  "account address"
+  id: Bytes!
+  creationDate: BigInt!
+  deployDate: BigInt
+  recoveryCount: Int!
+  hasRecovery: Boolean!
+  isRecovering: Boolean!
+  txCount: Int!
+  "account implementation address"
+  implementation: Bytes
+  invested: BigInt!
+  realizedGain: BigInt!
+  transactions: [ClaveTransaction!]! @derivedFrom(field: "sender")
+  inAppSwaps: [InAppSwap!]! @derivedFrom(field: "account")
+  activeWeeks: [WeekAccount!]! @derivedFrom(field: "account")
+}
+
+enum Paymaster {
+  None
+  ERC20
+  Gasless
+}
+
+type ClaveTransaction @entity(immutable: true) {
+  "transaction hash"
+  id: Bytes!
+  "tx.from"
+  sender: ClaveAccount!
+  "tx.to"
+  to: Bytes
+  "tx.value"
+  value: BigInt!
+  "tx.gasPrice * tx.gasUsed"
+  gasCost: BigInt!
+  "type of paymaster used"
+  paymaster: Paymaster!
+  "block.timestamp"
+  date: BigInt!
+}
+
+type InAppSwap @entity(immutable: true) {
+  id: Bytes!
+  account: ClaveAccount!
+  tokenIn: Bytes!
+  amountIn: BigInt!
+  tokenOut: Bytes!
+  amountOut: BigInt!
+  date: BigInt!
+}

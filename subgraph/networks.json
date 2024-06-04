@@ -1,0 +1,30 @@
+{
+  "zksync-era": {
+    "AccountFactory": {
+      "address": "0x3B91C2eCEaAd96f5Ef3B08738B2aA202a4012a79",
+      "startBlock": 24799912
+    },
+    "AccountFactoryV2": {
+      "address": "0x2B196aaB35184aa539E3D8360258CAF8d8309Ebc",
+      "startBlock": 30099184
+    },
+    "OdosRouter": {
+      "address": "0x4bBa932E9792A2b917D47830C93a9BC79320E4f7",
+      "startBlock": 24799912
+    },
+    "ClaveImplementation": {
+      "address": "0xf5bEDd0304ee359844541262aC349a6016A50bc6"
+    },
+    "GaslessPaymaster": {
+      "address": "0xa05B87198934eCB187157cBb98b25A0B79F33DEd"
+    },
+    "ERC20Paymaster": {
+      "address": "0x7a862CC27FAD666aB180F1708f8b18F7892FA761",
+      "startBlock": 24799912
+    },
+    "SocialRecovery": {
+      "address": "0x9eF467CAA8291c6DAdD08EA458D763a8258B347e",
+      "startBlock": 24799912
+    }
+  }
+}

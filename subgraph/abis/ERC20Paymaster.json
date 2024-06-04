@@ -1,0 +1,475 @@
+[
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "tokenAddress",
+            "type": "address"
+          },
+          { "internalType": "uint32", "name": "decimals", "type": "uint32" },
+          {
+            "internalType": "uint256",
+            "name": "priceMarkup",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct TokenInput[]",
+        "name": "tokens",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  { "inputs": [], "name": "CalldataMustHaveValidPayload", "type": "error" },
+  { "inputs": [], "name": "CalldataOverOrUnderFlow", "type": "error" },
+  { "inputs": [], "name": "CanNotPickMedianOfEmptyArray", "type": "error" },
+  {
+    "inputs": [],
+    "name": "DataPackageTimestampMustNotBeZero",
+    "type": "error"
+  },
+  { "inputs": [], "name": "DataPackageTimestampsMustBeEqual", "type": "error" },
+  {
+    "inputs": [],
+    "name": "EachSignerMustProvideTheSameValue",
+    "type": "error"
+  },
+  { "inputs": [], "name": "EmptyCalldataPointersArr", "type": "error" },
+  { "inputs": [], "name": "FAILED_FEE_TRANSFER", "type": "error" },
+  { "inputs": [], "name": "GetDataServiceIdNotImplemented", "type": "error" },
+  { "inputs": [], "name": "INVALID_MARKUP", "type": "error" },
+  { "inputs": [], "name": "INVALID_TOKEN", "type": "error" },
+  { "inputs": [], "name": "IncorrectUnsignedMetadataSize", "type": "error" },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "receivedSignersCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "requiredSignersCount",
+        "type": "uint256"
+      }
+    ],
+    "name": "InsufficientNumberOfUniqueSigners",
+    "type": "error"
+  },
+  { "inputs": [], "name": "InvalidCalldataPointer", "type": "error" },
+  { "inputs": [], "name": "LESS_ALLOWANCE_FOR_PAYMASTER", "type": "error" },
+  { "inputs": [], "name": "NOT_FROM_BOOTLOADER", "type": "error" },
+  {
+    "inputs": [],
+    "name": "RedstonePayloadMustHaveAtLeastOneDataPackage",
+    "type": "error"
+  },
+  { "inputs": [], "name": "SHORT_PAYMASTER_INPUT", "type": "error" },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "receivedSigner", "type": "address" }
+    ],
+    "name": "SignerNotAuthorised",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "receivedTimestampSeconds",
+        "type": "uint256"
+      },
+      { "internalType": "uint256", "name": "blockTimestamp", "type": "uint256" }
+    ],
+    "name": "TimestampFromTooLongFuture",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "receivedTimestampSeconds",
+        "type": "uint256"
+      },
+      { "internalType": "uint256", "name": "blockTimestamp", "type": "uint256" }
+    ],
+    "name": "TimestampIsTooOld",
+    "type": "error"
+  },
+  { "inputs": [], "name": "UNAUTHORIZED_WITHDRAW", "type": "error" },
+  { "inputs": [], "name": "UNSUPPORTED_FLOW", "type": "error" },
+  { "inputs": [], "name": "UNSUPPORTED_TOKEN", "type": "error" },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "BalanceWithdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "ERC20PaymasterUsed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "ERC20TokenAllowed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "ERC20TokenRemoved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256[]", "name": "values", "type": "uint256[]" }
+    ],
+    "name": "aggregateValues",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "tokenAddress",
+            "type": "address"
+          },
+          { "internalType": "uint32", "name": "decimals", "type": "uint32" },
+          {
+            "internalType": "uint256",
+            "name": "priceMarkup",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct TokenInput",
+        "name": "token",
+        "type": "tuple"
+      }
+    ],
+    "name": "allowToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "allowedTokens",
+    "outputs": [
+      { "internalType": "uint32", "name": "decimals", "type": "uint32" },
+      { "internalType": "uint192", "name": "markup", "type": "uint192" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes", "name": "", "type": "bytes" }],
+    "name": "callOracle",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "extractTimestampsAndAssertAllAreEqual",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "extractedTimestamp",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "signerAddress", "type": "address" }
+    ],
+    "name": "getAuthorisedSignerIndex",
+    "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getDataServiceId",
+    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getUniqueSignersThreshold",
+    "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes", "name": "_context", "type": "bytes" },
+      {
+        "components": [
+          { "internalType": "uint256", "name": "txType", "type": "uint256" },
+          { "internalType": "uint256", "name": "from", "type": "uint256" },
+          { "internalType": "uint256", "name": "to", "type": "uint256" },
+          { "internalType": "uint256", "name": "gasLimit", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "gasPerPubdataByteLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxFeePerGas",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxPriorityFeePerGas",
+            "type": "uint256"
+          },
+          { "internalType": "uint256", "name": "paymaster", "type": "uint256" },
+          { "internalType": "uint256", "name": "nonce", "type": "uint256" },
+          { "internalType": "uint256", "name": "value", "type": "uint256" },
+          {
+            "internalType": "uint256[4]",
+            "name": "reserved",
+            "type": "uint256[4]"
+          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          { "internalType": "bytes", "name": "signature", "type": "bytes" },
+          {
+            "internalType": "bytes32[]",
+            "name": "factoryDeps",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "bytes",
+            "name": "paymasterInput",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes",
+            "name": "reservedDynamic",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct Transaction",
+        "name": "_transaction",
+        "type": "tuple"
+      },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      { "internalType": "enum ExecutionResult", "name": "", "type": "uint8" },
+      {
+        "internalType": "uint256",
+        "name": "_maxRefundedGas",
+        "type": "uint256"
+      }
+    ],
+    "name": "postTransaction",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "tokenAddress", "type": "address" }
+    ],
+    "name": "removeToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "newOwner", "type": "address" }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      {
+        "components": [
+          { "internalType": "uint256", "name": "txType", "type": "uint256" },
+          { "internalType": "uint256", "name": "from", "type": "uint256" },
+          { "internalType": "uint256", "name": "to", "type": "uint256" },
+          { "internalType": "uint256", "name": "gasLimit", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "gasPerPubdataByteLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxFeePerGas",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxPriorityFeePerGas",
+            "type": "uint256"
+          },
+          { "internalType": "uint256", "name": "paymaster", "type": "uint256" },
+          { "internalType": "uint256", "name": "nonce", "type": "uint256" },
+          { "internalType": "uint256", "name": "value", "type": "uint256" },
+          {
+            "internalType": "uint256[4]",
+            "name": "reserved",
+            "type": "uint256[4]"
+          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          { "internalType": "bytes", "name": "signature", "type": "bytes" },
+          {
+            "internalType": "bytes32[]",
+            "name": "factoryDeps",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "bytes",
+            "name": "paymasterInput",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes",
+            "name": "reservedDynamic",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct Transaction",
+        "name": "_transaction",
+        "type": "tuple"
+      }
+    ],
+    "name": "validateAndPayForPaymasterTransaction",
+    "outputs": [
+      { "internalType": "bytes4", "name": "magic", "type": "bytes4" },
+      { "internalType": "bytes", "name": "context", "type": "bytes" }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "receivedTimestampMilliseconds",
+        "type": "uint256"
+      }
+    ],
+    "name": "validateTimestamp",
+    "outputs": [],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "token", "type": "address" },
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "withdrawToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  { "stateMutability": "payable", "type": "receive" }
+]

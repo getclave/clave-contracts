@@ -14,10 +14,12 @@ import {BootloaderAuth} from '../auth/BootloaderAuth.sol';
  * @author https://getclave.io
  */
 contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
+    uint256 public maxSponsoredEth = 0.001 ether;
     // User tx limit per paymaster
     uint256 public userLimit;
     // Clave account registry contract
     address public claveRegistry;
+    address public claveRegistry2;
 
     // Store users sponsored tx count
     mapping(address => uint256) public userSponsored;
@@ -65,7 +67,10 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
 
         if (limitlessAddresses[userAddress]) {
             // Allow limitlessAddresses to use paymaster freely
-        } else if (IClaveRegistry(claveRegistry).isClave(userAddress)) {
+        } else if (
+            IClaveRegistry(claveRegistry).isClave(userAddress) ||
+            IClaveRegistry(claveRegistry2).isClave(userAddress)
+        ) {
             // Check if the account is a Clave account
             // Then, check the user sponsorship limit and decrease
             uint256 txAmount = userSponsored[userAddress];
@@ -78,12 +83,12 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
         // Required ETH and token to pay fees
         uint256 requiredETH = _transaction.gasLimit * _transaction.maxFeePerGas;
 
+        // Check if the required ETH is less than the maximum sponsored ETH
+        if (requiredETH > maxSponsoredEth) revert Errors.EXCEEDS_MAX_SPONSORED_ETH();
+
         // Transfer fees to the bootloader
         (bool success, ) = payable(BOOTLOADER_FORMAL_ADDRESS).call{value: requiredETH}('');
         if (!success) revert Errors.FAILED_FEE_TRANSFER();
-
-        // No context needed
-        context = bytes('');
     }
 
     /// @inheritdoc IPaymaster
@@ -109,7 +114,7 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
         uint256 limit;
         uint256 sponsored = userSponsored[userAddress];
 
-        userLimit > sponsored ? limit = (userLimit - sponsored) : limit = 0;
+        limit = userLimit > sponsored ? (userLimit - sponsored) : 0;
 
         return limit;
     }
@@ -139,6 +144,15 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
     }
 
     /**
+     * @notice Update the maximum sponsored ETH
+     * @param newMaxSponsoredEth uint256 - New maximum sponsored ETH
+     * @dev Only owner address can call this method
+     */
+    function updateMaxSponsoredEth(uint256 newMaxSponsoredEth) external onlyOwner {
+        maxSponsoredEth = newMaxSponsoredEth;
+    }
+
+    /**
      * @notice Add minter addresses to the whitelist
      * @param addresses address[] - Array of addresses to be added
      * @dev Only owner address can call this method
@@ -147,7 +161,7 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
     function addLimitlessAddresses(address[] calldata addresses) external onlyOwner {
         for (uint i = 0; i < addresses.length; i++) {
             address addr = addresses[i];
-            require(addr != address(0) || !limitlessAddresses[addr]);
+            require(addr != address(0) && !limitlessAddresses[addr]);
 
             limitlessAddresses[addr] = true;
         }
@@ -162,9 +176,27 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
     function removeLimitlessAddresses(address[] calldata addresses) external onlyOwner {
         for (uint i = 0; i < addresses.length; i++) {
             address addr = addresses[i];
-            require(addr != address(0) || limitlessAddresses[addr]);
+            require(limitlessAddresses[addr]);
 
             delete (limitlessAddresses[addr]);
         }
+    }
+
+    /**
+     * @notice Change the Clave registry address
+     * @param newRegistry address - New Clave registry address
+     * @dev Only owner address can call this method
+     */
+    function changeClaveRegistry(address newRegistry) external onlyOwner {
+        claveRegistry = newRegistry;
+    }
+
+    /**
+     * @notice Change the Clave registry2 address
+     * @param newRegistry address - New Clave registry2 address
+     * @dev Only owner address can call this method
+     */
+    function changeClaveRegistry2(address newRegistry) external onlyOwner {
+        claveRegistry2 = newRegistry;
     }
 }

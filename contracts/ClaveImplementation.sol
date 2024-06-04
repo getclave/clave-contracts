@@ -19,6 +19,7 @@ import {Errors} from './libraries/Errors.sol';
 import {SignatureDecoder} from './libraries/SignatureDecoder.sol';
 
 import {ERC1271Handler} from './handlers/ERC1271Handler.sol';
+import {Call} from './batch/BatchCaller.sol';
 
 import {IClaveAccount} from './interfaces/IClave.sol';
 
@@ -54,11 +55,13 @@ contract ClaveImplementation is
      * @param initialR1Owner bytes calldata - The initial r1 owner of the account
      * @param initialR1Validator address    - The initial r1 validator of the account
      * @param modules bytes[] calldata      - The list of modules to enable for the account
+     * @param initCall Call calldata         - The initial call to be executed after the account is created
      */
     function initialize(
         bytes calldata initialR1Owner,
         address initialR1Validator,
-        bytes[] calldata modules
+        bytes[] calldata modules,
+        Call calldata initCall
     ) external initializer {
         _r1AddOwner(initialR1Owner);
         _r1AddValidator(initialR1Validator);
@@ -68,6 +71,11 @@ contract ClaveImplementation is
             unchecked {
                 i++;
             }
+        }
+
+        if (initCall.target != address(0)) {
+            uint128 value = Utils.safeCastToU128(initCall.value);
+            _executeCall(initCall.target, value, initCall.callData, initCall.allowFailure);
         }
     }
 
@@ -172,6 +180,8 @@ contract ClaveImplementation is
         if (!success) {
             revert Errors.FEE_PAYMENT_FAILED();
         }
+
+        emit FeePaid();
     }
 
     /**
@@ -228,20 +238,37 @@ contract ClaveImplementation is
         address to = _safeCastToAddress(transaction.to);
         uint128 value = Utils.safeCastToU128(transaction.value);
         bytes calldata data = transaction.data;
+
+        _executeCall(to, value, data, false);
+    }
+
+    function _executeCall(
+        address to,
+        uint128 value,
+        bytes calldata data,
+        bool allowFailure
+    ) internal {
         uint32 gas = Utils.safeCastToU32(gasleft());
 
         if (to == address(DEPLOYER_SYSTEM_CONTRACT)) {
             // Note, that the deployer contract can only be called
             // with a "systemCall" flag.
-            SystemContractsCaller.systemCallWithPropagatedRevert(gas, to, value, data);
+            (bool success, bytes memory returnData) = SystemContractsCaller
+                .systemCallWithReturndata(gas, to, value, data);
+            if (!success && !allowFailure) {
+                assembly {
+                    let size := mload(returnData)
+                    revert(add(returnData, 0x20), size)
+                }
+            }
         } else if (to == _BATCH_CALLER) {
             bool success = EfficientCall.rawDelegateCall(gas, to, data);
-            if (!success) {
+            if (!success && !allowFailure) {
                 EfficientCall.propagateRevert();
             }
         } else {
             bool success = EfficientCall.rawCall(gas, to, value, data, false);
-            if (!success) {
+            if (!success && !allowFailure) {
                 EfficientCall.propagateRevert();
             }
         }

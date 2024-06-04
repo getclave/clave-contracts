@@ -103,6 +103,9 @@ abstract contract HookManager is IHookManager, Auth {
             cursor = validationHooks[cursor];
         }
 
+        // Ensure that hookData is not tampered with
+        if (hookData.length != idx) return false;
+
         return true;
     }
 

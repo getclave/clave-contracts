@@ -20,7 +20,7 @@ library SignatureDecoder {
 
     // Decode signature into signature and validator
     function decodeSignatureNoHookData(
-        bytes calldata signatureAndValidator
+        bytes memory signatureAndValidator
     ) internal pure returns (bytes memory signature, address validator) {
         (signature, validator) = abi.decode(signatureAndValidator, (bytes, address));
     }

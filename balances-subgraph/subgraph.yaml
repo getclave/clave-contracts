@@ -1,0 +1,50 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: erc20
+    network: zksync-era
+    source:
+      abi: ERC20
+      startBlock: 24799912
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ERC20
+        - ERC20Balance
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/erc20.ts
+  - kind: ethereum
+    name: AccountFactory
+    network: zksync-era
+    source:
+      address: '0x2B196aaB35184aa539E3D8360258CAF8d8309Ebc'
+      abi: AccountFactory
+      startBlock: 24799912
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ClaveAccount
+      abis:
+        - name: AccountFactory
+          file: ./abis/AccountFactory.json
+      eventHandlers:
+        - event: ClaveAccountCreated(indexed address)
+          handler: handleClaveAccountCreated
+      blockHandlers:
+        - handler: handleOnce
+          filter:
+            kind: once
+      file: ./src/account-factory.ts

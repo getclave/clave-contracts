@@ -1,0 +1,292 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  # - kind: ethereum
+  #   name: KoiFactory
+  #   network: zksync-era
+  #   source:
+  #     address: '0x40be1cBa6C5B47cDF9da7f963B6F761F4C60627D'
+  #     abi: KoiFactory
+  #     startBlock: 9672
+  #   mapping:
+  #     kind: ethereum/events
+  #     apiVersion: 0.0.7
+  #     language: wasm/assemblyscript
+  #     entities:
+  #       - KoiPair
+  #     abis:
+  #       - name: KoiFactory
+  #         file: ./abis/KoiFactory.json
+  #     eventHandlers:
+  #       - event: PairCreated(address indexed token0, address indexed token1, bool stable, address pair, uint, uint fee)
+  #         handler: handlePairCreated
+  #     file: ./src/koi-factory.ts
+  - kind: ethereum
+    name: KoiUsdceUsdt
+    network: zksync-era
+    source:
+      address: '0x9d2811b85c1d736427722817b69e4d1e98016bb0'
+      abi: KoiPair
+      startBlock: 24799912
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Total
+        - Week
+        - Month
+        - ClaveAccount
+      abis:
+        - name: KoiPair
+          file: ./abis/KoiPair.json
+      eventHandlers:
+        - event: Mint(indexed address,uint256,uint256)
+          handler: handleMint
+        - event: Burn(indexed address,uint256,uint256,indexed address)
+          handler: handleBurn
+        - event: Claim(indexed address,indexed address,uint256,uint256)
+          handler: handleClaim
+      file: ./src/koi-pair.ts
+  - kind: ethereum
+    name: OdosRouter
+    network: zksync-era
+    source:
+      address: '0x4bBa932E9792A2b917D47830C93a9BC79320E4f7'
+      abi: OdosRouter
+      startBlock: 24799912
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - InAppSwap
+        - WeeklySwappedTo
+        - MonthlySwappedTo
+      abis:
+        - name: OdosRouter
+          file: ./abis/OdosRouter.json
+      eventHandlers:
+        - event: Swap(address,uint256,address,uint256,address,int256,uint32)
+          handler: handleSwap
+      file: ./src/odos-router.ts
+  - kind: ethereum
+    name: AccountFactory
+    network: zksync-era
+    source:
+      address: '0x3B91C2eCEaAd96f5Ef3B08738B2aA202a4012a79'
+      abi: AccountFactory
+      startBlock: 24799912
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ClaveAccount
+        - Week
+        - Month
+        - Total
+      abis:
+        - name: AccountFactory
+          file: ./abis/AccountFactory.json
+      eventHandlers:
+        - event: NewClaveAccount(indexed address)
+          handler: handleNewClaveAccount
+      blockHandlers:
+        - handler: handleOnce
+          filter:
+            kind: once
+      file: ./src/account-factory.ts
+  - kind: ethereum
+    name: AccountFactoryV2
+    network: zksync-era
+    source:
+      address: '0x2B196aaB35184aa539E3D8360258CAF8d8309Ebc'
+      abi: AccountFactoryV2
+      startBlock: 30099184
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ClaveAccount
+        - Week
+        - Month
+        - Total
+      abis:
+        - name: AccountFactoryV2
+          file: ./abis/AccountFactoryV2.json
+      eventHandlers:
+        - event: ClaveAccountCreated(indexed address)
+          handler: handleClaveAccountCreated
+        - event: ClaveAccountDeployed(indexed address)
+          handler: handleClaveAccountDeployed
+      file: ./src/account-factory-v2.ts
+  - kind: ethereum
+    name: GaslessPaymaster
+    network: zksync-era
+    source:
+      address: '0xa05B87198934eCB187157cBb98b25A0B79F33DEd'
+      abi: GaslessPaymaster
+      startBlock: 30099198
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ClaveTransaction
+        - Week
+        - WeekAccount
+        - Month
+        - MonthAccount
+        - Total
+        - ClaveAccount
+      abis:
+        - name: GaslessPaymaster
+          file: ./abis/GaslessPaymaster.json
+      eventHandlers:
+        - event: FeeSponsored(address)
+          handler: handleFeeSponsored
+          receipt: true
+      file: ./src/gasless-paymaster.ts
+  - kind: ethereum
+    name: GaslessPaymasterV2
+    network: zksync-era
+    source:
+      address: '0x10A8d22f91a326d9Fef2a8a63a5a54A6d4fBC4e8'
+      abi: GaslessPaymaster
+      startBlock: 24799936
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ClaveTransaction
+        - Week
+        - WeekAccount
+        - Month
+        - MonthAccount
+        - Total
+        - ClaveAccount
+      abis:
+        - name: GaslessPaymaster
+          file: ./abis/GaslessPaymaster.json
+      eventHandlers:
+        - event: FeeSponsored(address)
+          handler: handleFeeSponsored
+          receipt: true
+      file: ./src/gasless-paymaster.ts
+  - kind: ethereum
+    name: GaslessPaymasterV3
+    network: zksync-era
+    source:
+      address: '0xCBf1367699d8704a320ADF06E23c294AC089270B'
+      abi: GaslessPaymaster
+      startBlock: 24799936
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ClaveTransaction
+        - Week
+        - WeekAccount
+        - Month
+        - MonthAccount
+        - Total
+        - ClaveAccount
+      abis:
+        - name: GaslessPaymaster
+          file: ./abis/GaslessPaymaster.json
+      eventHandlers:
+        - event: FeeSponsored(address)
+          handler: handleFeeSponsored
+          receipt: true
+      file: ./src/gasless-paymaster.ts
+  - kind: ethereum
+    name: ERC20Paymaster
+    network: zksync-era
+    source:
+      address: '0x7a862CC27FAD666aB180F1708f8b18F7892FA761'
+      abi: ERC20Paymaster
+      startBlock: 24960486
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ClaveTransaction
+        - Week
+        - WeekAccount
+        - Month
+        - MonthAccount
+        - Total
+        - ClaveAccount
+      abis:
+        - name: ERC20Paymaster
+          file: ./abis/ERC20Paymaster.json
+      eventHandlers:
+        - event: ERC20PaymasterUsed(indexed address,address)
+          handler: handleERC20PaymasterUsed
+          receipt: true
+      file: ./src/erc-20-paymaster.ts
+  - kind: ethereum
+    name: SocialRecovery
+    network: zksync-era
+    source:
+      address: '0x9eF467CAA8291c6DAdD08EA458D763a8258B347e'
+      abi: SocialRecovery
+      startBlock: 24799936
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ClaveAccount
+        - Total
+      abis:
+        - name: SocialRecovery
+          file: ./abis/SocialRecovery.json
+      eventHandlers:
+        - event: Disabled(indexed address)
+          handler: handleDisabled
+        - event: Inited(indexed address)
+          handler: handleInited
+        - event: RecoveryExecuted(indexed address,bytes)
+          handler: handleRecoveryExecuted
+        - event: RecoveryStarted(indexed address,bytes,uint256)
+          handler: handleRecoveryStarted
+        - event: RecoveryStopped(indexed address)
+          handler: handleRecoveryStopped
+      file: ./src/social-recovery.ts
+templates:
+  - kind: ethereum
+    name: Account
+    network: zksync-era
+    source:
+      abi: ClaveImplementation
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Owner
+        - ClaveTransaction
+        - Week
+        - WeekAccount
+        - Month
+        - MonthAccount
+        - Total
+        - ClaveAccount
+      abis:
+        - name: ClaveImplementation
+          file: ./abis/ClaveImplementation.json
+      eventHandlers:
+        - event: FeePaid()
+          handler: handleFeePaid
+        - event: Upgraded(indexed address,indexed address)
+          handler: handleUpgraded
+      file: ./src/account.ts

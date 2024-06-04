@@ -21,7 +21,6 @@ import {IValidatorManager} from './IValidatorManager.sol';
  */
 interface IClaveAccount is
     IERC1271Upgradeable,
-    IERC777Recipient,
     IERC721Receiver,
     IERC1155Receiver,
     IHookManager,
@@ -30,4 +29,6 @@ interface IClaveAccount is
     IValidatorManager,
     IUpgradeManager,
     IAccount
-{}
+{
+    event FeePaid();
+}

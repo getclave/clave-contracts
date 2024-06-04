@@ -1,9 +1,15 @@
 {
   "name": "clave-contracts",
   "version": "1.0.0",
-  "main": "index.js",
   "author": "getclave.io",
-  "license": "MIT",
+  "dependencies": {
+    "@matterlabs/zksync-contracts": "^0.6.1",
+    "@nomad-xyz/excessively-safe-call": "github:nomad-xyz/ExcessivelySafeCall",
+    "@openzeppelin/contracts": "4.6.0",
+    "@openzeppelin/contracts-upgradeable": "4.6.0",
+    "@redstone-finance/evm-connector": "0.3.6",
+    "ts-morph": "^19.0.0"
+  },
   "devDependencies": {
     "@getclave/constants": "1.0.0",
     "@matterlabs/hardhat-zksync-chai-matchers": "1.2.1",
@@ -21,7 +27,7 @@
     "@types/mocha": "^10.0.1",
     "chai": "^4.3.7",
     "dotenv": "^16.0.3",
-    "elliptic": "^6.5.4",
+    "elliptic": "6.5.4",
     "ethers": "^6.9.2",
     "hardhat": "^2.19.2",
     "mocha": "^10.2.0",
@@ -32,23 +38,17 @@
     "typescript": "5.3.3",
     "zksync-ethers": "^6.0.0"
   },
+  "license": "MIT",
+  "main": "index.js",
   "scripts": {
-    "test": "exit 0",
-    "test-real": "hardhat test --network inMemoryNode",
-    "test-real-docker": "hardhat test --network dockerizedNode",
     "auto-test": "./test/bash/autotest.sh",
     "gas-report": "./test/bash/snapshot.sh",
-    "release-dev": "npx hardhat deploy-zksync --script release-dev.ts",
-    "release-prod": "npx hardhat deploy-zksync --script release-prod.ts",
+    "lint": "npx prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "lint-check": "npx prettier --list-different --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
-    "lint": "npx prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'"
-  },
-  "dependencies": {
-    "@matterlabs/zksync-contracts": "^0.6.1",
-    "@nomad-xyz/excessively-safe-call": "github:nomad-xyz/ExcessivelySafeCall",
-    "@openzeppelin/contracts": "4.6.0",
-    "@openzeppelin/contracts-upgradeable": "4.6.0",
-    "@redstone-finance/evm-connector": "0.3.6",
-    "ts-morph": "^19.0.0"
+    "release-dev": "npx hardhat deploy-zksync --script release-dev.ts",
+    "release-prod": "npx hardhat deploy-zksync --script release-prod.ts --network zkSyncMainnet",
+    "test": "exit 0",
+    "test-real": "hardhat test --network inMemoryNode",
+    "test-real-docker": "hardhat test --network dockerizedNode"
   }
 }

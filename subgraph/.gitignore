@@ -1,0 +1,10 @@
+# Matchstick binaries
+tests/.*
+matchstick
+
+# Test coverage tools
+tests/.tools/
+
+# Graph CLI
+generated/
+build/
