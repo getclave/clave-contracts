@@ -27,6 +27,7 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
 
     event NameRegistered(string indexed name, address indexed owner);
     event NameDeleted(string indexed name, address indexed owner);
+    event NameTransferred(string indexed name, address indexed from, address indexed to);
 
     constructor(string memory baseURI) ERC721('ClaveNames', 'CLVN') {
         baseTokenURI = baseURI;
@@ -47,6 +48,7 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         require(namesToAddresses[domain].id == 0, '[register] Already registered.');
         require(bytes(domain).length != 0, '[register] Null name');
         require(isAlphanumeric(domain), '[register] Unsupported characters.');
+        require(balanceOf(to) == 0, '[register] Already have.');
 
         namesToAddresses[domain].id = newItemId;
         idsToNames[newItemId].name = domain;
@@ -102,6 +104,15 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         emit NameDeleted(domain, msg.sender);
 
         super.burn(tokenId);
+    }
+
+    function _transfer(address from, address to, uint256 tokenId) internal override {
+        require(balanceOf(to) == 0, '[register] Already have.');
+
+        string memory domain = idsToNames[tokenId].name;
+        emit NameTransferred(domain, from, to);
+
+        super.transferFrom(from, to, tokenId);
     }
 
     function toLower(string memory str) private pure returns (string memory) {
