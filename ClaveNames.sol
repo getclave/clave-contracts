@@ -13,7 +13,9 @@ import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
 contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
     struct NameAssets {
         uint256 id;
+        uint256 renewals;
     }
+
     struct LinkedNames {
         string name;
     }
@@ -22,12 +24,14 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
     uint256 private lastTokenId;
     string private baseTokenURI;
 
-    mapping(string => NameAssets) public namesToAddresses;
+    mapping(string => NameAssets) public namesToAssets;
     mapping(uint256 => LinkedNames) public idsToNames;
 
     event NameRegistered(string indexed name, address indexed owner);
     event NameDeleted(string indexed name, address indexed owner);
     event NameTransferred(string indexed name, address indexed from, address indexed to);
+    event NameRenewed(string indexed name, address indexed owner);
+    event NameExpired(string indexed name, address indexed owner);
 
     constructor(string memory baseURI) ERC721('ClaveNames', 'CLVN') {
         baseTokenURI = baseURI;
@@ -35,22 +39,34 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function register(address to, string memory _name) external returns (uint256) {
+    function resolve(string memory _name) external view returns (address) {
+        string memory domain = toLower(_name);
+        if (namesToAssets[domain].id == 0) {
+            return address(0);
+        }
+        address owner = ownerOf(namesToAssets[domain].id);
+        return owner;
+    }
+
+    function totalSupply() external view returns (uint256) {
+        uint256 supply = lastTokenId;
+
+        return supply;
+    }
+
+    function register(
+        address to,
+        string memory _name
+    ) external onlyRoleOrOwner(to) returns (uint256) {
         string memory domain = toLower(_name);
         uint256 newItemId = ++lastTokenId;
 
-        require(
-            to == msg.sender ||
-                hasRole(REGISTERER_ROLE, msg.sender) ||
-                hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            '[register] Not authorized.'
-        );
-        require(namesToAddresses[domain].id == 0, '[register] Already registered.');
         require(bytes(domain).length != 0, '[register] Null name');
         require(isAlphanumeric(domain), '[register] Unsupported characters.');
+        require(namesToAssets[domain].id == 0, '[register] Already registered.');
         require(balanceOf(to) == 0, '[register] Already have.');
 
-        namesToAddresses[domain].id = newItemId;
+        namesToAssets[domain] = NameAssets(newItemId, block.timestamp);
         idsToNames[newItemId].name = domain;
 
         _mint(to, newItemId);
@@ -60,19 +76,30 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         return newItemId;
     }
 
-    function resolve(string memory _name) external view returns (address) {
-        string memory domain = toLower(_name);
-        if (namesToAddresses[domain].id == 0) {
-            return address(0);
-        }
-        address owner = ownerOf(namesToAddresses[domain].id);
-        return owner;
+    function renewName(string memory _name) external {
+        NameAssets storage asset = namesToAssets[_name];
+
+        require(asset.id != 0, '[renewName] Not registered.');
+        require(ownerOf(asset.id) == msg.sender, '[renewName] Not owner.');
+
+        asset.renewals = block.timestamp;
+
+        emit NameRenewed(_name, msg.sender);
     }
 
-    function totalSupply() external view returns (uint256) {
-        uint256 supply = lastTokenId;
+    function expireName(address to, string memory _name) external {
+        string memory domain = toLower(_name);
+        NameAssets memory asset = namesToAssets[domain];
 
-        return supply;
+        require(asset.id != 0, '[expireName] Not registered.');
+        require(asset.renewals + 365 days < block.timestamp, '[expireName] Renewal not over.');
+
+        delete idsToNames[asset.id];
+        delete namesToAssets[domain];
+
+        emit NameExpired(domain, to);
+
+        _burn(asset.id);
     }
 
     function setBaseTokenURI(
@@ -99,7 +126,7 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         string memory domain = idsToNames[tokenId].name;
 
         delete idsToNames[tokenId];
-        delete namesToAddresses[domain];
+        delete namesToAssets[domain];
 
         emit NameDeleted(domain, msg.sender);
 
@@ -137,5 +164,16 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
             if (!(char > 0x2F && char < 0x3A) && !(char > 0x60 && char < 0x7B)) return false;
         }
         return true;
+    }
+
+    modifier onlyRoleOrOwner(address to) {
+        require(
+            to == msg.sender ||
+                hasRole(REGISTERER_ROLE, msg.sender) ||
+                hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            '[] Not authorized.'
+        );
+
+        _;
     }
 }
