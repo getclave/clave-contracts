@@ -9,6 +9,7 @@ import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
  * @title ClaveNames
  * @author https://getclave.io
  * @notice https://github.com/stevegachau/optimismresolver
+ * TODO: May limit for Clave accounts 
  */
 contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
     struct NameAssets {
@@ -66,7 +67,6 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         require(bytes(domain).length != 0, '[register] Null name');
         require(isAlphanumeric(domain), '[register] Unsupported characters.');
         require(namesToAssets[domain].id == 0, '[register] Already registered.');
-        require(balanceOf(to) == 0, '[register] Already have.');
 
         namesToAssets[domain] = NameAssets(newItemId, block.timestamp);
         idsToNames[newItemId].name = domain;
@@ -144,13 +144,11 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         super.burn(tokenId);
     }
 
-    function _transfer(address from, address to, uint256 tokenId) internal override {
-        require(balanceOf(to) == 0, '[register] Already have.');
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
+        require(balanceOf(to) == 0, '[] Already have name.');
 
         string memory domain = idsToNames[tokenId].name;
         emit NameTransferred(domain, from, to);
-
-        super.transferFrom(from, to, tokenId);
     }
 
     function toLower(string memory str) private pure returns (string memory) {
