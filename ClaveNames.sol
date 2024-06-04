@@ -20,9 +20,11 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         string name;
     }
 
-    bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
     uint256 private lastTokenId;
-    string private baseTokenURI;
+    bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
+    uint256 public expiration = 365 days;
+    string public baseTokenURI;
+    bool public allowRenewals;
 
     mapping(string => NameAssets) public namesToAssets;
     mapping(uint256 => LinkedNames) public idsToNames;
@@ -76,7 +78,7 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         return newItemId;
     }
 
-    function renewName(string memory _name) external {
+    function renewName(string memory _name) external isRenewalsAllowed {
         NameAssets storage asset = namesToAssets[_name];
 
         require(asset.id != 0, '[renewName] Not registered.');
@@ -87,12 +89,12 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         emit NameRenewed(_name, msg.sender);
     }
 
-    function expireName(address to, string memory _name) external {
+    function expireName(address to, string memory _name) external isRenewalsAllowed {
         string memory domain = toLower(_name);
         NameAssets memory asset = namesToAssets[domain];
 
         require(asset.id != 0, '[expireName] Not registered.');
-        require(asset.renewals + 365 days < block.timestamp, '[expireName] Renewal not over.');
+        require(asset.renewals + expiration < block.timestamp, '[expireName] Renewal not over.');
 
         delete idsToNames[asset.id];
         delete namesToAssets[domain];
@@ -109,9 +111,18 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         return baseTokenURI;
     }
 
+    function flipRenewals() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        allowRenewals = !allowRenewals;
+    }
+
+    function setExpirationTime(uint256 expirationTime) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        expiration = expirationTime;
+    }
+
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         string memory domain = idsToNames[tokenId].name;
         string memory tokenlink = string(abi.encodePacked(baseTokenURI, domain));
+
         return tokenlink;
     }
 
@@ -173,6 +184,12 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
                 hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
             '[] Not authorized.'
         );
+
+        _;
+    }
+
+    modifier isRenewalsAllowed() {
+        require(allowRenewals, '[isRenewalsEnabled] Renewals disabled.');
 
         _;
     }
