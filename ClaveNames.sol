@@ -18,7 +18,8 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         string name;
     }
 
-    uint256 lastTokenId;
+    bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
+    uint256 private lastTokenId;
     string private baseTokenURI;
 
     mapping(string => NameAssets) public namesToAddresses;
@@ -37,6 +38,12 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         string memory domain = toLower(_name);
         uint256 newItemId = ++lastTokenId;
 
+        require(
+            to == msg.sender ||
+                hasRole(REGISTERER_ROLE, msg.sender) ||
+                hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            '[register] Not authorized.'
+        );
         require(namesToAddresses[domain].id == 0, '[register] Already registered.');
         require(bytes(domain).length != 0, '[register] Null name');
         require(isAlphanumeric(domain), '[register] Unsupported characters.');
