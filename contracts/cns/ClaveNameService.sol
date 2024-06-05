@@ -6,12 +6,12 @@ import {ERC721Burnable} from '@openzeppelin/contracts/token/ERC721/extensions/ER
 import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
 
 /**
- * @title ClaveNames
+ * @title ClaveNameService
  * @author https://getclave.io
  * @notice https://github.com/stevegachau/optimismresolver
  * TODO: May limit for Clave accounts 
  */
-contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
+contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     struct NameAssets {
         uint256 id;
         uint256 renewals;
@@ -21,7 +21,7 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         string name;
     }
 
-    uint256 private lastTokenId;
+    uint256 private totalSupply_;
     bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
     uint256 public expiration = 365 days;
     string public baseTokenURI;
@@ -36,25 +36,21 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
     event NameRenewed(string indexed name, address indexed owner);
     event NameExpired(string indexed name, address indexed owner);
 
-    constructor(string memory baseURI) ERC721('ClaveNames', 'CLVN') {
+    constructor(string memory baseURI) ERC721('ClaveNameService', 'CNS') {
         baseTokenURI = baseURI;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function resolve(string memory _name) external view returns (address) {
+        // Domain NFTs are stored against the hashes of domains
         string memory domain = toLower(_name);
-        if (namesToAssets[domain].id == 0) {
-            return address(0);
-        }
-        address owner = ownerOf(namesToAssets[domain].id);
-        return owner;
+        bytes32 domainHash = keccak256(abi.encodePacked(domain));
+        return ownerOf(uint256(domainHash));
     }
 
     function totalSupply() external view returns (uint256) {
-        uint256 supply = lastTokenId;
-
-        return supply;
+        return totalSupply_;
     }
 
     function register(
@@ -62,20 +58,17 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
         string memory _name
     ) external onlyRoleOrOwner(to) returns (uint256) {
         string memory domain = toLower(_name);
-        uint256 newItemId = ++lastTokenId;
-
         require(bytes(domain).length != 0, '[register] Null name');
         require(isAlphanumeric(domain), '[register] Unsupported characters.');
         require(namesToAssets[domain].id == 0, '[register] Already registered.');
 
-        namesToAssets[domain] = NameAssets(newItemId, block.timestamp);
-        idsToNames[newItemId].name = domain;
+        uint256 newTokenId = uint256(keccak256(abi.encodePacked(domain)));
+        namesToAssets[domain] = NameAssets(newTokenId, block.timestamp);
+        idsToNames[newTokenId].name = domain;
 
-        _mint(to, newItemId);
-
+        _mint(to, newTokenId);
         emit NameRegistered(domain, to);
-
-        return newItemId;
+        return newTokenId;
     }
 
     function renewName(string memory _name) external isRenewalsAllowed {
@@ -188,7 +181,6 @@ contract ClaveNames is ERC721, ERC721Burnable, AccessControl {
 
     modifier isRenewalsAllowed() {
         require(allowRenewals, '[isRenewalsEnabled] Renewals disabled.');
-
         _;
     }
 }
