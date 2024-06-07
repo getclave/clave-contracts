@@ -27,15 +27,30 @@ interface ISyncRouter {
 }
 
 interface ISyncStaking {
+    struct RewardData {
+        uint rewardRate;
+        uint rewardAmount;
+        uint lastUpdate;
+        uint rewardPerShare;
+    }
+
+    struct UserRewardData {
+        uint claimable;
+        uint debtRewardPerShare;
+    }
+
     function stake(uint256 amount, address to) external returns (uint256);
     function userStaked(address recipient) external view returns (uint256);
+    function rewardData(address token) external view returns (RewardData memory);
+    function userRewardData(address token, address account) external view returns (UserRewardData memory);
 }
 
 interface ISyncEarnRouter {
     function deposit(address pairAddress, uint256 minLiquidity) external payable;
     function stakePositions(
         address pairAddress,
-        address recipient
+        address recipient,
+        address rewardToken
     ) external view returns (uint256[] memory tokensInPosition, uint256[] memory rewards);
 }
 
@@ -45,6 +60,8 @@ interface ISyncPair is IERC20 {
 
 contract SyncEarnRouter is ISyncEarnRouter {
     using SafeERC20 for IERC20;
+
+    uint private constant PRECISION = 1e24;
 
     ISyncRouter private syncRouter;
     ISyncStaking private syncStaking;
@@ -65,12 +82,14 @@ contract SyncEarnRouter is ISyncEarnRouter {
      *
      * @param pairAddress address         - Depositing token address in the pair
      * @param recipient address           - Recipient address
+     * @param rewardToken address         - Reward token address
      * @return tokensInPosition uint256[] - Deposited token amounts
      * @return rewards uint256[]          - Claimable fees
      */
     function stakePositions(
         address pairAddress,
-        address recipient
+        address recipient,
+        address rewardToken
     ) external view override returns (uint256[] memory tokensInPosition, uint256[] memory rewards) {
         ISyncPair pair = ISyncPair(pairAddress);
 
@@ -90,8 +109,14 @@ contract SyncEarnRouter is ISyncEarnRouter {
 
         rewards = new uint256[](2);
 
+        ISyncStaking.RewardData memory rewardData = syncStaking.rewardData(rewardToken);
+        ISyncStaking.UserRewardData memory userRewardData = syncStaking.userRewardData(rewardToken, recipient);
+
+        uint256 claimable = userRewardData.claimable;
+        uint256 rewardAfterLastUpdate = (rewardData.rewardPerShare - userRewardData.debtRewardPerShare) * lpTokenBalance / PRECISION;
+
         rewards[0] = 0;
-        rewards[1] = 0;
+        rewards[1] = claimable + rewardAfterLastUpdate;
     }
 
     function deposit(address pairAddress, uint256 minLiquidity) external payable override {
@@ -135,7 +160,9 @@ contract SyncEarnRouter is ISyncEarnRouter {
      */
     function withdrawToken(address token, uint256 amount) external {
         if (token == address(0)) {
-            payable(msg.sender).transfer(amount);
+            (bool sent,) = payable(msg.sender).call{value: amount}("");
+            
+            require(sent, "Failed to withdraw token");
         } else {
             IERC20(token).safeTransfer(msg.sender, amount);
         }
