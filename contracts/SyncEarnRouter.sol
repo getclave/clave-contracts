@@ -42,7 +42,10 @@ interface ISyncStaking {
     function stake(uint256 amount, address to) external returns (uint256);
     function userStaked(address recipient) external view returns (uint256);
     function rewardData(address token) external view returns (RewardData memory);
-    function userRewardData(address token, address account) external view returns (UserRewardData memory);
+    function userRewardData(
+        address token,
+        address account
+    ) external view returns (UserRewardData memory);
 }
 
 interface ISyncEarnRouter {
@@ -69,7 +72,8 @@ contract SyncEarnRouter is ISyncEarnRouter {
     // Event to be emitted when a user deposits tokenA to the pair
     event Deposit(address indexed user, address indexed tokenA, uint256 indexed amount);
 
-    error InvalidValue();
+    error INVALID_VALUE();
+    error WITHDRAW_FAILED();
 
     constructor(address syncRouterAddress, address syncStakingAddress) {
         syncRouter = ISyncRouter(syncRouterAddress);
@@ -110,10 +114,18 @@ contract SyncEarnRouter is ISyncEarnRouter {
         rewards = new uint256[](2);
 
         ISyncStaking.RewardData memory rewardData = syncStaking.rewardData(rewardToken);
-        ISyncStaking.UserRewardData memory userRewardData = syncStaking.userRewardData(rewardToken, recipient);
+        ISyncStaking.UserRewardData memory userRewardData = syncStaking.userRewardData(
+            rewardToken,
+            recipient
+        );
+
+        uint256 rewardPerShare = rewardData.rewardPerShare;
+        uint256 debtRewardPerShare = userRewardData.debtRewardPerShare;
+
+        uint256 shareAfterLastUpdate = (rewardPerShare - debtRewardPerShare) * lpTokenBalance;
+        uint256 rewardAfterLastUpdate = shareAfterLastUpdate / PRECISION;
 
         uint256 claimable = userRewardData.claimable;
-        uint256 rewardAfterLastUpdate = (rewardData.rewardPerShare - userRewardData.debtRewardPerShare) * lpTokenBalance / PRECISION;
 
         rewards[0] = 0;
         rewards[1] = claimable + rewardAfterLastUpdate;
@@ -123,7 +135,7 @@ contract SyncEarnRouter is ISyncEarnRouter {
         IERC20 liquidityToken = IERC20(pairAddress);
 
         if (msg.value == 0) {
-            revert InvalidValue();
+            revert INVALID_VALUE();
         }
 
         // Add liquidity
@@ -160,9 +172,8 @@ contract SyncEarnRouter is ISyncEarnRouter {
      */
     function withdrawToken(address token, uint256 amount) external {
         if (token == address(0)) {
-            (bool sent,) = payable(msg.sender).call{value: amount}("");
-
-            require(sent, "Failed to withdraw token");
+            (bool success, ) = payable(msg.sender).call{value: amount}('');
+            if (!success) revert WITHDRAW_FAILED();
         } else {
             IERC20(token).safeTransfer(msg.sender, amount);
         }
