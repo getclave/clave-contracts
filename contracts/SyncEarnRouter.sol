@@ -28,15 +28,15 @@ interface ISyncRouter {
 
 interface ISyncStaking {
     struct RewardData {
-        uint rewardRate;
-        uint rewardAmount;
-        uint lastUpdate;
-        uint rewardPerShare;
+        uint256 rewardRate;
+        uint256 rewardAmount;
+        uint256 lastUpdate;
+        uint256 rewardPerShare;
     }
 
     struct UserRewardData {
-        uint claimable;
-        uint debtRewardPerShare;
+        uint256 claimable;
+        uint256 debtRewardPerShare;
     }
 
     function stake(uint256 amount, address to) external returns (uint256);
@@ -61,7 +61,7 @@ interface ISyncPair is IERC20 {
 contract SyncEarnRouter is ISyncEarnRouter {
     using SafeERC20 for IERC20;
 
-    uint private constant PRECISION = 1e24;
+    uint256 private constant PRECISION = 1e24;
 
     ISyncRouter private syncRouter;
     ISyncStaking private syncStaking;
@@ -161,7 +161,7 @@ contract SyncEarnRouter is ISyncEarnRouter {
     function withdrawToken(address token, uint256 amount) external {
         if (token == address(0)) {
             (bool sent,) = payable(msg.sender).call{value: amount}("");
-            
+
             require(sent, "Failed to withdraw token");
         } else {
             IERC20(token).safeTransfer(msg.sender, amount);
