@@ -3,12 +3,24 @@ pragma solidity ^0.8.17;
 
 import {SafeERC20, IERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
+struct ExactInputSingleParams {
+    address tokenIn;
+    address tokenOut;
+    uint24 fee;
+    address recipient;
+    uint256 deadline;
+    uint256 amountIn;
+    uint256 amountOutMinimum;
+    uint160 sqrtPriceLimitX96;
+}
+
+interface IWETH {
+    function withdraw(uint256 amount) external;
+}
+
 interface IPancakeRouter {
-    function swapExactTokensForTokens(
-        uint256 amountIn,
-        uint256 amountOutMin,
-        address[] memory path,
-        address to
+    function exactInputSingle(
+        ExactInputSingleParams calldata params
     ) external payable returns (uint256 amountOut);
 }
 
@@ -82,6 +94,7 @@ contract SyncEarnRouter is ISyncEarnRouter {
     ISyncRouter private syncRouter;
     ISyncStaking private syncStaking;
     IPancakeRouter private pancakeRouter;
+    IWETH private weth;
 
     // Event to be emitted when a user deposits tokenA to the pair
     event Deposit(address indexed user, address indexed tokenA, uint256 indexed amount);
@@ -92,12 +105,16 @@ contract SyncEarnRouter is ISyncEarnRouter {
     constructor(
         address syncRouterAddress,
         address syncStakingAddress,
-        address pancakeRouterAddress
+        address pancakeRouterAddress,
+        address wethAddress
     ) {
         syncRouter = ISyncRouter(syncRouterAddress);
         syncStaking = ISyncStaking(syncStakingAddress);
         pancakeRouter = IPancakeRouter(pancakeRouterAddress);
+        weth = IWETH(wethAddress);
     }
+
+    receive() external payable {}
 
     /**
      * @notice View deposited token amounts for the tokenA and tokenB pair
@@ -186,13 +203,39 @@ contract SyncEarnRouter is ISyncEarnRouter {
 
         tokenIn.safeTransferFrom(msg.sender, address(this), amountToSwap);
 
-        address[] memory path = new address[](2);
-        path[0] = address(tokenIn);
-        path[1] = address(tokenOut);
-
         tokenIn.safeApprove(address(pancakeRouter), amountToSwap);
 
-        pancakeRouter.swapExactTokensForTokens(amountToSwap, 0, path, msg.sender);
+        if (address(tokenOut) == address(weth)) {
+            uint256 amountOut = pancakeRouter.exactInputSingle(
+                ExactInputSingleParams({
+                    tokenIn: address(tokenIn),
+                    tokenOut: address(tokenOut),
+                    fee: 500,
+                    recipient: address(this),
+                    deadline: block.timestamp + 600000000,
+                    amountIn: amountToSwap,
+                    amountOutMinimum: 0,
+                    sqrtPriceLimitX96: 0
+                })
+            );
+
+            weth.withdraw(amountOut);
+            (bool success, ) = payable(msg.sender).call{value: amountOut}('');
+            require(success, 'ETH transfer failed');
+        } else {
+            pancakeRouter.exactInputSingle(
+                ExactInputSingleParams({
+                    tokenIn: address(tokenIn),
+                    tokenOut: address(tokenOut),
+                    fee: 500,
+                    recipient: msg.sender,
+                    deadline: block.timestamp + 600000000,
+                    amountIn: amountToSwap,
+                    amountOutMinimum: 0,
+                    sqrtPriceLimitX96: 0
+                })
+            );
+        }
     }
 
     /**
