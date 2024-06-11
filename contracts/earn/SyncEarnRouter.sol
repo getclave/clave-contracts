@@ -3,6 +3,15 @@ pragma solidity ^0.8.17;
 
 import {SafeERC20, IERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
+interface IPancakeRouter {
+    function swapExactTokensForTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] memory path,
+        address to
+    ) external payable returns (uint256 amountOut);
+}
+
 interface ISyncRouter {
     struct TokenInput {
         address token;
@@ -40,8 +49,11 @@ interface ISyncStaking {
     }
 
     function stake(uint256 amount, address to) external returns (uint256);
+
     function userStaked(address recipient) external view returns (uint256);
+
     function rewardData(address token) external view returns (RewardData memory);
+
     function userRewardData(
         address token,
         address account
@@ -50,6 +62,7 @@ interface ISyncStaking {
 
 interface ISyncEarnRouter {
     function deposit(address pairAddress, uint256 minLiquidity) external payable;
+
     function stakePositions(
         address pairAddress,
         address recipient,
@@ -68,6 +81,7 @@ contract SyncEarnRouter is ISyncEarnRouter {
 
     ISyncRouter private syncRouter;
     ISyncStaking private syncStaking;
+    IPancakeRouter private pancakeRouter;
 
     // Event to be emitted when a user deposits tokenA to the pair
     event Deposit(address indexed user, address indexed tokenA, uint256 indexed amount);
@@ -75,9 +89,14 @@ contract SyncEarnRouter is ISyncEarnRouter {
     error INVALID_VALUE();
     error WITHDRAW_FAILED();
 
-    constructor(address syncRouterAddress, address syncStakingAddress) {
+    constructor(
+        address syncRouterAddress,
+        address syncStakingAddress,
+        address pancakeRouterAddress
+    ) {
         syncRouter = ISyncRouter(syncRouterAddress);
         syncStaking = ISyncStaking(syncStakingAddress);
+        pancakeRouter = IPancakeRouter(pancakeRouterAddress);
     }
 
     /**
@@ -159,6 +178,21 @@ contract SyncEarnRouter is ISyncEarnRouter {
         syncStaking.stake(liquidity, msg.sender);
 
         emit Deposit(msg.sender, address(0), msg.value);
+    }
+
+    function swapDust(IERC20 tokenIn, IERC20 tokenOut, uint256 amountToLeave) external {
+        uint256 balance = tokenIn.balanceOf(msg.sender);
+        uint256 amountToSwap = balance - amountToLeave;
+
+        tokenIn.safeTransferFrom(msg.sender, address(this), amountToSwap);
+
+        address[] memory path = new address[](2);
+        path[0] = address(tokenIn);
+        path[1] = address(tokenOut);
+
+        tokenIn.safeApprove(address(pancakeRouter), amountToSwap);
+
+        pancakeRouter.swapExactTokensForTokens(amountToSwap, 0, path, msg.sender);
     }
 
     /**
