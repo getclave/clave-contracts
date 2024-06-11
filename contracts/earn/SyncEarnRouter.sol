@@ -98,6 +98,7 @@ contract SyncEarnRouter is ISyncEarnRouter {
 
     // Event to be emitted when a user deposits tokenA to the pair
     event Deposit(address indexed user, address indexed tokenA, uint256 indexed amount);
+    event ClaimWithDust(address indexed account, address indexed token, uint amount);
 
     error INVALID_VALUE();
     error WITHDRAW_FAILED();
@@ -222,8 +223,9 @@ contract SyncEarnRouter is ISyncEarnRouter {
             weth.withdraw(amountOut);
             (bool success, ) = payable(msg.sender).call{value: amountOut}('');
             require(success, 'ETH transfer failed');
+            emit ClaimWithDust(msg.sender, 0x000000000000000000000000000000000000800A, amountOut);
         } else {
-            pancakeRouter.exactInputSingle(
+            uint256 amountOut = pancakeRouter.exactInputSingle(
                 ExactInputSingleParams({
                     tokenIn: address(tokenIn),
                     tokenOut: address(tokenOut),
@@ -235,6 +237,7 @@ contract SyncEarnRouter is ISyncEarnRouter {
                     sqrtPriceLimitX96: 0
                 })
             );
+            emit ClaimWithDust(msg.sender, address(tokenOut), amountOut);
         }
     }
 
