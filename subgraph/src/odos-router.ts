@@ -8,11 +8,17 @@
 import { Swap as SwapEvent } from '../generated/OdosRouter/OdosRouter';
 import {
     ClaveAccount,
+    DailySwappedTo,
     InAppSwap,
     MonthlySwappedTo,
     WeeklySwappedTo,
 } from '../generated/schema';
-import { ZERO, getOrCreateMonth, getOrCreateWeek } from './helpers';
+import {
+    ZERO,
+    getOrCreateDay,
+    getOrCreateMonth,
+    getOrCreateWeek,
+} from './helpers';
 
 export function handleSwap(event: SwapEvent): void {
     const account = ClaveAccount.load(event.params.sender);
@@ -20,10 +26,22 @@ export function handleSwap(event: SwapEvent): void {
         return;
     }
 
+    const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
 
     const tokenOutAddress = event.params.outputToken;
+    const dailySwappedToId = day.id.concat(tokenOutAddress);
+    let dailySwappedTo = DailySwappedTo.load(dailySwappedToId);
+    if (!dailySwappedTo) {
+        dailySwappedTo = new DailySwappedTo(dailySwappedToId);
+        dailySwappedTo.day = day.id;
+        dailySwappedTo.erc20 = tokenOutAddress;
+        dailySwappedTo.amount = ZERO;
+    }
+
+    dailySwappedTo.amount = dailySwappedTo.amount.plus(event.params.amountOut);
+
     const weeklySwappedToId = week.id.concat(tokenOutAddress);
     let weeklySwappedTo = WeeklySwappedTo.load(weeklySwappedToId);
     if (!weeklySwappedTo) {
@@ -61,6 +79,7 @@ export function handleSwap(event: SwapEvent): void {
     inAppSwap.tokenOut = event.params.outputToken;
     inAppSwap.date = event.block.timestamp;
 
+    dailySwappedTo.save();
     weeklySwappedTo.save();
     monthlySwappedTo.save();
     inAppSwap.save();

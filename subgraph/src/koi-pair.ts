@@ -11,7 +11,12 @@ import {
     Mint as MintEvent,
 } from '../generated/KoiUsdceUsdt/KoiPair';
 import { ClaveAccount } from '../generated/schema';
-import { getOrCreateMonth, getOrCreateWeek, getTotal } from './helpers';
+import {
+    getOrCreateDay,
+    getOrCreateMonth,
+    getOrCreateWeek,
+    getTotal,
+} from './helpers';
 
 export function handleMint(event: MintEvent): void {
     const account = ClaveAccount.load(event.transaction.from);
@@ -21,15 +26,18 @@ export function handleMint(event: MintEvent): void {
 
     const amount = event.params.amount1.plus(event.params.amount0);
 
+    const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
     const total = getTotal();
 
+    day.investIn = day.investIn.plus(amount);
     week.investIn = week.investIn.plus(amount);
     month.investIn = month.investIn.plus(amount);
     total.invested = total.invested.plus(amount);
     account.invested = account.invested.plus(amount);
 
+    day.save();
     week.save();
     month.save();
     total.save();
@@ -44,15 +52,18 @@ export function handleBurn(event: BurnEvent): void {
 
     const amount = event.params.amount1.plus(event.params.amount0);
 
+    const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
     const total = getTotal();
 
+    day.investOut = day.investOut.plus(amount);
     week.investOut = week.investOut.plus(amount);
     month.investOut = month.investOut.plus(amount);
     total.invested = total.invested.minus(amount);
     account.invested = account.invested.minus(amount);
 
+    day.save();
     week.save();
     month.save();
     total.save();
@@ -67,15 +78,18 @@ export function handleClaim(event: ClaimEvent): void {
 
     const amount = event.params.amount1.plus(event.params.amount0);
 
+    const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
     const total = getTotal();
 
+    day.realizedGain = day.realizedGain.plus(amount);
     week.realizedGain = week.realizedGain.plus(amount);
     month.realizedGain = month.realizedGain.plus(amount);
     total.realizedGain = total.realizedGain.plus(amount);
     account.realizedGain = account.realizedGain.plus(amount);
 
+    day.save();
     week.save();
     month.save();
     total.save();

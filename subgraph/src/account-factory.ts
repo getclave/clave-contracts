@@ -18,7 +18,13 @@ import { NewClaveAccount as NewClaveAccountEvent } from '../generated/AccountFac
 import { ClaveAccount } from '../generated/schema';
 import { Account } from '../generated/templates';
 import { wallets } from '../wallets';
-import { ZERO, getOrCreateMonth, getOrCreateWeek, getTotal } from './helpers';
+import {
+    ZERO,
+    getOrCreateDay,
+    getOrCreateMonth,
+    getOrCreateWeek,
+    getTotal,
+} from './helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function handleOnce(_block: ethereum.Block): void {
@@ -30,10 +36,12 @@ export function handleOnce(_block: ethereum.Block): void {
             Date.parse(createdAt).getTime(),
         ).div(BigInt.fromU32(1000));
         const account = new ClaveAccount(Bytes.fromHexString(accountAddress));
+        const day = getOrCreateDay(createdAtDate);
         const week = getOrCreateWeek(createdAtDate);
         const month = getOrCreateMonth(createdAtDate);
         const total = getTotal();
 
+        day.createdAccounts = day.createdAccounts + 1;
         week.createdAccounts = week.createdAccounts + 1;
         month.createdAccounts = month.createdAccounts + 1;
         total.createdAccounts = total.createdAccounts + 1;
@@ -44,7 +52,10 @@ export function handleOnce(_block: ethereum.Block): void {
         account.txCount = 0;
         account.invested = ZERO;
         account.realizedGain = ZERO;
+        account.investedEth = ZERO;
+        account.realizedGainEth = ZERO;
 
+        day.save();
         week.save();
         month.save();
         total.save();
@@ -55,9 +66,11 @@ export function handleOnce(_block: ethereum.Block): void {
 
 export function handleNewClaveAccount(event: NewClaveAccountEvent): void {
     let account = ClaveAccount.load(event.params.accountAddress);
+    const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
     const total = getTotal();
+    day.createdAccounts = day.createdAccounts + 1;
     week.deployedAccounts = week.deployedAccounts + 1;
     month.deployedAccounts = month.deployedAccounts + 1;
     total.deployedAccounts = total.deployedAccounts + 1;
@@ -71,12 +84,15 @@ export function handleNewClaveAccount(event: NewClaveAccountEvent): void {
         account.creationDate = ZERO;
         account.invested = ZERO;
         account.realizedGain = ZERO;
+        account.investedEth = ZERO;
+        account.realizedGainEth = ZERO;
     }
     account.implementation = Bytes.fromHexString(
         '0xdd4dD37B22Fc16DBFF3daB6Ecd681798c459f275',
     );
     account.deployDate = event.block.timestamp;
 
+    day.save();
     week.save();
     month.save();
     total.save();
