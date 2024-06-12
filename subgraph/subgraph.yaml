@@ -4,26 +4,6 @@ indexerHints:
 schema:
   file: ./schema.graphql
 dataSources:
-  # - kind: ethereum
-  #   name: KoiFactory
-  #   network: zksync-era
-  #   source:
-  #     address: '0x40be1cBa6C5B47cDF9da7f963B6F761F4C60627D'
-  #     abi: KoiFactory
-  #     startBlock: 9672
-  #   mapping:
-  #     kind: ethereum/events
-  #     apiVersion: 0.0.7
-  #     language: wasm/assemblyscript
-  #     entities:
-  #       - KoiPair
-  #     abis:
-  #       - name: KoiFactory
-  #         file: ./abis/KoiFactory.json
-  #     eventHandlers:
-  #       - event: PairCreated(address indexed token0, address indexed token1, bool stable, address pair, uint, uint fee)
-  #         handler: handlePairCreated
-  #     file: ./src/koi-factory.ts
   - kind: ethereum
     name: KoiUsdceUsdt
     network: zksync-era
@@ -37,6 +17,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - Total
+        - Day
         - Week
         - Month
         - ClaveAccount
@@ -64,6 +45,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - InAppSwap
+        - DailySwappedTo
         - WeeklySwappedTo
         - MonthlySwappedTo
       abis:
@@ -86,6 +68,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveAccount
+        - Day
         - Week
         - Month
         - Total
@@ -113,6 +96,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveAccount
+        - Day
         - Week
         - Month
         - Total
@@ -138,6 +122,8 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveTransaction
+        - Day
+        - DayAccount
         - Week
         - WeekAccount
         - Month
@@ -165,6 +151,8 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveTransaction
+        - Day
+        - DayAccount
         - Week
         - WeekAccount
         - Month
@@ -192,6 +180,8 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveTransaction
+        - Day
+        - DayAccount
         - Week
         - WeekAccount
         - Month
@@ -219,6 +209,8 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveTransaction
+        - Day
+        - DayAccount
         - Week
         - WeekAccount
         - Month
@@ -262,6 +254,56 @@ dataSources:
         - event: RecoveryStopped(indexed address)
           handler: handleRecoveryStopped
       file: ./src/social-recovery.ts
+  - kind: ethereum
+    name: SyncEthWstethPool
+    network: zksync-era
+    source:
+      address: '0x12e7A9423d9128287E63017eE6d1f20e1C237f15'
+      abi: SyncStablePool
+      startBlock: 34062974
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Total
+        - Day
+        - Week
+        - Month
+        - ClaveAccount
+      abis:
+        - name: SyncStablePool
+          file: ./abis/SyncStablePool.json
+      eventHandlers:
+        - event: Burn(indexed address,uint256,uint256,uint256,indexed address)
+          handler: handleBurn
+        - event: Mint(indexed address,uint256,uint256,uint256,indexed address)
+          handler: handleMint
+      file: ./src/sync-stable-pair.ts
+  - kind: ethereum
+    name: SyncStaking
+    network: zksync-era
+    source:
+      address: '0x2B9a7d5cD64E5c1446b32e034e75A5C93B0C8bB5'
+      abi: SyncStaking
+      startBlock: 32062974
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Total
+        - Day
+        - Week
+        - Month
+        - ClaveAccount
+      abis:
+        - name: SyncStaking
+          file: ./abis/SyncStaking.json
+      eventHandlers:
+        - event: ClaimRewards(indexed address,indexed address,uint256)
+          handler: handleClaimRewards
+      file: ./src/sync-staking.ts
 templates:
   - kind: ethereum
     name: Account
@@ -275,6 +317,8 @@ templates:
       entities:
         - Owner
         - ClaveTransaction
+        - Day
+        - DayAccount
         - Week
         - WeekAccount
         - Month
