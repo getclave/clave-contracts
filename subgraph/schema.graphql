@@ -7,7 +7,26 @@ type Total @entity {
   backedUp: Int!
   gasSponsored: BigInt!
   invested: BigInt!
+  investedEth: BigInt!
   realizedGain: BigInt!
+  realizedGainEth: BigInt!
+}
+
+type Day @entity {
+  "day start timestamp concat 0x0000"
+  id: Bytes!
+  createdAccounts: Int!
+  deployedAccounts: Int!
+  activeAccounts: Int!
+  transactions: Int!
+  gasSponsored: BigInt!
+  investIn: BigInt!
+  investInEth: BigInt!
+  investOut: BigInt!
+  investOutEth: BigInt!
+  realizedGain: BigInt!
+  realizedGainEth: BigInt!
+  swappedTo: [DailySwappedTo!]! @derivedFrom(field: "day")
 }
 
 type Week @entity {
@@ -19,8 +38,11 @@ type Week @entity {
   transactions: Int!
   gasSponsored: BigInt!
   investIn: BigInt!
+  investInEth: BigInt!
   investOut: BigInt!
+  investOutEth: BigInt!
   realizedGain: BigInt!
+  realizedGainEth: BigInt!
   swappedTo: [WeeklySwappedTo!]! @derivedFrom(field: "week")
 }
 
@@ -33,9 +55,20 @@ type Month @entity {
   transactions: Int!
   gasSponsored: BigInt!
   investIn: BigInt!
+  investInEth: BigInt!
   investOut: BigInt!
+  investOutEth: BigInt!
   realizedGain: BigInt!
+  realizedGainEth: BigInt!
   swappedTo: [MonthlySwappedTo!]! @derivedFrom(field: "month")
+}
+
+type DailySwappedTo @entity {
+  "day.id.concat(erc20)"
+  id: Bytes!
+  day: Day!
+  erc20: Bytes!
+  amount: BigInt!
 }
 
 type WeeklySwappedTo @entity {
@@ -52,6 +85,13 @@ type MonthlySwappedTo @entity {
   month: Month!
   erc20: Bytes!
   amount: BigInt!
+}
+
+type DayAccount @entity(immutable: true) {
+  "account.id.concat(day.id)"
+  id: Bytes!
+  account: ClaveAccount!
+  day: Day!
 }
 
 type WeekAccount @entity(immutable: true) {
@@ -80,10 +120,14 @@ type ClaveAccount @entity {
   "account implementation address"
   implementation: Bytes
   invested: BigInt!
+  investedEth: BigInt!
   realizedGain: BigInt!
+  realizedGainEth: BigInt!
   transactions: [ClaveTransaction!]! @derivedFrom(field: "sender")
   inAppSwaps: [InAppSwap!]! @derivedFrom(field: "account")
+  activeDays: [DayAccount!]! @derivedFrom(field: "account")
   activeWeeks: [WeekAccount!]! @derivedFrom(field: "account")
+  activeMonths: [MonthAccount!]! @derivedFrom(field: "account")
 }
 
 enum Paymaster {
