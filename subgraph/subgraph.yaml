@@ -304,6 +304,32 @@ dataSources:
         - event: ClaimRewards(indexed address,indexed address,uint256)
           handler: handleClaimRewards
       file: ./src/sync-staking.ts
+  - kind: ethereum
+    name: zeroUsdtPool
+    network: zksync-era
+    source:
+      address: '0x4d9429246EA989C9CeE203B43F6d1C7D83e3B8F8'
+      abi: zeroUsdtPool
+      startBlock: 32062974
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Total
+        - Day
+        - Week
+        - Month
+        - ClaveAccount
+      abis:
+        - name: zeroUsdtPool
+          file: ./abis/zeroUsdtPool.json
+      eventHandlers:
+        - event: Supply(indexed address,address,indexed address,uint256,indexed uint16)
+          handler: handleSupply
+        - event: Withdraw(indexed address,indexed address,indexed address,uint256)
+          handler: handleWithdraw
+      file: ./src/zero-usdt-pool.ts
 templates:
   - kind: ethereum
     name: Account
