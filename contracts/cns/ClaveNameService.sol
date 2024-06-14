@@ -130,8 +130,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        string memory domain = idsToNames[tokenId].name;
-        string memory tokenlink = string(abi.encodePacked(baseTokenURI, domain));
+        string memory tokenlink = string(abi.encodePacked(baseTokenURI, tokenId));
 
         return tokenlink;
     }
