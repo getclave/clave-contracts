@@ -151,7 +151,15 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
 
         emit NameDeleted(domain, msg.sender);
 
+        _totalSupply--;
+
         super.burn(tokenId);
+    }
+
+    function _safeMint(address to, uint256 tokenId, bytes memory _data) internal override {
+        _totalSupply++;
+
+        super._safeMint(to, tokenId, _data);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
