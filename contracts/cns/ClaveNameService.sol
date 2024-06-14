@@ -107,13 +107,6 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         _burn(asset.id);
     }
 
-    function setEnsDomain(
-        string memory domain
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) returns (string memory) {
-        ensDomain = domain;
-        return ensDomain;
-    }
-
     function setBaseTokenURI(
         string memory baseURI
     ) external onlyRole(DEFAULT_ADMIN_ROLE) returns (string memory) {
