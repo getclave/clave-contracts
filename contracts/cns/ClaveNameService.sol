@@ -87,10 +87,10 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
      */
     function resolve(string memory _name) external view returns (address) {
         // Domain NFTs are stored against the namehashes of the subdomains
-        string memory domain = toLower(_name);
-        bytes32 namehash = namehash(subdomain);
+        _name = toLower(_name);
+        bytes32 subdomainNamehash = namehash(_name);
 
-        return ownerOf(uint256(namehash));
+        return ownerOf(uint256(subdomainNamehash));
     }
 
     /**
@@ -199,7 +199,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         return tokenlink;
     }
 
-    /// @inheritdoc IERC165
+    /// @inheritdoc ERC721
     function supportsInterface(
         bytes4 interfaceId
     ) public view override(ERC721, AccessControl) returns (bool) {
@@ -219,7 +219,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
 
         emit NameDeleted(domain, msg.sender);
 
-        _totalSupply--;
+        totalSupply_--;
 
         super.burn(tokenId);
     }
@@ -229,7 +229,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
      * @dev Total supply is applied
      */
     function _safeMint(address to, uint256 tokenId, bytes memory _data) internal override {
-        _totalSupply++;
+        totalSupply_++;
 
         super._safeMint(to, tokenId, _data);
     }
@@ -251,7 +251,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
      * @dev See ENS namehashes https://docs.ens.domains/resolution/names#namehash
      * @dev {subdomain}.{domain}.{topdomain} => claver.getclave.eth
      */
-    function namehash(string memory subdomain) private pure returns (bytes32 subdomainNamehash) {
+    function namehash(string memory subdomain) private view returns (bytes32 subdomainNamehash) {
         subdomainNamehash = keccak256(
             abi.encodePacked(domainNamehash, keccak256(abi.encodePacked(subdomain)))
         );
@@ -262,23 +262,23 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     /**
      * @param domain string - domain name
      * @param topdomain string - topdomain name
-     * @return - bytes32 - ENS namehash of the domain
+     * @return domainNamehash_ bytes32 - ENS namehash of the domain
      * @dev See ENS namehashes https://docs.ens.domains/resolution/names#namehash
      * @dev {domain}.{topdomain} => getclave.eth
      */
     function namehash(
         string memory domain,
         string memory topdomain
-    ) private pure returns (bytes32) {
+    ) private pure returns (bytes32 domainNamehash_) {
         bytes32 topdomainNamehash = keccak256(
             abi.encodePacked(bytes32(0x00), keccak256(abi.encodePacked(topdomain)))
         );
 
-        domainNamehash = keccak256(
+        domainNamehash_ = keccak256(
             abi.encodePacked(topdomainNamehash, keccak256(abi.encodePacked(domain)))
         );
 
-        return domainNamehash;
+        return domainNamehash_;
     }
 
     // Convert string to lowercase
