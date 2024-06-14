@@ -19,7 +19,12 @@ export default async function (
     const chainId = hre.network.config.chainId;
 
     const cnsArtifact = await deployer.loadArtifact('ClaveNameService');
-    const cns = await deployer.deploy(cnsArtifact, [''], undefined, []);
+    const cns = await deployer.deploy(
+        cnsArtifact,
+        ['clave', 'eth', ''],
+        undefined,
+        [],
+    );
     const cnsAddress = await cns.getAddress();
 
     console.log(`ClaveNameService address: ${cnsAddress}`);
@@ -29,7 +34,7 @@ export default async function (
             const verificationId = await hre.run('verify:verify', {
                 address: cnsAddress,
                 contract: contractNames.claveNameService,
-                constructorArguments: [''],
+                constructorArguments: ['clave', 'eth', ''],
             });
             console.log(`Verification ID: ${verificationId}`);
         } catch (e) {

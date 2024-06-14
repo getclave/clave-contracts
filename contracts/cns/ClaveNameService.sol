@@ -9,7 +9,7 @@ import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
  * @title ClaveNameService
  * @author https://getclave.io
  * @notice https://github.com/stevegachau/optimismresolver
- * TODO: May limit for Clave accounts 
+ * TODO: May limit for Clave accounts
  */
 contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     struct NameAssets {
@@ -24,7 +24,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     uint256 private totalSupply_;
     bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
     uint256 public expiration = 365 days;
-    string public ensDomain;
+    bytes32 public domainNamehash;
     string public baseTokenURI;
     bool public allowRenewals;
 
@@ -37,18 +37,26 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     event NameRenewed(string indexed name, address indexed owner);
     event NameExpired(string indexed name, address indexed owner);
 
-    constructor(string memory domain, string memory baseURI) ERC721('ClaveNameService', 'CNS') {
-        ensDomain = domain;
+    constructor(
+        string memory domain,
+        string memory topdomain,
+        string memory baseURI
+    ) ERC721('ClaveNameService', 'CNS') {
+        domain = toLower(domain);
+        topdomain = toLower(topdomain);
+
+        domainNamehash = namehash(domain, topdomain);
         baseTokenURI = baseURI;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function resolve(string memory _name) external view returns (address) {
-        // Domain NFTs are stored against the hashes of domains
+        // Domain NFTs are stored against the namehashes of the subdomains
         string memory domain = toLower(_name);
-        bytes32 domainHash = keccak256(abi.encodePacked(domain));
-        return ownerOf(uint256(domainHash));
+        bytes32 namehash = namehash(subdomain);
+
+        return ownerOf(uint256(namehash));
     }
 
     function totalSupply() external view returns (uint256) {
@@ -59,17 +67,17 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         address to,
         string memory _name
     ) external onlyRoleOrOwner(to) returns (uint256) {
-        string memory domain = toLower(_name);
-        require(bytes(domain).length != 0, '[register] Null name');
-        require(isAlphanumeric(domain), '[register] Unsupported characters.');
-        require(namesToAssets[domain].id == 0, '[register] Already registered.');
+        string memory subdomain = toLower(_name);
+        require(bytes(subdomain).length != 0, '[register] Null name');
+        require(isAlphanumeric(subdomain), '[register] Unsupported characters.');
+        require(namesToAssets[subdomain].id == 0, '[register] Already registered.');
 
-        uint256 newTokenId = uint256(keccak256(abi.encodePacked(domain)));
-        namesToAssets[domain] = NameAssets(newTokenId, block.timestamp);
-        idsToNames[newTokenId].name = domain;
+        uint256 newTokenId = uint256(namehash(subdomain));
+        namesToAssets[subdomain] = NameAssets(newTokenId, block.timestamp);
+        idsToNames[newTokenId].name = subdomain;
 
         _mint(to, newTokenId);
-        emit NameRegistered(domain, to);
+        emit NameRegistered(subdomain, to);
         return newTokenId;
     }
 
@@ -151,6 +159,29 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
 
         string memory domain = idsToNames[tokenId].name;
         emit NameTransferred(domain, from, to);
+    }
+
+    function namehash(string memory subdomain) private pure returns (bytes32 subdomainNamehash) {
+        subdomainNamehash = keccak256(
+            abi.encodePacked(domainNamehash, keccak256(abi.encodePacked(subdomain)))
+        );
+
+        return subdomainNamehash;
+    }
+
+    function namehash(
+        string memory domain,
+        string memory topdomain
+    ) private pure returns (bytes32) {
+        bytes32 topdomainNamehash = keccak256(
+            abi.encodePacked(bytes32(0x00), keccak256(abi.encodePacked(topdomain)))
+        );
+
+        domainNamehash = keccak256(
+            abi.encodePacked(topdomainNamehash, keccak256(abi.encodePacked(domain)))
+        );
+
+        return domainNamehash;
     }
 
     function toLower(string memory str) private pure returns (string memory) {
