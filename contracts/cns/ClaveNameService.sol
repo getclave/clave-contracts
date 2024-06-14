@@ -24,6 +24,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     uint256 private totalSupply_;
     bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
     uint256 public expiration = 365 days;
+    string public ensDomain;
     string public baseTokenURI;
     bool public allowRenewals;
 
@@ -36,7 +37,8 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     event NameRenewed(string indexed name, address indexed owner);
     event NameExpired(string indexed name, address indexed owner);
 
-    constructor(string memory baseURI) ERC721('ClaveNameService', 'CNS') {
+    constructor(string memory domain, string memory baseURI) ERC721('ClaveNameService', 'CNS') {
+        ensDomain = domain;
         baseTokenURI = baseURI;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -95,6 +97,13 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         emit NameExpired(domain, to);
 
         _burn(asset.id);
+    }
+
+    function setEnsDomain(
+        string memory domain
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) returns (string memory) {
+        ensDomain = domain;
+        return ensDomain;
     }
 
     function setBaseTokenURI(
