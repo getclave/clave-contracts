@@ -7,36 +7,65 @@ import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
 
 /**
  * @title ClaveNameService
+ * @notice L2 name service contract that built compatible to resolved as ENS subdomains by L2 resolver
  * @author https://getclave.io
- * @notice https://github.com/stevegachau/optimismresolver
+ * @notice Inspired by @stevegachau/optimismresolver
+ * @dev Names can only be registered by the owner or authorized accounts
+ * @dev Addresses can only have one name at a time
+ * @dev Subdomains are stored as ERC-721 assets, can only be transferred to another address without any assets
+ * @dev If renewals are enabled, non-renewed names can be burnt after expiration timeline
  * TODO: May limit for Clave accounts
  */
 contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
+    // Subdomains as ERC-721 assets
     struct NameAssets {
-        uint256 id;
-        uint256 renewals;
+        uint256 id; // Token ID as ENS namehash
+        uint256 renewals; // Last renewal timestamp
     }
 
+    // Subdomains as native names
     struct LinkedNames {
-        string name;
+        string name; // Subdomain name
     }
 
+    // Current asset supply
     uint256 private totalSupply_;
+    // Role to be authorized as default minter
     bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
+    // Defualt domain expiration timeline
     uint256 public expiration = 365 days;
+    // ENS domain namehash to be used for subdomains
     bytes32 public domainNamehash;
+    // ERC-721 base token URI
     string public baseTokenURI;
+    // Allow renewal and expirations
     bool public allowRenewals;
 
+    // Store name to asset data
     mapping(string => NameAssets) public namesToAssets;
+    // Store subdomain namehashes / token IDs to names
     mapping(uint256 => LinkedNames) public idsToNames;
 
+    // Event to be emitted for name registration
     event NameRegistered(string indexed name, address indexed owner);
+    // Event to be emitted for name deletion
     event NameDeleted(string indexed name, address indexed owner);
+    // Event to be emitted for name transfer
     event NameTransferred(string indexed name, address indexed from, address indexed to);
+    // Event to be emitted for name renewal
     event NameRenewed(string indexed name, address indexed owner);
+    // Event to be emitted for name expiration
     event NameExpired(string indexed name, address indexed owner);
 
+    /**
+     * @notice Constructor function of the contract
+     *
+     * @param domain string    - ENS domain to build subdomains
+     * @param topdomain string - ENS topdomain of the domain
+     * @param baseURI string   - Base URI for the ERC-721 tokens as subdomains
+     *
+     * @dev {subdomain}.{domain}.{topdomain} => claver.getclave.eth
+     */
     constructor(
         string memory domain,
         string memory topdomain,
@@ -44,13 +73,18 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     ) ERC721('ClaveNameService', 'CNS') {
         domain = toLower(domain);
         topdomain = toLower(topdomain);
-
         domainNamehash = namehash(domain, topdomain);
+
         baseTokenURI = baseURI;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    /**
+     * @notice Resolve name to address from L2
+     * @param _name string - Subdomain name to resolve
+     * @return - address - Owner of the name
+     */
     function resolve(string memory _name) external view returns (address) {
         // Domain NFTs are stored against the namehashes of the subdomains
         string memory domain = toLower(_name);
@@ -59,10 +93,20 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         return ownerOf(uint256(namehash));
     }
 
+    /**
+     * @notice Total supply of the assets
+     * @return - uint256 - Total supply amount
+     */
     function totalSupply() external view returns (uint256) {
         return totalSupply_;
     }
 
+    /**
+     * @notice Register a new name and issue as a ENS subdomain
+     * @param to address   - Owner of the registered address
+     * @param _name string - Name to be registered
+     * @dev Only owner of the given address or authorized accounts can register a name
+     */
     function register(
         address to,
         string memory _name
@@ -76,11 +120,17 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         namesToAssets[subdomain] = NameAssets(newTokenId, block.timestamp);
         idsToNames[newTokenId].name = subdomain;
 
-        _mint(to, newTokenId);
+        _safeMint(to, newTokenId);
         emit NameRegistered(subdomain, to);
         return newTokenId;
     }
 
+    /**
+     * @notice Renew the name to extend the expiration timeline
+     * @param _name string - Name to be renewed
+     * @dev The names are expired after the renewal date + expiration timeline
+     * @dev The names can be renewed by only name owner
+     */
     function renewName(string memory _name) external isRenewalsAllowed {
         NameAssets storage asset = namesToAssets[_name];
 
@@ -92,7 +142,13 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         emit NameRenewed(_name, msg.sender);
     }
 
-    function expireName(address to, string memory _name) external isRenewalsAllowed {
+    /**
+     * @notice Expire and delete the names after the expiration timeline
+     * @param _name string - Expired name to be deleted
+     * @dev Anyone can expire a name after the expiration timeline
+     * @dev Renewals and expirations might be disabled by the admin
+     */
+    function expireName(string memory _name) external isRenewalsAllowed {
         string memory domain = toLower(_name);
         NameAssets memory asset = namesToAssets[domain];
 
@@ -102,11 +158,17 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         delete idsToNames[asset.id];
         delete namesToAssets[domain];
 
-        emit NameExpired(domain, to);
+        emit NameExpired(domain, ownerOf(asset.id));
 
         _burn(asset.id);
     }
 
+    /**
+     * @notice Change base token URI for the ERC-721 tokens
+     * @param baseURI string - New Base URI
+     * @return - string - Given base URI
+     * @dev Only admin can change the URI
+     */
     function setBaseTokenURI(
         string memory baseURI
     ) external onlyRole(DEFAULT_ADMIN_ROLE) returns (string memory) {
@@ -114,20 +176,30 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         return baseTokenURI;
     }
 
+    /**
+     * @notice Allow or disallow renewals
+     * @dev Only admin can change the status
+     */
     function flipRenewals() external onlyRole(DEFAULT_ADMIN_ROLE) {
         allowRenewals = !allowRenewals;
     }
 
+    /**
+     * @notice Set expiration time for the names
+     * @dev Only admin can change the time
+     */
     function setExpirationTime(uint256 expirationTime) external onlyRole(DEFAULT_ADMIN_ROLE) {
         expiration = expirationTime;
     }
 
+    /// @inheritdoc ERC721
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         string memory tokenlink = string(abi.encodePacked(baseTokenURI, tokenId));
 
         return tokenlink;
     }
 
+    /// @inheritdoc IERC165
     function supportsInterface(
         bytes4 interfaceId
     ) public view override(ERC721, AccessControl) returns (bool) {
@@ -135,6 +207,10 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
             ERC721.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
     }
 
+    /**
+     * @inheritdoc ERC721Burnable
+     * @dev Asset data is cleaned
+     */
     function burn(uint256 tokenId) public override(ERC721Burnable) {
         string memory domain = idsToNames[tokenId].name;
 
@@ -148,12 +224,20 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         super.burn(tokenId);
     }
 
+    /**
+     * @inheritdoc ERC721
+     * @dev Total supply is applied
+     */
     function _safeMint(address to, uint256 tokenId, bytes memory _data) internal override {
         _totalSupply++;
 
         super._safeMint(to, tokenId, _data);
     }
 
+    /**
+     * @inheritdoc ERC721
+     * @dev Transfers to addresses already have assets are restricted
+     */
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
         require(balanceOf(to) == 0, '[] Already have name.');
 
@@ -161,6 +245,12 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         emit NameTransferred(domain, from, to);
     }
 
+    /**
+     * @param subdomain string - Subdomain name
+     * @return subdomainNamehash bytes32 - ENS namehash of the subdomain by contract domain namehash
+     * @dev See ENS namehashes https://docs.ens.domains/resolution/names#namehash
+     * @dev {subdomain}.{domain}.{topdomain} => claver.getclave.eth
+     */
     function namehash(string memory subdomain) private pure returns (bytes32 subdomainNamehash) {
         subdomainNamehash = keccak256(
             abi.encodePacked(domainNamehash, keccak256(abi.encodePacked(subdomain)))
@@ -169,6 +259,13 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         return subdomainNamehash;
     }
 
+    /**
+     * @param domain string - domain name
+     * @param topdomain string - topdomain name
+     * @return - bytes32 - ENS namehash of the domain
+     * @dev See ENS namehashes https://docs.ens.domains/resolution/names#namehash
+     * @dev {domain}.{topdomain} => getclave.eth
+     */
     function namehash(
         string memory domain,
         string memory topdomain
@@ -184,6 +281,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         return domainNamehash;
     }
 
+    // Convert string to lowercase
     function toLower(string memory str) private pure returns (string memory) {
         bytes memory bStr = bytes(str);
         bytes memory bLower = new bytes(bStr.length);
@@ -199,6 +297,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         return string(bLower);
     }
 
+    // Check if string is alphanumeric
     function isAlphanumeric(string memory str) private pure returns (bool) {
         bytes memory b = bytes(str);
         for (uint i; i < b.length; i++) {
@@ -208,6 +307,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         return true;
     }
 
+    // Modifier to check if caller is the asset owner address or authorized
     modifier onlyRoleOrOwner(address to) {
         require(
             to == msg.sender ||
@@ -219,6 +319,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         _;
     }
 
+    // Modifier to check if renewal - expiration timeline is enabled
     modifier isRenewalsAllowed() {
         require(allowRenewals, '[isRenewalsEnabled] Renewals disabled.');
         _;
