@@ -26,4 +26,5 @@ export const contractNames = {
     koiEarnRouter: 'contracts/earn/KoiEarnRouter.sol:KoiEarnRouter',
     syncEarnRouter: 'contracts/earn/SyncEarnRouter.sol:SyncEarnRouter',
     smoothieStore: 'contracts/berlin/SmoothieStore.sol:SmoothieStore',
+    ZtaKe: 'contracts/earn/ZtaKe.sol:ZtaKe',
 };
