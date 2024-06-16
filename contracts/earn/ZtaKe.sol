@@ -5,7 +5,8 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IClaveRegistry} from '../interfaces/IClaveRegistry.sol';
 
 contract ZtaKe {
-    IERC20 public constant ZK = IERC20(0x5A7d6b2F92C77FAD6CCaBd7EE0624E64907Eaf3E);
+    //0x5A7d6b2F92C77FAD6CCaBd7EE0624E64907Eaf3E
+    IERC20 public constant ZK = IERC20(0x30e96277ca0e7aD3E8DF3D5E190b760D9D1A085f);
     IClaveRegistry public registry1 = IClaveRegistry(0x8fcddcb5b3DE43267B89C4380A5EC8892C08D92C);
     IClaveRegistry public registry2 = IClaveRegistry(0x4A70d13c117fAC84c07917755aCcAE236f4DF97f);
 
@@ -79,6 +80,13 @@ contract ZtaKe {
             rewardPerTokenStored +
             (rewardRate * (lastTimeRewardApplicable() - updatedAt) * 1e18) /
             totalSupply;
+    }
+
+    function getApy() public view returns (uint256) {
+        if (totalSupply == 0) {
+            return (rewardRate * 365 days * 100) / totalLimit;
+        }
+        return (rewardRate * 365 days * 100) / totalSupply;
     }
 
     function stake(uint256 _amount) external onlyClave updateReward(msg.sender) {
