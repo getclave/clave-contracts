@@ -50,10 +50,6 @@ export function handleOnce(_block: ethereum.Block): void {
         account.isRecovering = false;
         account.recoveryCount = 0;
         account.txCount = 0;
-        account.invested = ZERO;
-        account.realizedGain = ZERO;
-        account.investedEth = ZERO;
-        account.realizedGainEth = ZERO;
 
         day.save();
         week.save();
@@ -82,10 +78,6 @@ export function handleNewClaveAccount(event: NewClaveAccountEvent): void {
         account.recoveryCount = 0;
         account.txCount = 0;
         account.creationDate = ZERO;
-        account.invested = ZERO;
-        account.realizedGain = ZERO;
-        account.investedEth = ZERO;
-        account.realizedGainEth = ZERO;
     }
     account.implementation = Bytes.fromHexString(
         '0xdd4dD37B22Fc16DBFF3daB6Ecd681798c459f275',

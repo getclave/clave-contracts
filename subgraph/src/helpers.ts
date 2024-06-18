@@ -9,7 +9,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
 /* eslint-disable prefer-const */
-import { ByteArray, Bytes } from '@graphprotocol/graph-ts';
+import { Bytes } from '@graphprotocol/graph-ts';
 import { BigInt } from '@graphprotocol/graph-ts';
 
 import {
@@ -178,8 +178,8 @@ export function getTotal(): Total {
 
 export function getOrCreateEarnPosition(
     account: ClaveAccount,
-    pool: ByteArray,
-    token: ByteArray,
+    pool: Bytes,
+    token: Bytes,
     protocol: string,
 ): EarnPosition {
     let earnPositionId = account.id.concat(pool).concat(token);
@@ -203,7 +203,7 @@ export function getOrCreateEarnPosition(
 
 export function getOrCreateDailyEarnFlow(
     day: Day,
-    token: ByteArray,
+    token: Bytes,
     protocol: string,
 ): DailyEarnFlow {
     let dailyEarnFlowId = day.id.concat(token).concat(Bytes.fromUTF8(protocol));
@@ -226,7 +226,7 @@ export function getOrCreateDailyEarnFlow(
 
 export function getOrCreateWeeklyEarnFlow(
     week: Week,
-    token: ByteArray,
+    token: Bytes,
     protocol: string,
 ): WeeklyEarnFlow {
     let weeklyEarnFlowId = week.id
@@ -251,7 +251,7 @@ export function getOrCreateWeeklyEarnFlow(
 
 export function getOrCreateMonthlyEarnFlow(
     month: Month,
-    token: ByteArray,
+    token: Bytes,
     protocol: string,
 ): MonthlyEarnFlow {
     let monthlyEarnFlowId = month.id
