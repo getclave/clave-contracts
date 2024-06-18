@@ -326,6 +326,33 @@ dataSources:
         - event: Withdraw(indexed address,indexed address,indexed address,uint256)
           handler: handleWithdraw
       file: ./src/zero-usdt-pool.ts
+  - kind: ethereum
+    name: ClaveZKStake
+    network: zksync-era
+    source:
+      address: '0xd7c75bDe1F5Dfa164943cb9b6F1017b33E75D7a2'
+      abi: ClaveZKStake
+      startBlock: 36908411
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: ClaveZKStake
+          file: ./abis/ClaveZKStake.json
+      eventHandlers:
+        - event: Staked(indexed address,uint256)
+          handler: handleStaked
+        - event: Withdrawn(indexed address,uint256)
+          handler: handleWithdrawn
+        - event: RewardPaid(indexed address,uint256)
+          handler: handleRewardPaid
+      file: ./src/clave-zk-stake.ts
 templates:
   - kind: ethereum
     name: Account
