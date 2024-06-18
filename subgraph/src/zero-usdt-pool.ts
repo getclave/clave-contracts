@@ -5,26 +5,23 @@
  */
 
 /* eslint-disable @typescript-eslint/consistent-type-imports */
-import { log } from '@graphprotocol/graph-ts';
-
 import { ClaveAccount } from '../generated/schema';
 import {
     Supply as SupplyEvent,
     Withdraw as WithdrawEvent,
 } from '../generated/zeroUsdtPool/zeroUsdtPool';
 import {
+    ZERO,
+    getOrCreateDailyEarnFlow,
     getOrCreateDay,
+    getOrCreateEarnPosition,
     getOrCreateMonth,
+    getOrCreateMonthlyEarnFlow,
     getOrCreateWeek,
-    getTotal,
+    getOrCreateWeeklyEarnFlow,
 } from './helpers';
 
-const tokens = [
-    '0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4'.toLowerCase(),
-    '0x493257fD37EDB34451f62EDf8D2a0C418852bA4C'.toLowerCase(),
-    '0x4B9eb6c0b6ea15176BBF62841C6B2A8a398cb656'.toLowerCase(),
-    '0x1d17cbcf0d6d143135ae902365d2e5e2a16538d4'.toLowerCase(),
-];
+const protocol = 'ZeroLend';
 
 export function handleSupply(event: SupplyEvent): void {
     const account = ClaveAccount.load(event.params.onBehalfOf);
@@ -32,34 +29,33 @@ export function handleSupply(event: SupplyEvent): void {
         return;
     }
 
-    // skip if event.params.reserve not in tokens
-    if (
-        tokens.indexOf(event.params.reserve.toHexString().toLowerCase()) === -1
-    ) {
-        log.info('Skipped: {}', [event.params.reserve.toHexString()]);
-        return;
-    }
-
-    log.info('Supply: {}', [event.params.reserve.toHexString()]);
-
+    const pool = event.address;
+    const token = event.params.reserve;
     const amount = event.params.amount;
 
     const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
-    const total = getTotal();
 
-    day.investIn = day.investIn.plus(amount);
-    week.investIn = week.investIn.plus(amount);
-    month.investIn = month.investIn.plus(amount);
-    total.invested = total.invested.plus(amount);
-    account.invested = account.invested.plus(amount);
+    const dailyEarnFlow = getOrCreateDailyEarnFlow(day, token, protocol);
+    const weeklyEarnFlow = getOrCreateWeeklyEarnFlow(week, token, protocol);
+    const monthlyEarnFlow = getOrCreateMonthlyEarnFlow(month, token, protocol);
+    const earnPosition = getOrCreateEarnPosition(
+        account,
+        pool,
+        token,
+        protocol,
+    );
 
-    day.save();
-    week.save();
-    month.save();
-    total.save();
-    account.save();
+    dailyEarnFlow.amountIn = dailyEarnFlow.amountIn.plus(amount);
+    weeklyEarnFlow.amountIn = weeklyEarnFlow.amountIn.plus(amount);
+    monthlyEarnFlow.amountIn = monthlyEarnFlow.amountIn.plus(amount);
+    earnPosition.invested = earnPosition.invested.plus(amount);
+
+    dailyEarnFlow.save();
+    weeklyEarnFlow.save();
+    monthlyEarnFlow.save();
+    earnPosition.save();
 }
 
 export function handleWithdraw(event: WithdrawEvent): void {
@@ -68,32 +64,49 @@ export function handleWithdraw(event: WithdrawEvent): void {
         return;
     }
 
-    // skip if event.params.reserve not in tokens
-    if (
-        tokens.indexOf(event.params.reserve.toHexString().toLowerCase()) === -1
-    ) {
-        log.info('Skipped: {}', [event.params.reserve.toHexString()]);
-        return;
-    }
-
-    log.info('Supply: {}', [event.params.reserve.toHexString()]);
-
+    const pool = event.address;
+    const token = event.params.reserve;
     const amount = event.params.amount;
 
     const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
-    const total = getTotal();
 
-    day.investOut = day.investOut.plus(amount);
-    week.investOut = week.investOut.plus(amount);
-    month.investOut = month.investOut.plus(amount);
-    total.invested = total.invested.minus(amount);
-    account.invested = account.invested.minus(amount);
+    const dailyEarnFlow = getOrCreateDailyEarnFlow(day, token, protocol);
+    const weeklyEarnFlow = getOrCreateWeeklyEarnFlow(week, token, protocol);
+    const monthlyEarnFlow = getOrCreateMonthlyEarnFlow(month, token, protocol);
+    const earnPosition = getOrCreateEarnPosition(
+        account,
+        pool,
+        token,
+        protocol,
+    );
 
-    day.save();
-    week.save();
-    month.save();
-    total.save();
-    account.save();
+    const invested = earnPosition.invested;
+
+    if (amount.gt(invested)) {
+        const compoundGain = amount.minus(invested);
+        dailyEarnFlow.amountOut = dailyEarnFlow.amountOut.plus(invested);
+        dailyEarnFlow.claimedGain =
+            dailyEarnFlow.claimedGain.plus(compoundGain);
+        weeklyEarnFlow.amountOut = weeklyEarnFlow.amountOut.plus(invested);
+        weeklyEarnFlow.claimedGain =
+            weeklyEarnFlow.claimedGain.plus(compoundGain);
+        monthlyEarnFlow.amountOut = monthlyEarnFlow.amountOut.plus(invested);
+        monthlyEarnFlow.claimedGain =
+            monthlyEarnFlow.claimedGain.plus(compoundGain);
+        earnPosition.invested = ZERO;
+        earnPosition.compoundGain =
+            earnPosition.compoundGain.plus(compoundGain);
+    } else {
+        dailyEarnFlow.amountOut = dailyEarnFlow.amountOut.plus(amount);
+        weeklyEarnFlow.amountOut = weeklyEarnFlow.amountOut.plus(amount);
+        monthlyEarnFlow.amountOut = monthlyEarnFlow.amountOut.plus(amount);
+        earnPosition.invested = invested.minus(amount);
+    }
+
+    dailyEarnFlow.save();
+    weeklyEarnFlow.save();
+    monthlyEarnFlow.save();
+    earnPosition.save();
 }
