@@ -9,18 +9,22 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
 /* eslint-disable prefer-const */
-import { Bytes } from '@graphprotocol/graph-ts';
+import { ByteArray, Bytes } from '@graphprotocol/graph-ts';
 import { BigInt } from '@graphprotocol/graph-ts';
 
 import {
     ClaveAccount,
+    DailyEarnFlow,
     Day,
     DayAccount,
+    EarnPosition,
     Month,
     MonthAccount,
+    MonthlyEarnFlow,
     Total,
     Week,
     WeekAccount,
+    WeeklyEarnFlow,
 } from '../generated/schema';
 
 export const ZERO = BigInt.fromI32(0);
@@ -47,12 +51,6 @@ export function getOrCreateDay(timestamp: BigInt): Day {
     day.deployedAccounts = 0;
     day.activeAccounts = 0;
     day.transactions = 0;
-    day.investIn = ZERO;
-    day.investInEth = ZERO;
-    day.investOut = ZERO;
-    day.investOutEth = ZERO;
-    day.realizedGain = ZERO;
-    day.realizedGainEth = ZERO;
     day.gasSponsored = ZERO;
 
     return day;
@@ -94,12 +92,6 @@ export function getOrCreateWeek(timestamp: BigInt): Week {
     week.deployedAccounts = 0;
     week.activeAccounts = 0;
     week.transactions = 0;
-    week.investIn = ZERO;
-    week.investInEth = ZERO;
-    week.investOut = ZERO;
-    week.investOutEth = ZERO;
-    week.realizedGain = ZERO;
-    week.realizedGainEth = ZERO;
     week.gasSponsored = ZERO;
 
     return week;
@@ -141,12 +133,6 @@ export function getOrCreateMonth(timestamp: BigInt): Month {
     month.deployedAccounts = 0;
     month.activeAccounts = 0;
     month.transactions = 0;
-    month.investIn = ZERO;
-    month.investInEth = ZERO;
-    month.investOut = ZERO;
-    month.investOutEth = ZERO;
-    month.realizedGain = ZERO;
-    month.realizedGainEth = ZERO;
     month.gasSponsored = ZERO;
 
     return month;
@@ -185,11 +171,105 @@ export function getTotal(): Total {
     total.deployedAccounts = 0;
     total.transactions = 0;
     total.backedUp = 0;
-    total.invested = ZERO;
-    total.investedEth = ZERO;
-    total.realizedGain = ZERO;
-    total.realizedGainEth = ZERO;
     total.gasSponsored = ZERO;
 
     return total;
+}
+
+export function getOrCreateEarnPosition(
+    account: ClaveAccount,
+    pool: ByteArray,
+    token: ByteArray,
+    protocol: string,
+): EarnPosition {
+    let earnPositionId = account.id.concat(pool).concat(token);
+    let earnPosition = EarnPosition.load(earnPositionId);
+
+    if (earnPosition !== null) {
+        return earnPosition;
+    }
+
+    earnPosition = new EarnPosition(earnPositionId);
+    earnPosition.account = account.id;
+    earnPosition.pool = pool;
+    earnPosition.token = token;
+    earnPosition.protocol = protocol;
+    earnPosition.invested = ZERO;
+    earnPosition.compoundGain = ZERO;
+    earnPosition.normalGain = ZERO;
+
+    return earnPosition;
+}
+
+export function getOrCreateDailyEarnFlow(
+    day: Day,
+    token: ByteArray,
+    protocol: string,
+): DailyEarnFlow {
+    let dailyEarnFlowId = day.id.concat(token).concat(Bytes.fromUTF8(protocol));
+    let dailyEarnFlow = DailyEarnFlow.load(dailyEarnFlowId);
+
+    if (dailyEarnFlow !== null) {
+        return dailyEarnFlow;
+    }
+
+    dailyEarnFlow = new DailyEarnFlow(dailyEarnFlowId);
+    dailyEarnFlow.day = day.id;
+    dailyEarnFlow.erc20 = token;
+    dailyEarnFlow.protocol = protocol;
+    dailyEarnFlow.amountIn = ZERO;
+    dailyEarnFlow.amountOut = ZERO;
+    dailyEarnFlow.claimedGain = ZERO;
+
+    return dailyEarnFlow;
+}
+
+export function getOrCreateWeeklyEarnFlow(
+    week: Week,
+    token: ByteArray,
+    protocol: string,
+): WeeklyEarnFlow {
+    let weeklyEarnFlowId = week.id
+        .concat(token)
+        .concat(Bytes.fromUTF8(protocol));
+    let weeklyEarnFlow = WeeklyEarnFlow.load(weeklyEarnFlowId);
+
+    if (weeklyEarnFlow !== null) {
+        return weeklyEarnFlow;
+    }
+
+    weeklyEarnFlow = new WeeklyEarnFlow(weeklyEarnFlowId);
+    weeklyEarnFlow.week = week.id;
+    weeklyEarnFlow.erc20 = token;
+    weeklyEarnFlow.protocol = protocol;
+    weeklyEarnFlow.amountIn = ZERO;
+    weeklyEarnFlow.amountOut = ZERO;
+    weeklyEarnFlow.claimedGain = ZERO;
+
+    return weeklyEarnFlow;
+}
+
+export function getOrCreateMonthlyEarnFlow(
+    month: Month,
+    token: ByteArray,
+    protocol: string,
+): MonthlyEarnFlow {
+    let monthlyEarnFlowId = month.id
+        .concat(token)
+        .concat(Bytes.fromUTF8(protocol));
+    let monthlyEarnFlow = MonthlyEarnFlow.load(monthlyEarnFlowId);
+
+    if (monthlyEarnFlow !== null) {
+        return monthlyEarnFlow;
+    }
+
+    monthlyEarnFlow = new MonthlyEarnFlow(monthlyEarnFlowId);
+    monthlyEarnFlow.month = month.id;
+    monthlyEarnFlow.erc20 = token;
+    monthlyEarnFlow.protocol = protocol;
+    monthlyEarnFlow.amountIn = ZERO;
+    monthlyEarnFlow.amountOut = ZERO;
+    monthlyEarnFlow.claimedGain = ZERO;
+
+    return monthlyEarnFlow;
 }
