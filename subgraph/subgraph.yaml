@@ -10,17 +10,16 @@ dataSources:
     source:
       address: '0x9d2811b85c1d736427722817b69e4d1e98016bb0'
       abi: KoiPair
-      startBlock: 24799912
+      startBlock: 30099184
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - Total
-        - Day
-        - Week
-        - Month
-        - ClaveAccount
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
       abis:
         - name: KoiPair
           file: ./abis/KoiPair.json
@@ -260,17 +259,16 @@ dataSources:
     source:
       address: '0x12e7A9423d9128287E63017eE6d1f20e1C237f15'
       abi: SyncStablePool
-      startBlock: 24799912
+      startBlock: 30099184
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - Total
-        - Day
-        - Week
-        - Month
-        - ClaveAccount
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
       abis:
         - name: SyncStablePool
           file: ./abis/SyncStablePool.json
@@ -286,17 +284,16 @@ dataSources:
     source:
       address: '0x2B9a7d5cD64E5c1446b32e034e75A5C93B0C8bB5'
       abi: SyncStaking
-      startBlock: 24799912
+      startBlock: 30099184
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - Total
-        - Day
-        - Week
-        - Month
-        - ClaveAccount
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
       abis:
         - name: SyncStaking
           file: ./abis/SyncStaking.json
@@ -310,17 +307,16 @@ dataSources:
     source:
       address: '0x4d9429246EA989C9CeE203B43F6d1C7D83e3B8F8'
       abi: zeroUsdtPool
-      startBlock: 24799912
+      startBlock: 30099184
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - Total
-        - Day
-        - Week
-        - Month
-        - ClaveAccount
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
       abis:
         - name: zeroUsdtPool
           file: ./abis/zeroUsdtPool.json
