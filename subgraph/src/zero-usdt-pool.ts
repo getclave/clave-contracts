@@ -20,10 +20,10 @@ import {
 } from './helpers';
 
 const tokens = [
-    '0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4',
-    '0x493257fD37EDB34451f62EDf8D2a0C418852bA4C',
-    '0x4B9eb6c0b6ea15176BBF62841C6B2A8a398cb656',
-    '0x1d17cbcf0d6d143135ae902365d2e5e2a16538d4',
+    '0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4'.toLowerCase(),
+    '0x493257fD37EDB34451f62EDf8D2a0C418852bA4C'.toLowerCase(),
+    '0x4B9eb6c0b6ea15176BBF62841C6B2A8a398cb656'.toLowerCase(),
+    '0x1d17cbcf0d6d143135ae902365d2e5e2a16538d4'.toLowerCase(),
 ];
 
 export function handleSupply(event: SupplyEvent): void {
@@ -33,7 +33,9 @@ export function handleSupply(event: SupplyEvent): void {
     }
 
     // skip if event.params.reserve not in tokens
-    if (tokens.indexOf(event.params.reserve.toHexString()) === -1) {
+    if (
+        tokens.indexOf(event.params.reserve.toHexString().toLowerCase()) === -1
+    ) {
         log.info('Skipped: {}', [event.params.reserve.toHexString()]);
         return;
     }
@@ -65,6 +67,16 @@ export function handleWithdraw(event: WithdrawEvent): void {
     if (!account) {
         return;
     }
+
+    // skip if event.params.reserve not in tokens
+    if (
+        tokens.indexOf(event.params.reserve.toHexString().toLowerCase()) === -1
+    ) {
+        log.info('Skipped: {}', [event.params.reserve.toHexString()]);
+        return;
+    }
+
+    log.info('Supply: {}', [event.params.reserve.toHexString()]);
 
     const amount = event.params.amount;
 
