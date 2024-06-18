@@ -5,6 +5,8 @@
  */
 
 /* eslint-disable @typescript-eslint/consistent-type-imports */
+import { Address } from '@graphprotocol/graph-ts';
+
 import {
     Burn as BurnEvent,
     Claim as ClaimEvent,
@@ -12,11 +14,19 @@ import {
 } from '../generated/KoiUsdceUsdt/KoiPair';
 import { ClaveAccount } from '../generated/schema';
 import {
+    getOrCreateDailyEarnFlow,
     getOrCreateDay,
+    getOrCreateEarnPosition,
     getOrCreateMonth,
+    getOrCreateMonthlyEarnFlow,
     getOrCreateWeek,
-    getTotal,
+    getOrCreateWeeklyEarnFlow,
 } from './helpers';
+
+const protocol = 'Koi';
+const token = Address.fromHexString(
+    '0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4',
+);
 
 export function handleMint(event: MintEvent): void {
     const account = ClaveAccount.load(event.transaction.from);
@@ -24,24 +34,32 @@ export function handleMint(event: MintEvent): void {
         return;
     }
 
+    const pool = event.address;
     const amount = event.params.amount1.plus(event.params.amount0);
 
     const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
-    const total = getTotal();
 
-    day.investIn = day.investIn.plus(amount);
-    week.investIn = week.investIn.plus(amount);
-    month.investIn = month.investIn.plus(amount);
-    total.invested = total.invested.plus(amount);
-    account.invested = account.invested.plus(amount);
+    const dailyEarnFlow = getOrCreateDailyEarnFlow(day, token, protocol);
+    const weeklyEarnFlow = getOrCreateWeeklyEarnFlow(week, token, protocol);
+    const monthlyEarnFlow = getOrCreateMonthlyEarnFlow(month, token, protocol);
+    const earnPosition = getOrCreateEarnPosition(
+        account,
+        pool,
+        token,
+        protocol,
+    );
 
-    day.save();
-    week.save();
-    month.save();
-    total.save();
-    account.save();
+    dailyEarnFlow.amountIn = dailyEarnFlow.amountIn.plus(amount);
+    weeklyEarnFlow.amountIn = weeklyEarnFlow.amountIn.plus(amount);
+    monthlyEarnFlow.amountIn = monthlyEarnFlow.amountIn.plus(amount);
+    earnPosition.invested = earnPosition.invested.plus(amount);
+
+    dailyEarnFlow.save();
+    weeklyEarnFlow.save();
+    monthlyEarnFlow.save();
+    earnPosition.save();
 }
 
 export function handleBurn(event: BurnEvent): void {
@@ -50,24 +68,32 @@ export function handleBurn(event: BurnEvent): void {
         return;
     }
 
+    const pool = event.address;
     const amount = event.params.amount1.plus(event.params.amount0);
 
     const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
-    const total = getTotal();
 
-    day.investOut = day.investOut.plus(amount);
-    week.investOut = week.investOut.plus(amount);
-    month.investOut = month.investOut.plus(amount);
-    total.invested = total.invested.minus(amount);
-    account.invested = account.invested.minus(amount);
+    const dailyEarnFlow = getOrCreateDailyEarnFlow(day, token, protocol);
+    const weeklyEarnFlow = getOrCreateWeeklyEarnFlow(week, token, protocol);
+    const monthlyEarnFlow = getOrCreateMonthlyEarnFlow(month, token, protocol);
+    const earnPosition = getOrCreateEarnPosition(
+        account,
+        pool,
+        token,
+        protocol,
+    );
 
-    day.save();
-    week.save();
-    month.save();
-    total.save();
-    account.save();
+    dailyEarnFlow.amountOut = dailyEarnFlow.amountOut.plus(amount);
+    weeklyEarnFlow.amountOut = weeklyEarnFlow.amountOut.plus(amount);
+    monthlyEarnFlow.amountOut = monthlyEarnFlow.amountOut.plus(amount);
+    earnPosition.invested = earnPosition.invested.minus(amount);
+
+    dailyEarnFlow.save();
+    weeklyEarnFlow.save();
+    monthlyEarnFlow.save();
+    earnPosition.save();
 }
 
 export function handleClaim(event: ClaimEvent): void {
@@ -76,22 +102,25 @@ export function handleClaim(event: ClaimEvent): void {
         return;
     }
 
+    const pool = event.address;
     const amount = event.params.amount1.plus(event.params.amount0);
 
     const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
-    const total = getTotal();
 
-    day.realizedGain = day.realizedGain.plus(amount);
-    week.realizedGain = week.realizedGain.plus(amount);
-    month.realizedGain = month.realizedGain.plus(amount);
-    total.realizedGain = total.realizedGain.plus(amount);
-    account.realizedGain = account.realizedGain.plus(amount);
+    const dailyEarnFlow = getOrCreateDailyEarnFlow(day, token, protocol);
+    const weeklyEarnFlow = getOrCreateWeeklyEarnFlow(week, token, protocol);
+    const monthlyEarnFlow = getOrCreateMonthlyEarnFlow(month, token, protocol);
+    const earnPosition = getOrCreateEarnPosition(
+        account,
+        pool,
+        token,
+        protocol,
+    );
 
-    day.save();
-    week.save();
-    month.save();
-    total.save();
-    account.save();
+    dailyEarnFlow.claimedGain = dailyEarnFlow.claimedGain.plus(amount);
+    weeklyEarnFlow.claimedGain = weeklyEarnFlow.claimedGain.plus(amount);
+    monthlyEarnFlow.claimedGain = monthlyEarnFlow.claimedGain.plus(amount);
+    earnPosition.normalGain = earnPosition.normalGain.plus(amount);
 }
