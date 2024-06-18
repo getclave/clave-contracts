@@ -48,7 +48,6 @@ enum EarnProtocol {
   Koi
   SyncSwap
   ZeroLend
-  Uniswap
   Clave
 }
 
