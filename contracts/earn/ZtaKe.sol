@@ -5,8 +5,7 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IClaveRegistry} from '../interfaces/IClaveRegistry.sol';
 
 contract ZtaKe {
-    //0x5A7d6b2F92C77FAD6CCaBd7EE0624E64907Eaf3E
-    IERC20 public constant ZK = IERC20(0x30e96277ca0e7aD3E8DF3D5E190b760D9D1A085f);
+    IERC20 public constant ZK = IERC20(0x5A7d6b2F92C77FAD6CCaBd7EE0624E64907Eaf3E);
     IClaveRegistry public registry1 = IClaveRegistry(0x8fcddcb5b3DE43267B89C4380A5EC8892C08D92C);
     IClaveRegistry public registry2 = IClaveRegistry(0x4A70d13c117fAC84c07917755aCcAE236f4DF97f);
 
@@ -93,9 +92,9 @@ contract ZtaKe {
         require(_amount > 0, 'amount = 0');
         require(balanceOf[msg.sender] + _amount <= limitPerUser, 'exceeds limit per user');
         require(totalSupply + _amount <= totalLimit, 'exceeds total limit');
-        ZK.transferFrom(msg.sender, address(this), _amount);
         balanceOf[msg.sender] += _amount;
         totalSupply += _amount;
+        ZK.transferFrom(msg.sender, address(this), _amount);
         emit Staked(msg.sender, _amount);
     }
 
