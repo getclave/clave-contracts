@@ -24,7 +24,7 @@ export default async function (
 
     const zkStake = await deployer.deploy(
         zkStakeArtifact,
-        [1000000, 10000000],
+        ['50000000000000000000000', '6000000000000000000000000'],
         undefined,
         [],
     );
@@ -33,18 +33,18 @@ export default async function (
 
     console.log(`ZtaKe address: ${zkStakeAddress}`);
 
-    if (chainId === 0x12c || chainId === 0x144) {
-        try {
-            const verificationId = await hre.run('verify:verify', {
-                address: zkStakeAddress,
-                contract: contractNames.ZtaKe,
-                constructorArguments: [1000000, 10000000],
-            });
-            console.log(`Verification ID: ${verificationId}`);
-        } catch (e) {
-            console.log(e);
-        }
-    }
+    // if (chainId === 0x12c || chainId === 0x144) {
+    //     try {
+    //         const verificationId = await hre.run('verify:verify', {
+    //             address: zkStakeAddress,
+    //             contract: contractNames.ZtaKe,
+    //             constructorArguments: [1000000, 10000000],
+    //         });
+    //         console.log(`Verification ID: ${verificationId}`);
+    //     } catch (e) {
+    //         console.log(e);
+    //     }
+    // }
 
     // if (releaseType != null) {
     //     const key: AddressKey = 'SYNC_EARN_ROUTER';
