@@ -330,7 +330,7 @@ dataSources:
     name: ClaveZKStake
     network: zksync-era
     source:
-      address: '0xd7c75bDe1F5Dfa164943cb9b6F1017b33E75D7a2'
+      address: '0x9248F1Ee8cBD029F3D22A92EB270333a39846fB2'
       abi: ClaveZKStake
       startBlock: 36908411
     mapping:
