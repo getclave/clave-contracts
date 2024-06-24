@@ -4,19 +4,27 @@ pragma solidity ^0.8.17;
 import {ERC721} from '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import {ERC721Burnable} from '@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol';
 import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
+import {IClaveRegistry} from '../interfaces/IClaveRegistry.sol';
+import {IClaveNameService} from './IClaveNameService.sol';
 
 /**
  * @title ClaveNameService
  * @notice L2 name service contract that built compatible to resolved as ENS subdomains by L2 resolver
+ * @notice This contract also replaces previous ClaveRegistry contracts by migrating their data
  * @author https://getclave.io
  * @notice Inspired by @stevegachau/optimismresolver
  * @dev Names can only be registered by the owner or authorized accounts
  * @dev Addresses can only have one name at a time
  * @dev Subdomains are stored as ERC-721 assets, can only be transferred to another address without any assets
  * @dev If renewals are enabled, non-renewed names can be burnt after expiration timeline
- * TODO: May limit for Clave accounts
  */
-contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
+contract ClaveNameService is
+    IClaveRegistry,
+    IClaveNameService,
+    ERC721,
+    ERC721Burnable,
+    AccessControl
+{
     // Subdomains as ERC-721 assets
     struct NameAssets {
         uint256 id; // Token ID as ENS namehash
@@ -32,6 +40,8 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     uint256 private totalSupply_;
     // Role to be authorized as default minter
     bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
+    // Role to be authorized as default minter
+    bytes32 public constant FACTORY_ROLE = keccak256('FACTORY_ROLE');
     // Defualt domain expiration timeline
     uint256 public expiration = 365 days;
     // ENS domain namehash to be used for subdomains
@@ -45,6 +55,8 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     mapping(string => NameAssets) public namesToAssets;
     // Store subdomain namehashes / token IDs to names
     mapping(uint256 => LinkedNames) public idsToNames;
+    // Mapping of Clave accounts for the Registry
+    mapping(address => bool) public isClave;
 
     // Event to be emitted for name registration
     event NameRegistered(string indexed name, address indexed owner);
@@ -80,11 +92,7 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    /**
-     * @notice Resolve name to address from L2
-     * @param _name string - Subdomain name to resolve
-     * @return - address - Owner of the name
-     */
+    /// @inheritdoc IClaveNameService
     function resolve(string memory _name) external view returns (address) {
         // Domain NFTs are stored against the namehashes of the subdomains
         _name = toLower(_name);
@@ -102,12 +110,27 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
     }
 
     /**
-     * @notice Register a new name and issue as a ENS subdomain
-     * @param to address   - Owner of the registered address
-     * @param _name string - Name to be registered
-     * @dev Only owner of the given address or authorized accounts can register a name
+     * @notice Registers an account as a Clave account
+     * @dev Can only be called by the factory or owner
+     * @param account address - Address of the account to register
      */
-    function register(
+    function register(address account) external override onlyFactory {
+        isClave[account] = true;
+    }
+
+    /**
+     * @notice Registers multiple accounts as Clave accounts
+     * @dev Can only be called by the factory or owner
+     * @param accounts address[] - Array of addresses to register
+     */
+    function registerMultiple(address[] calldata accounts) external onlyFactory {
+        for (uint256 i = 0; i < accounts.length; i++) {
+            isClave[accounts[i]] = true;
+        }
+    }
+
+    /// @inheritdoc IClaveNameService
+    function registerName(
         address to,
         string memory _name
     ) external onlyRoleOrOwner(to) returns (uint256) {
@@ -313,6 +336,18 @@ contract ClaveNameService is ERC721, ERC721Burnable, AccessControl {
             to == msg.sender ||
                 hasRole(REGISTERER_ROLE, msg.sender) ||
                 hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            '[] Not authorized.'
+        );
+
+        require(isClave[to], '[] Not a Clave account.');
+
+        _;
+    }
+
+    // Modifier to check if caller is authorized
+    modifier onlyFactory() {
+        require(
+            hasRole(FACTORY_ROLE, msg.sender) || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
             '[] Not authorized.'
         );
 
