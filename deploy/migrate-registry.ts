@@ -5,16 +5,19 @@
  */
 import { readFile } from 'fs/promises';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { Wallet } from 'zksync-ethers';
+import { Provider, Wallet } from 'zksync-ethers';
 
 const CLAVE_NAME_SERVICE_ADDRESS = '0x';
-const CHUNK_SIZE = 10;
+const CHUNK_SIZE = 100;
 const STARTING_INDEX = 0;
 
 export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const provider = new Provider(hre.network.config.url);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const privateKey = process.env.PRIVATE_KEY!;
-    const wallet = new Wallet(privateKey);
+    const wallet = new Wallet(privateKey).connect(provider);
 
     const registry = await hre.ethers.getContractAt(
         'ClaveNameService',
@@ -42,7 +45,7 @@ export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
             const tx = await registry.connect(wallet).registerMultiple(chunk);
             await tx.wait();
 
-            console.log('chunk processed: ', currentIndex);
+            console.log('chunk processed:', currentIndex, 'with tx:', tx.hash);
 
             currentIndex += CHUNK_SIZE;
         }
