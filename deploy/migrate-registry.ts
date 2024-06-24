@@ -45,9 +45,9 @@ export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
             const tx = await registry.connect(wallet).registerMultiple(chunk);
             await tx.wait();
 
-            console.log('chunk processed:', currentIndex, 'with tx:', tx.hash);
-
             currentIndex += CHUNK_SIZE;
+
+            console.log('chunk processed:', currentIndex, 'with tx:', tx.hash);
         }
     } catch (e) {
         console.log('Error while processing chunk:', currentIndex);
