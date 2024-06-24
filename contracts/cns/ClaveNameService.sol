@@ -129,23 +129,13 @@ contract ClaveNameService is
         }
     }
 
-    /// @inheritdoc IClaveNameService
-    function registerName(
-        address to,
-        string memory _name
-    ) external onlyRoleOrOwner(to) returns (uint256) {
-        string memory subdomain = toLower(_name);
-        require(bytes(subdomain).length != 0, '[register] Null name');
-        require(isAlphanumeric(subdomain), '[register] Unsupported characters.');
-        require(namesToAssets[subdomain].id == 0, '[register] Already registered.');
-
-        uint256 newTokenId = uint256(namehash(subdomain));
-        namesToAssets[subdomain] = NameAssets(newTokenId, block.timestamp);
-        idsToNames[newTokenId].name = subdomain;
-
-        _safeMint(to, newTokenId);
-        emit NameRegistered(subdomain, to);
-        return newTokenId;
+    /**
+     * @notice Register multiple names at once, calles "registerName" as batch
+     */
+    function registerNameMultiple(address[] memory to, string[] memory _name) external onlyFactory {
+        for (uint256 i = 0; i < to.length; i++) {
+            registerName(to[i], _name[i]);
+        }
     }
 
     /**
@@ -213,6 +203,25 @@ contract ClaveNameService is
      */
     function setExpirationTime(uint256 expirationTime) external onlyRole(DEFAULT_ADMIN_ROLE) {
         expiration = expirationTime;
+    }
+
+    /// @inheritdoc IClaveNameService
+    function registerName(
+        address to,
+        string memory _name
+    ) public onlyRoleOrOwner(to) returns (uint256) {
+        string memory subdomain = toLower(_name);
+        require(bytes(subdomain).length != 0, '[register] Null name');
+        require(isAlphanumeric(subdomain), '[register] Unsupported characters.');
+        require(namesToAssets[subdomain].id == 0, '[register] Already registered.');
+
+        uint256 newTokenId = uint256(namehash(subdomain));
+        namesToAssets[subdomain] = NameAssets(newTokenId, block.timestamp);
+        idsToNames[newTokenId].name = subdomain;
+
+        _safeMint(to, newTokenId);
+        emit NameRegistered(subdomain, to);
+        return newTokenId;
     }
 
     /// @inheritdoc ERC721
