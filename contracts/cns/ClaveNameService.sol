@@ -40,8 +40,10 @@ contract ClaveNameService is
     uint256 private totalSupply_;
     // Role to be authorized as default minter
     bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
-    // Role to be authorized as default minter
+    // Role to be authorized as default registerer
     bytes32 public constant FACTORY_ROLE = keccak256('FACTORY_ROLE');
+    // Role to be authorized as default minter
+    bytes32 public constant DEPLOYER_ROLE = keccak256('FACTORY_ROLE');
     // Defualt domain expiration timeline
     uint256 public expiration = 365 days;
     // ENS domain namehash to be used for subdomains
@@ -111,19 +113,19 @@ contract ClaveNameService is
 
     /**
      * @notice Registers an account as a Clave account
-     * @dev Can only be called by the factory or owner
+     * @dev Can only be called by the deployer or owner
      * @param account address - Address of the account to register
      */
-    function register(address account) external override onlyFactory {
+    function register(address account) external override onlyDeployer {
         isClave[account] = true;
     }
 
     /**
      * @notice Registers multiple accounts as Clave accounts
-     * @dev Can only be called by the factory or owner
+     * @dev Can only be called by the deployer or owner
      * @param accounts address[] - Array of addresses to register
      */
-    function registerMultiple(address[] calldata accounts) external onlyFactory {
+    function registerMultiple(address[] calldata accounts) external onlyDeployer {
         for (uint256 i = 0; i < accounts.length; i++) {
             isClave[accounts[i]] = true;
         }
@@ -161,7 +163,7 @@ contract ClaveNameService is
      * @dev Anyone can expire a name after the expiration timeline
      * @dev Renewals and expirations might be disabled by the admin
      */
-    function expireName(string memory _name) external isRenewalsAllowed {
+    function expireName(string memory _name) external isRenewalsAllowed onlyDeployer {
         string memory domain = toLower(_name);
         NameAssets memory asset = namesToAssets[domain];
 
@@ -353,13 +355,19 @@ contract ClaveNameService is
         _;
     }
 
-    // Modifier to check if caller is authorized
+    // Modifier to check if caller is authorized for register operation
     modifier onlyFactory() {
         require(
             hasRole(FACTORY_ROLE, msg.sender) || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
             '[] Not authorized.'
         );
 
+        _;
+    }
+
+    // Modifier to check if caller is authorized for mints
+    modifier onlyDeployer() {
+            hasRole(DEPLOYER_ROLE, msg.sender) || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
         _;
     }
 
