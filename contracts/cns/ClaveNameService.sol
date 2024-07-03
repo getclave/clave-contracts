@@ -42,8 +42,6 @@ contract ClaveNameService is
     bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
     // Role to be authorized as default registerer
     bytes32 public constant FACTORY_ROLE = keccak256('FACTORY_ROLE');
-    // Role to be authorized as default minter
-    bytes32 public constant DEPLOYER_ROLE = keccak256('FACTORY_ROLE');
     // Defualt domain expiration timeline
     uint256 public expiration = 365 days;
     // ENS domain namehash to be used for subdomains
@@ -113,19 +111,19 @@ contract ClaveNameService is
 
     /**
      * @notice Registers an account as a Clave account
-     * @dev Can only be called by the deployer or owner
+     * @dev Can only be called by the registerer or owner
      * @param account address - Address of the account to register
      */
-    function register(address account) external override onlyDeployer {
+    function register(address account) external override onlyFactory {
         isClave[account] = true;
     }
 
     /**
      * @notice Registers multiple accounts as Clave accounts
-     * @dev Can only be called by the deployer or owner
+     * @dev Can only be called by the registerer or owner
      * @param accounts address[] - Array of addresses to register
      */
-    function registerMultiple(address[] calldata accounts) external onlyDeployer {
+    function registerMultiple(address[] calldata accounts) external onlyFactory {
         for (uint256 i = 0; i < accounts.length; i++) {
             isClave[accounts[i]] = true;
         }
@@ -134,7 +132,10 @@ contract ClaveNameService is
     /**
      * @notice Register multiple names at once, calles "registerName" as batch
      */
-    function registerNameMultiple(address[] memory to, string[] memory _name) external onlyFactory {
+    function registerNameMultiple(
+        address[] memory to,
+        string[] memory _name
+    ) external onlyRegisterer {
         for (uint256 i = 0; i < to.length; i++) {
             registerName(to[i], _name[i]);
         }
@@ -163,7 +164,7 @@ contract ClaveNameService is
      * @dev Anyone can expire a name after the expiration timeline
      * @dev Renewals and expirations might be disabled by the admin
      */
-    function expireName(string memory _name) external isRenewalsAllowed onlyDeployer {
+    function expireName(string memory _name) external isRenewalsAllowed onlyRegisterer {
         string memory domain = toLower(_name);
         NameAssets memory asset = namesToAssets[domain];
 
@@ -208,14 +209,12 @@ contract ClaveNameService is
     }
 
     /// @inheritdoc IClaveNameService
-    function registerName(
-        address to,
-        string memory _name
-    ) public onlyRoleOrOwner(to) returns (uint256) {
+    function registerName(address to, string memory _name) public onlyRegisterer returns (uint256) {
         string memory subdomain = toLower(_name);
         require(bytes(subdomain).length != 0, '[register] Null name');
         require(isAlphanumeric(subdomain), '[register] Unsupported characters.');
         require(namesToAssets[subdomain].id == 0, '[register] Already registered.');
+        require(isClave[to], '[register] Not a Clave account.');
 
         uint256 newTokenId = uint256(namehash(subdomain));
         namesToAssets[subdomain] = NameAssets(newTokenId, block.timestamp);
@@ -341,20 +340,6 @@ contract ClaveNameService is
         return true;
     }
 
-    // Modifier to check if caller is the asset owner address or authorized
-    modifier onlyRoleOrOwner(address to) {
-        require(
-            to == msg.sender ||
-                hasRole(REGISTERER_ROLE, msg.sender) ||
-                hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            '[] Not authorized.'
-        );
-
-        require(isClave[to], '[] Not a Clave account.');
-
-        _;
-    }
-
     // Modifier to check if caller is authorized for register operation
     modifier onlyFactory() {
         require(
@@ -365,9 +350,12 @@ contract ClaveNameService is
         _;
     }
 
-    // Modifier to check if caller is authorized for mints
-    modifier onlyDeployer() {
-            hasRole(DEPLOYER_ROLE, msg.sender) || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+    // Modifier to check if caller is authorized for mints and registries
+    modifier onlyRegisterer() {
+        require(
+            hasRole(REGISTERER_ROLE, msg.sender) || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            '[]  Not authorized.'
+        );
         _;
     }
 
