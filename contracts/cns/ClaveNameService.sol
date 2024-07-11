@@ -9,7 +9,7 @@ import {IClaveNameService} from './IClaveNameService.sol';
 
 /**
  * @title ClaveNameService
- * @notice L2 name service contract that built compatible to resolved as ENS subdomains by L2 resolver
+ * @notice L2 name servi ce contract that built compatible to resolved as ENS subdomains by L2 resolver
  * @notice This contract also replaces previous ClaveRegistry contracts by migrating their data
  * @author https://getclave.io
  * @notice Inspired by @stevegachau/optimismresolver
@@ -27,7 +27,7 @@ contract ClaveNameService is
 {
     // Subdomains as ERC-721 assets
     struct NameAssets {
-        uint256 id; // Token ID as ENS namehash
+        uint256 id; // Token ID as hash of names
         uint256 renewals; // Last renewal timestamp
     }
 
@@ -44,8 +44,8 @@ contract ClaveNameService is
     bytes32 public constant FACTORY_ROLE = keccak256('FACTORY_ROLE');
     // Defualt domain expiration timeline
     uint256 public expiration = 365 days;
-    // ENS domain namehash to be used for subdomains
-    bytes32 public domainNamehash;
+    // ENS to be used for subdomains
+    string public ensdomain;
     // ERC-721 base token URI
     string public baseTokenURI;
     // Allow renewal and expirations
@@ -53,7 +53,7 @@ contract ClaveNameService is
 
     // Store name to asset data
     mapping(string => NameAssets) public namesToAssets;
-    // Store subdomain namehashes / token IDs to names
+    // Store hashed names / token IDs to names
     mapping(uint256 => LinkedNames) public idsToNames;
     // Mapping of Clave accounts for the Registry
     mapping(address => bool) public isClave;
@@ -72,20 +72,20 @@ contract ClaveNameService is
     /**
      * @notice Constructor function of the contract
      *
-     * @param domain string    - ENS domain to build subdomains
-     * @param topdomain string - ENS topdomain of the domain
-     * @param baseURI string   - Base URI for the ERC-721 tokens as subdomains
+     * @param _domain string    - ENS domain to build subdomains
+     * @param _topdomain string - ENS topdomain of the domain
+     * @param baseURI string    - Base URI for the ERC-721 tokens as subdomains
      *
      * @dev {subdomain}.{domain}.{topdomain} => claver.getclave.eth
      */
     constructor(
-        string memory domain,
-        string memory topdomain,
+        string memory _domain,
+        string memory _topdomain,
         string memory baseURI
     ) ERC721('ClaveNameService', 'CNS') {
-        domain = toLower(domain);
-        topdomain = toLower(topdomain);
-        domainNamehash = namehash(domain, topdomain);
+        _domain = toLower(_domain);
+        _topdomain = toLower(_topdomain);
+        ensdomain = string.concat(_domain, '.', _topdomain);
 
         baseTokenURI = baseURI;
 
@@ -94,11 +94,11 @@ contract ClaveNameService is
 
     /// @inheritdoc IClaveNameService
     function resolve(string memory _name) external view returns (address) {
-        // Domain NFTs are stored against the namehashes of the subdomains
+        // Names are stored against keccak hashes of the name converted to 'uint256's
         _name = toLower(_name);
-        bytes32 subdomainNamehash = namehash(_name);
+        uint256 hashOfName = uint256(keccak256(abi.encodePacked(_name)));
 
-        return ownerOf(uint256(subdomainNamehash));
+        return ownerOf(hashOfName);
     }
 
     /**
@@ -148,6 +148,7 @@ contract ClaveNameService is
      * @dev The names can be renewed by only name owner
      */
     function renewName(string memory _name) external isRenewalsAllowed {
+        _name = toLower(_name);
         NameAssets storage asset = namesToAssets[_name];
 
         require(asset.id != 0, '[renewName] Not registered.');
@@ -165,16 +166,16 @@ contract ClaveNameService is
      * @dev Renewals and expirations might be disabled by the admin
      */
     function expireName(string memory _name) external isRenewalsAllowed onlyRegisterer {
-        string memory domain = toLower(_name);
-        NameAssets memory asset = namesToAssets[domain];
+        _name = toLower(_name);
+        NameAssets memory asset = namesToAssets[_name];
 
         require(asset.id != 0, '[expireName] Not registered.');
         require(asset.renewals + expiration < block.timestamp, '[expireName] Renewal not over.');
 
         delete idsToNames[asset.id];
-        delete namesToAssets[domain];
+        delete namesToAssets[_name];
 
-        emit NameExpired(domain, ownerOf(asset.id));
+        emit NameExpired(_name, ownerOf(asset.id));
 
         _burn(asset.id);
     }
@@ -210,18 +211,18 @@ contract ClaveNameService is
 
     /// @inheritdoc IClaveNameService
     function registerName(address to, string memory _name) public onlyRegisterer returns (uint256) {
-        string memory subdomain = toLower(_name);
-        require(bytes(subdomain).length != 0, '[register] Null name');
-        require(isAlphanumeric(subdomain), '[register] Unsupported characters.');
-        require(namesToAssets[subdomain].id == 0, '[register] Already registered.');
+        _name = toLower(_name);
+        require(bytes(_name).length != 0, '[register] Null name');
+        require(isAlphanumeric(_name), '[register] Unsupported characters.');
+        require(namesToAssets[_name].id == 0, '[register] Already registered.');
         require(isClave[to], '[register] Not a Clave account.');
 
-        uint256 newTokenId = uint256(namehash(subdomain));
-        namesToAssets[subdomain] = NameAssets(newTokenId, block.timestamp);
-        idsToNames[newTokenId].name = subdomain;
+        uint256 newTokenId = uint256(keccak256(abi.encodePacked(_name)));
+        namesToAssets[_name] = NameAssets(newTokenId, block.timestamp);
+        idsToNames[newTokenId].name = _name;
 
         _safeMint(to, newTokenId);
-        emit NameRegistered(subdomain, to);
+        emit NameRegistered(_name, to);
         return newTokenId;
     }
 
@@ -245,12 +246,12 @@ contract ClaveNameService is
      * @dev Asset data is cleaned
      */
     function burn(uint256 tokenId) public override(ERC721Burnable) {
-        string memory domain = idsToNames[tokenId].name;
+        string memory _name = idsToNames[tokenId].name;
 
         delete idsToNames[tokenId];
-        delete namesToAssets[domain];
+        delete namesToAssets[_name];
 
-        emit NameDeleted(domain, msg.sender);
+        emit NameDeleted(_name, msg.sender);
 
         totalSupply_--;
 
@@ -272,46 +273,14 @@ contract ClaveNameService is
      * @dev Transfers to addresses already have assets are restricted
      */
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
+        if (to == address(0)) {
+            return;
+        }
+
         require(balanceOf(to) == 0, '[] Already have name.');
 
         string memory domain = idsToNames[tokenId].name;
         emit NameTransferred(domain, from, to);
-    }
-
-    /**
-     * @param subdomain string - Subdomain name
-     * @return subdomainNamehash bytes32 - ENS namehash of the subdomain by contract domain namehash
-     * @dev See ENS namehashes https://docs.ens.domains/resolution/names#namehash
-     * @dev {subdomain}.{domain}.{topdomain} => claver.getclave.eth
-     */
-    function namehash(string memory subdomain) private view returns (bytes32 subdomainNamehash) {
-        subdomainNamehash = keccak256(
-            abi.encodePacked(domainNamehash, keccak256(abi.encodePacked(subdomain)))
-        );
-
-        return subdomainNamehash;
-    }
-
-    /**
-     * @param domain string - domain name
-     * @param topdomain string - topdomain name
-     * @return domainNamehash_ bytes32 - ENS namehash of the domain
-     * @dev See ENS namehashes https://docs.ens.domains/resolution/names#namehash
-     * @dev {domain}.{topdomain} => getclave.eth
-     */
-    function namehash(
-        string memory domain,
-        string memory topdomain
-    ) private pure returns (bytes32 domainNamehash_) {
-        bytes32 topdomainNamehash = keccak256(
-            abi.encodePacked(bytes32(0x00), keccak256(abi.encodePacked(topdomain)))
-        );
-
-        domainNamehash_ = keccak256(
-            abi.encodePacked(topdomainNamehash, keccak256(abi.encodePacked(domain)))
-        );
-
-        return domainNamehash_;
     }
 
     // Convert string to lowercase
