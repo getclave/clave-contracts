@@ -9,7 +9,7 @@ import {IClaveNameService} from './IClaveNameService.sol';
 
 /**
  * @title ClaveNameService
- * @notice L2 name servi ce contract that built compatible to resolved as ENS subdomains by L2 resolver
+ * @notice L2 name service contract that is built compatible to resolved as ENS subdomains by L2 resolver
  * @notice This contract also replaces previous ClaveRegistry contracts by migrating their data
  * @author https://getclave.io
  * @notice Inspired by @stevegachau/optimismresolver
