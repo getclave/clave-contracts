@@ -11,7 +11,7 @@ import { contractNames } from './helpers/fully-qualified-contract-names';
 import type { ReleaseType } from './helpers/release';
 
 const syncRouter = '0x9b5def958d0f3b6955cbea4d5b7809b2fb26b059';
-const syncStaking = '0x30E8000FF16a4a2Be4ed289bC481D8718B9b931e';
+const syncStaking = '0x6fEbba4a360F43B71560519bCD90B3F45c8F441E';
 const wethAddress = '0x5aea5775959fbc2557cc8789bc1bf90a239d9a91';
 
 export default async function (
