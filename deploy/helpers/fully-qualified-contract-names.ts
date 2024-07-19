@@ -25,6 +25,7 @@ export const contractNames = {
         'contracts/paymasters/GaslessPaymaster.sol:GaslessPaymaster',
     koiEarnRouter: 'contracts/earn/KoiEarnRouter.sol:KoiEarnRouter',
     syncEarnRouter: 'contracts/earn/SyncEarnRouter.sol:SyncEarnRouter',
+    syncEarnRouterV2: 'contracts/earn/SyncEarnRouter.sol:SyncEarnRouterV2',
     smoothieStore: 'contracts/berlin/SmoothieStore.sol:SmoothieStore',
     ZtaKe: 'contracts/earn/ZtaKe.sol:ZtaKe',
 };
