@@ -23,7 +23,8 @@ export const contractNames = {
         'contracts/test/ERC20PaymasterMock.sol:ERC20PaymasterMock',
     gaslessPaymaster:
         'contracts/paymasters/GaslessPaymaster.sol:GaslessPaymaster',
-    koiEarnRouter: 'contracts/KoiEarnRouter.sol:KoiEarnRouter',
-    syncEarnRouter: 'contracts/SyncEarnRouter.sol:SyncEarnRouter',
+    koiEarnRouter: 'contracts/earn/KoiEarnRouter.sol:KoiEarnRouter',
+    syncEarnRouter: 'contracts/earn/SyncEarnRouter.sol:SyncEarnRouter',
     smoothieStore: 'contracts/berlin/SmoothieStore.sol:SmoothieStore',
+    ZtaKe: 'contracts/earn/ZtaKe.sol:ZtaKe',
 };
