@@ -302,6 +302,29 @@ dataSources:
           handler: handleClaimRewards
       file: ./src/sync-staking.ts
   - kind: ethereum
+    name: SyncClaveStaking
+    network: zksync-era
+    source:
+      address: '0x6fEbba4a360F43B71560519bCD90B3F45c8F441E'
+      abi: SyncClaveStaking
+      startBlock: 39511808
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: SyncClaveStaking
+          file: ./abis/SyncClaveStaking.json
+      eventHandlers:
+        - event: ClaimRewards(indexed address,indexed address,uint256)
+          handler: handleClaimRewards
+      file: ./src/sync-staking.ts
+  - kind: ethereum
     name: zeroUsdtPool
     network: zksync-era
     source:
