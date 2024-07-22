@@ -136,6 +136,8 @@ contract ClaveNameService is
         address[] memory to,
         string[] memory _name
     ) external onlyRegisterer {
+        require(to.length == _name.length, '[registerNameMultiple] Invalid input lengths.');
+
         for (uint256 i = 0; i < to.length; i++) {
             registerName(to[i], _name[i]);
         }
