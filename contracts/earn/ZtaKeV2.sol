@@ -135,7 +135,6 @@ contract ZtaKeV2 is Ownable {
     }
 
     function setRewardsDuration(uint256 _duration) external onlyOwner {
-        require(finishAt < block.timestamp, 'reward duration not finished');
         duration = _duration;
     }
 
