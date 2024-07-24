@@ -16,24 +16,20 @@ export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
     const deployer = new Deployer(hre, wallet);
     //const chainId = hre.network.config.chainId;
 
-    const zkStakeArtifact = await deployer.loadArtifact('ZtaKeV2');
+    const routerArtifact = await deployer.loadArtifact('ClaveStakingRouter');
 
-    const zkStake = await deployer.deploy(
-        zkStakeArtifact,
+    const router = await deployer.deploy(
+        routerArtifact,
         [
-            '50000000000', // limit per user
-            '6000000000000', // total limit
-            '0x493257fd37edb34451f62edf8d2a0c418852ba4c', // stake token
-            '0x5a7d6b2f92c77fad6ccabd7ee0624e64907eaf3e', // reward token
-            '0x620F54e2BA127a605d559D24495F3C85B387AE5c', // registry address
+            '0x44393C30e36C9Cba3E614E502708B64402bA22a2', // staking address
         ],
         undefined,
         [],
     );
 
-    const zkStakeAddress = await zkStake.getAddress();
+    const routerAddress = await router.getAddress();
 
-    console.log(`ZtaKe address: ${zkStakeAddress}`);
+    console.log(`router address: ${routerAddress}`);
 
     // if (chainId === 0x12c || chainId === 0x144) {
     //     try {
