@@ -4,6 +4,7 @@
  * Proprietary and confidential
  */
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
+import { parseUnits } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Wallet } from 'zksync-ethers';
 
@@ -21,8 +22,8 @@ export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
     const zkStake = await deployer.deploy(
         zkStakeArtifact,
         [
-            '50000000000', // limit per user
-            '6000000000000', // total limit
+            parseUnits('50000', 6), // limit per user
+            parseUnits('6000000', 6), // total limit
             '0x493257fd37edb34451f62edf8d2a0c418852ba4c', // stake token
             '0x5a7d6b2f92c77fad6ccabd7ee0624e64907eaf3e', // reward token
             '0x620F54e2BA127a605d559D24495F3C85B387AE5c', // registry address

@@ -7,7 +7,7 @@ interface IZtake {
     function earned(address account) external view returns (uint256);
 }
 
-contract ClaveStakingRouter {
+contract ClaveEarnRouter {
     address public stakingAddress;
 
     constructor(address _stakingAddress) {
