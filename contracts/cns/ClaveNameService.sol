@@ -208,6 +208,8 @@ contract ClaveNameService is
      * @dev Only admin can change the time
      */
     function setExpirationTime(uint256 expirationTime) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(expirationTime > block.timestamp + 30 days, '[setExpirationTime] Invalid time.');
+
         expiration = expirationTime;
     }
 
