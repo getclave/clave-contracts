@@ -3,7 +3,7 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-import '@matterlabs/hardhat-zksync-toolbox';
+import '@matterlabs/hardhat-zksync';
 import '@nomicfoundation/hardhat-ethers';
 import '@typechain/hardhat';
 import dotenv from 'dotenv';
@@ -47,10 +47,7 @@ const config: HardhatUserConfig = {
     zksolc: {
         version: 'latest',
         settings: {
-            isSystem: true,
-            optimizer: {
-                fallbackToOptimizingForSize: false,
-            },
+            enableEraVMExtensions: true,
         },
     },
     defaultNetwork: 'zkSyncSepolia',
