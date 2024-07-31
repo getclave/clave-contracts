@@ -16,12 +16,12 @@ export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
     const deployer = new Deployer(hre, wallet);
     //const chainId = hre.network.config.chainId;
 
-    const routerArtifact = await deployer.loadArtifact('ClaveStakingRouter');
+    const routerArtifact = await deployer.loadArtifact('ClaveEarnRouter');
 
     const router = await deployer.deploy(
         routerArtifact,
         [
-            '0x44393C30e36C9Cba3E614E502708B64402bA22a2', // staking address
+            '0xc2DAfbB0a8e3fc63538A8DD54ED622A5435CeB2f', // staking address
         ],
         undefined,
         [],
