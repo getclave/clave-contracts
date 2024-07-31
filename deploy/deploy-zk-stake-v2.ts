@@ -22,9 +22,9 @@ export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
     const zkStake = await deployer.deploy(
         zkStakeArtifact,
         [
-            parseUnits('50000', 6), // limit per user
-            parseUnits('6000000', 6), // total limit
-            '0x493257fd37edb34451f62edf8d2a0c418852ba4c', // stake token
+            parseUnits('5000000', 18), // limit per user
+            parseUnits('600000000', 18), // total limit
+            '0xE87269Fa38180A13e9bB3C487537F5282EF3e5d7', // stake token
             '0x5a7d6b2f92c77fad6ccabd7ee0624e64907eaf3e', // reward token
             '0x620F54e2BA127a605d559D24495F3C85B387AE5c', // registry address
         ],
