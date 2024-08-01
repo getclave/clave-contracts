@@ -10,6 +10,8 @@ import dotenv from 'dotenv';
 import type { HardhatUserConfig } from 'hardhat/config';
 import type { NetworkUserConfig } from 'hardhat/types';
 
+import './tasks/deploy';
+
 dotenv.config();
 
 const zkSyncMainnet: NetworkUserConfig = {
