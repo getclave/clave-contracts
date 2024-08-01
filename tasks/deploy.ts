@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config';
 
-import { deployContract } from '../deploy/helpers/utils';
+import { deployContract } from '../deploy/utils';
 
 task('deploy', 'Task for deploying contracts')
     .addFlag(
