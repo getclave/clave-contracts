@@ -219,7 +219,6 @@ contract ClaveNameService is
         require(bytes(_name).length != 0, '[register] Null name');
         require(isAlphanumeric(_name), '[register] Unsupported characters.');
         require(namesToAssets[_name].id == 0, '[register] Already registered.');
-        require(isClave[to], '[register] Not a Clave account.');
 
         uint256 newTokenId = uint256(keccak256(abi.encodePacked(_name)));
         namesToAssets[_name] = NameAssets(newTokenId, block.timestamp);
