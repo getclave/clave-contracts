@@ -4,7 +4,6 @@
  * Proprietary and confidential
  */
 import '@matterlabs/hardhat-zksync';
-import '@matterlabs/hardhat-zksync-node';
 import '@nomicfoundation/hardhat-ethers';
 import '@typechain/hardhat';
 import dotenv from 'dotenv';
@@ -51,6 +50,11 @@ const config: HardhatUserConfig = {
         version: 'latest',
         settings: {
             enableEraVMExtensions: true,
+            optimizer: process.env.TEST
+                ? {
+                      mode: 'z',
+                  }
+                : undefined,
         },
     },
     defaultNetwork: 'zkSyncSepolia',
