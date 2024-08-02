@@ -68,7 +68,7 @@ const config: HardhatUserConfig = {
         dockerizedNode,
     },
     solidity: {
-        version: '0.8.17',
+        version: '0.8.26',
     },
 };
 
