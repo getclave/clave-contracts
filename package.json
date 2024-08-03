@@ -29,7 +29,7 @@
     "dotenv": "^16.0.3",
     "elliptic": "6.5.4",
     "ethers": "^6.9.2",
-    "hardhat": "^2.19.2",
+    "hardhat": "2.19.2",
     "mocha": "^10.2.0",
     "prettier-plugin-solidity": "^1.1.3",
     "read-last-lines": "^1.8.0",
