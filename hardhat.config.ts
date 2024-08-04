@@ -4,6 +4,7 @@
  * Proprietary and confidential
  */
 import '@matterlabs/hardhat-zksync';
+import '@nomicfoundation/hardhat-chai-matchers';
 import '@nomicfoundation/hardhat-ethers';
 import '@typechain/hardhat';
 import dotenv from 'dotenv';
