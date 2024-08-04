@@ -7,7 +7,6 @@
     "@nomad-xyz/excessively-safe-call": "github:nomad-xyz/ExcessivelySafeCall",
     "@openzeppelin/contracts": "4.6.0",
     "@openzeppelin/contracts-upgradeable": "4.6.0",
-    "@redstone-finance/evm-connector": "0.3.6",
     "ts-morph": "^19.0.0"
   },
   "devDependencies": {
@@ -17,6 +16,7 @@
     "@nomicfoundation/hardhat-ethers": "3.0.6",
     "@nomicfoundation/hardhat-verify": "2.0.9",
     "@nomiclabs/hardhat-etherscan": "3.1.8",
+    "@redstone-finance/evm-connector": "^0.6.1",
     "@typechain/ethers-v6": "0.5.1",
     "@typechain/hardhat": "9.1.0",
     "@types/chai": "4.3.16",
@@ -33,19 +33,13 @@
     "ts-node": "10.9.2",
     "typechain": "8.3.2",
     "typescript": "5.3.3",
-    "zksync-ethers": "6.11.0"
+    "zksync-ethers": "6.11.1"
   },
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "auto-test": "./test/bash/autotest.sh",
-    "gas-report": "./test/bash/snapshot.sh",
     "lint": "npx prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "lint-check": "npx prettier --list-different --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
-    "release-dev": "npx hardhat deploy-zksync --script release-dev.ts",
-    "release-prod": "npx hardhat deploy-zksync --script release-prod.ts --network zkSyncMainnet",
-    "test": "exit 0",
-    "test-real": "hardhat test --network inMemoryNode",
-    "test-real-docker": "hardhat test --network dockerizedNode"
+    "test": "TEST=true npx hardhat test --network hardhat"
   }
 }
