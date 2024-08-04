@@ -9,15 +9,11 @@
 -   `/test`: test files
 -   `hardhat.config.ts`: configuration file.
 
-## Requirements
-
--   install the zksync era test node from [here](https://github.com/matter-labs/era-test-node).
-
 ## Commands
 
 -   `npx hardhat compile` will compile the contracts, typescript bindings are generated automatically.
--   `npx hardhat deploy-zksync --script {filename}` will execute the script `/deploy/{filename}.ts`. Requires [environment variable setup](#environment-variables).
--   `npm run test-real`: run tests. **Requires a running zksync era test node.**
+-   `npx hardhat deploy {contract name} {constructor arguments}` will deploy and verify the contract. Requires [environment variable setup](#environment-variables).
+-   `npm run test`: run tests.
 
 ### Environment variables
 
