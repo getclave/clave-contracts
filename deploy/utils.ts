@@ -1,3 +1,8 @@
+/**
+ * Copyright Clave - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ */
 import { Deployer } from '@matterlabs/hardhat-zksync';
 import '@matterlabs/hardhat-zksync-node/dist/type-extensions';
 import '@matterlabs/hardhat-zksync-verify/dist/src/type-extensions';
