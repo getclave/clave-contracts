@@ -8,11 +8,16 @@ import { ethers } from 'hardhat';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Provider, Wallet } from 'zksync-ethers';
 
-const ADDRESS_FILE = './deploy/wallets-staging.json';
+const ADDRESS_FILE = './deploy/wallets-prod.json';
 const INDEX_FILE = './deploy/last-username-index.txt';
-const CLAVE_NAME_SERVICE_ADDRESS = '0xC6F5A612835188866A0ABEAd3E77EB768B85Bb1D';
-const CHUNK_SIZE = 5;
-const EXCLUDED = ['0xc93d8de5422c913f93fc23003be0bfaf08291552'];
+const CLAVE_NAME_SERVICE_ADDRESS = '0xe7A36eaE739FB6EF713735521A308d4a7c286555';
+const CHUNK_SIZE = 100;
+const EXCLUDED: Array<string> = [
+    '0xc93d8de5422c913f93fc23003be0bfaf08291552',
+    '0x08b00ceee2fb66029b53d76110b19eeaabfd1e65',
+    '0xd3c5580b5334efc01579d8d836c98f74de985f7f',
+    '0x5747bb4417c76accf7c3bd577b9f7ebb6f603d49',
+];
 
 const getStartingIndex = async (fileName: string): Promise<number> => {
     try {
@@ -45,7 +50,9 @@ const filterWallets = (walletData: string): Array<ClaveWallet> => {
                 return { address: '0x', username };
             }
         })
-        .filter(({ address, username }) => address != '0x' && username != null);
+        .filter(
+            ({ address, username }) => address != '0x' && Boolean(username),
+        );
 };
 
 export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
@@ -66,7 +73,10 @@ export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
     console.log(`[migrate] file read: ${JSON.parse(fileContent).length}`);
 
     const wallets = filterWallets(fileContent).filter(
-        (w) => !EXCLUDED.includes(w.address),
+        (w) =>
+            !EXCLUDED.map((s) => s.toLowerCase()).includes(
+                w.address.toLowerCase(),
+            ),
     );
     const addresses = wallets.map((w) => w.address);
     const usernames = wallets.map((w) => w.username) as Array<string>;
@@ -89,6 +99,9 @@ export default async function (hre: HardhatRuntimeEnvironment): Promise<void> {
                 currentIndex,
                 currentIndex + CHUNK_SIZE,
             );
+
+            console.log(aChunk);
+            console.log(uChunk);
 
             const tx = await registry
                 .connect(wallet)

@@ -8,10 +8,10 @@ import { ethers } from 'hardhat';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Provider, Wallet } from 'zksync-ethers';
 
-const ADDRESS_FILE = './deploy/wallets-staging.json';
+const ADDRESS_FILE = './deploy/wallets-prod.json';
 const INDEX_FILE = './deploy/last-migrate-index.txt';
-const CLAVE_NAME_SERVICE_ADDRESS = '0xC6F5A612835188866A0ABEAd3E77EB768B85Bb1D';
-const CHUNK_SIZE = 20;
+const CLAVE_NAME_SERVICE_ADDRESS = '0xe7A36eaE739FB6EF713735521A308d4a7c286555';
+const CHUNK_SIZE = 100;
 
 const getStartingIndex = async (fileName: string): Promise<number> => {
     try {
