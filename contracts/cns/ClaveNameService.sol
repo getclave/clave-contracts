@@ -4,8 +4,8 @@ pragma solidity ^0.8.17;
 import {ERC721} from '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import {ERC721Burnable} from '@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol';
 import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
-import {IClaveNameService} from './IClaveNameService.sol';
 import {Strings} from '@openzeppelin/contracts/utils/Strings.sol';
+import {IClaveNameService} from './IClaveNameService.sol';
 
 /**
  * @title ClaveNameService
@@ -38,8 +38,6 @@ contract ClaveNameService is IClaveNameService, ERC721, ERC721Burnable, AccessCo
     bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
     // Defualt domain expiration timeline
     uint256 public expiration = 365 days;
-    // ENS to be used for subdomains
-    string public ensdomain;
     // ERC-721 base token URI
     string public baseTokenURI;
     // Allow renewal and expirations
@@ -54,8 +52,6 @@ contract ClaveNameService is IClaveNameService, ERC721, ERC721Burnable, AccessCo
     event NameRegistered(string indexed name, address indexed owner);
     // Event to be emitted for name deletion
     event NameDeleted(string indexed name, address indexed owner);
-    // Event to be emitted for name transfer
-    event NameTransferred(string indexed name, address indexed from, address indexed to);
     // Event to be emitted for name renewal
     event NameRenewed(string indexed name, address indexed owner);
     // Event to be emitted for name expiration
@@ -63,22 +59,10 @@ contract ClaveNameService is IClaveNameService, ERC721, ERC721Burnable, AccessCo
 
     /**
      * @notice Constructor function of the contract
-     *
-     * @param _domain string    - ENS domain to build subdomains
-     * @param _topdomain string - ENS topdomain of the domain
      * @param baseURI string    - Base URI for the ERC-721 tokens as subdomains
-     *
      * @dev {subdomain}.{domain}.{topdomain} => claver.getclave.eth
      */
-    constructor(
-        string memory _domain,
-        string memory _topdomain,
-        string memory baseURI
-    ) ERC721('ClaveNameService', 'CNS') {
-        _domain = toLower(_domain);
-        _topdomain = toLower(_topdomain);
-        ensdomain = string.concat(_domain, '.', _topdomain);
-
+    constructor(string memory baseURI) ERC721('ClaveNameService', 'CNS') {
         baseTokenURI = baseURI;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
