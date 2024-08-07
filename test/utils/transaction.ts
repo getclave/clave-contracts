@@ -5,11 +5,11 @@
  */
 import type { ec } from 'elliptic';
 import { type BigNumberish, ethers, parseEther } from 'ethers';
-import type { Provider, types } from 'zksync-ethers';
+import type { Contract, Provider, types } from 'zksync-ethers';
 import { EIP712Signer, utils } from 'zksync-ethers';
 
 import type { ClaveProxy } from '../../typechain-types';
-import type { BatchCaller } from '../../typechain-types';
+import type { CallStruct } from '../../typechain-types/contracts/batch/BatchCaller';
 import { sign } from './p256';
 
 export const ethTransfer = (
@@ -56,7 +56,7 @@ export async function prepareMockTx(
 
 export async function prepareTeeTx(
     provider: Provider,
-    account: ClaveProxy,
+    account: Contract,
     tx: types.TransactionLike,
     validatorAddress: string,
     keyPair: ec.KeyPair,
@@ -101,9 +101,9 @@ export async function prepareTeeTx(
 
 export async function prepareBatchTx(
     provider: Provider,
-    account: ClaveProxy,
+    account: Contract,
     BatchCallerAddress: string,
-    calls: Array<BatchCaller.CallStruct>,
+    calls: Array<CallStruct>,
     validatorAddress: string,
     keyPair: ec.KeyPair,
     hookData: Array<ethers.BytesLike> = [],

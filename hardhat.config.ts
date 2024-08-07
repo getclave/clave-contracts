@@ -3,12 +3,15 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-import '@matterlabs/hardhat-zksync-toolbox';
+import '@matterlabs/hardhat-zksync';
+import '@nomicfoundation/hardhat-chai-matchers';
 import '@nomicfoundation/hardhat-ethers';
 import '@typechain/hardhat';
 import dotenv from 'dotenv';
 import type { HardhatUserConfig } from 'hardhat/config';
 import type { NetworkUserConfig } from 'hardhat/types';
+
+import './tasks/deploy';
 
 dotenv.config();
 
@@ -47,10 +50,12 @@ const config: HardhatUserConfig = {
     zksolc: {
         version: 'latest',
         settings: {
-            isSystem: true,
-            optimizer: {
-                fallbackToOptimizingForSize: false,
-            },
+            enableEraVMExtensions: true,
+            optimizer: process.env.TEST
+                ? {
+                      mode: 'z',
+                  }
+                : undefined,
         },
     },
     defaultNetwork: 'zkSyncSepolia',
@@ -64,7 +69,7 @@ const config: HardhatUserConfig = {
         dockerizedNode,
     },
     solidity: {
-        version: '0.8.17',
+        version: '0.8.26',
     },
 };
 
