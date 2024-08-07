@@ -36,8 +36,6 @@ contract ClaveNameService is IClaveNameService, ERC721, ERC721Burnable, AccessCo
     uint256 private totalSupply_;
     // Role to be authorized as default minter
     bytes32 public constant REGISTERER_ROLE = keccak256('REGISTERER_ROLE');
-    // Role to be authorized as default registerer
-    bytes32 public constant FACTORY_ROLE = keccak256('FACTORY_ROLE');
     // Defualt domain expiration timeline
     uint256 public expiration = 365 days;
     // ENS to be used for subdomains
