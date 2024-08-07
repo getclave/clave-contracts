@@ -252,8 +252,16 @@ contract ClaveNameService is IClaveNameService, ERC721, ERC721Burnable, AccessCo
      * @inheritdoc ERC721
      * @dev Transfers to addresses already have assets are restricted
      */
-    function _beforeTokenTransfer(address, address to, uint256) internal pure override {
-        require(to == address(0), '[_beforeTokenTransfer] Transfers are not allowed..');
+    function _beforeTokenTransfer(address from, address to, uint256) internal view override {
+        require(
+            from == address(0) || to == address(0),
+            '[_beforeTokenTransfer] Transfers are not allowed..'
+        );
+
+        require(
+            to == address(0) || balanceOf(to) == 0,
+            '[_beforeTokenTransfer] Already have name.'
+        );
     }
 
     // Convert string to lowercase
