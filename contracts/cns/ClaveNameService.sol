@@ -4,27 +4,23 @@ pragma solidity ^0.8.17;
 import {ERC721} from '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import {ERC721Burnable} from '@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol';
 import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
-import {IClaveRegistry} from '../interfaces/IClaveRegistry.sol';
 import {IClaveNameService} from './IClaveNameService.sol';
+import {Strings} from '@openzeppelin/contracts/utils/Strings.sol';
 
 /**
  * @title ClaveNameService
  * @notice L2 name service contract that is built compatible to resolved as ENS subdomains by L2 resolver
- * @notice This contract also replaces previous ClaveRegistry contracts by migrating their data
  * @author https://getclave.io
  * @notice Inspired by @stevegachau/optimismresolver
  * @dev Names can only be registered by the owner or authorized accounts
  * @dev Addresses can only have one name at a time
- * @dev Subdomains are stored as ERC-721 assets, can only be transferred to another address without any assets
+ * @dev Subdomains are stored as ERC-721 assets, cannot be transferred
  * @dev If renewals are enabled, non-renewed names can be burnt after expiration timeline
  */
-contract ClaveNameService is
-    IClaveRegistry,
-    IClaveNameService,
-    ERC721,
-    ERC721Burnable,
-    AccessControl
-{
+contract ClaveNameService is IClaveNameService, ERC721, ERC721Burnable, AccessControl {
+    // String library for token id conversion
+    using Strings for uint256;
+
     // Subdomains as ERC-721 assets
     struct NameAssets {
         uint256 id; // Token ID as hash of names
@@ -55,8 +51,6 @@ contract ClaveNameService is
     mapping(string => NameAssets) public namesToAssets;
     // Store hashed names / token IDs to names
     mapping(uint256 => LinkedNames) public idsToNames;
-    // Mapping of Clave accounts for the Registry
-    mapping(address => bool) public isClave;
 
     // Event to be emitted for name registration
     event NameRegistered(string indexed name, address indexed owner);
@@ -107,26 +101,6 @@ contract ClaveNameService is
      */
     function totalSupply() external view returns (uint256) {
         return totalSupply_;
-    }
-
-    /**
-     * @notice Registers an account as a Clave account
-     * @dev Can only be called by the registerer or owner
-     * @param account address - Address of the account to register
-     */
-    function register(address account) external override onlyFactory {
-        isClave[account] = true;
-    }
-
-    /**
-     * @notice Registers multiple accounts as Clave accounts
-     * @dev Can only be called by the registerer or owner
-     * @param accounts address[] - Array of addresses to register
-     */
-    function registerMultiple(address[] calldata accounts) external onlyFactory {
-        for (uint256 i = 0; i < accounts.length; i++) {
-            isClave[accounts[i]] = true;
-        }
     }
 
     /**
@@ -231,9 +205,10 @@ contract ClaveNameService is
 
     /// @inheritdoc ERC721
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        string memory tokenlink = string(abi.encodePacked(baseTokenURI, tokenId));
+        if (!_exists(tokenId)) return '';
 
-        return tokenlink;
+        return
+            bytes(baseTokenURI).length > 0 ? string.concat(baseTokenURI, tokenId.toString()) : '';
     }
 
     /// @inheritdoc ERC721
@@ -241,7 +216,9 @@ contract ClaveNameService is
         bytes4 interfaceId
     ) public view override(ERC721, AccessControl) returns (bool) {
         return
-            ERC721.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
+            type(IClaveNameService).interfaceId == interfaceId ||
+            ERC721.supportsInterface(interfaceId) ||
+            AccessControl.supportsInterface(interfaceId);
     }
 
     /**
@@ -275,15 +252,8 @@ contract ClaveNameService is
      * @inheritdoc ERC721
      * @dev Transfers to addresses already have assets are restricted
      */
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
-        if (to == address(0)) {
-            return;
-        }
-
-        require(balanceOf(to) == 0, '[] Already have name.');
-
-        string memory domain = idsToNames[tokenId].name;
-        emit NameTransferred(domain, from, to);
+    function _beforeTokenTransfer(address, address to, uint256) internal pure override {
+        require(to == address(0), '[_beforeTokenTransfer] Transfers are not allowed..');
     }
 
     // Convert string to lowercase
@@ -310,16 +280,6 @@ contract ClaveNameService is
             if (!(char > 0x2F && char < 0x3A) && !(char > 0x60 && char < 0x7B)) return false;
         }
         return true;
-    }
-
-    // Modifier to check if caller is authorized for register operation
-    modifier onlyFactory() {
-        require(
-            hasRole(FACTORY_ROLE, msg.sender) || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            '[] Not authorized.'
-        );
-
-        _;
     }
 
     // Modifier to check if caller is authorized for mints and registries
