@@ -376,6 +376,33 @@ dataSources:
         - event: RewardPaid(indexed address,uint256)
           handler: handleRewardPaid
       file: ./src/clave-zk-stake.ts
+  - kind: ethereum
+    name: MeowStake
+    network: zksync-era
+    source:
+      address: '0x0C71c7B6FD654EE0D3137a2Eb790CAd8Ba702540'
+      abi: ClaveZKStake
+      startBlock: 36908411
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: ClaveZKStake
+          file: ./abis/ClaveZKStake.json
+      eventHandlers:
+        - event: Staked(indexed address,uint256)
+          handler: handleStaked
+        - event: Withdrawn(indexed address,uint256)
+          handler: handleWithdrawn
+        - event: RewardPaid(indexed address,uint256)
+          handler: handleRewardPaid
+      file: ./src/meow-staking.ts
 templates:
   - kind: ethereum
     name: Account

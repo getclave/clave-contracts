@@ -66,7 +66,7 @@ export function handleNewClaveAccount(event: NewClaveAccountEvent): void {
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
     const total = getTotal();
-    day.createdAccounts = day.createdAccounts + 1;
+    day.deployedAccounts = day.deployedAccounts + 1;
     week.deployedAccounts = week.deployedAccounts + 1;
     month.deployedAccounts = month.deployedAccounts + 1;
     total.deployedAccounts = total.deployedAccounts + 1;

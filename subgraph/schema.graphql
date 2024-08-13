@@ -49,6 +49,7 @@ enum EarnProtocol {
   SyncSwap
   ZeroLend
   Clave
+  Meow
 }
 
 type EarnPosition @entity {
