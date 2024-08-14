@@ -2,19 +2,22 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 contract ReferralFeePayer {
+    using SafeERC20 for IERC20;
+
     event ReferralFee(address indexed referrer, address indexed token, uint256 fee);
 
-    function payFee(address referrer, address token, uint256 fee) external payable returns (bool) {
+    function payFee(address referrer, address token, uint256 fee) external payable {
         if (token == address(0)) {
-            payable(referrer).transfer(fee);
-            emit ReferralFee(referrer, token, fee);
-            return true;
+            (bool success, ) = payable(referrer).call{value: fee}('');
+            require(success, 'ReferralFeePayer: failed to pay referral fee');
         } else {
-            bool success = IERC20(token).transferFrom(msg.sender, referrer, fee);
-            emit ReferralFee(referrer, token, fee);
-            return success;
+            IERC20 erc20 = IERC20(token);
+            erc20.safeTransferFrom(msg.sender, referrer, fee);
         }
+
+        emit ReferralFee(referrer, token, fee);
     }
 }
