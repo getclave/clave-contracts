@@ -6,7 +6,7 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 contract ReferralFeePayer {
     event ReferralFee(address indexed referrer, address indexed token, uint256 fee);
 
-    function payFee(address referrer, address token, uint256 fee) external returns (bool) {
+    function payFee(address referrer, address token, uint256 fee) external payable returns (bool) {
         if (token == address(0)) {
             payable(referrer).transfer(fee);
             emit ReferralFee(referrer, token, fee);
