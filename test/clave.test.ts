@@ -20,7 +20,7 @@ import { Contract, Provider, Wallet, utils } from 'zksync-ethers';
 
 import { LOCAL_RICH_WALLETS, deployContract, getWallet } from '../deploy/utils';
 import type { CallStruct } from '../typechain-types/contracts/batch/BatchCaller';
-import { encodePublicKey, genKey } from './utils/p256';
+import { genKey, genKeyK1, encodePublicKeyK1, encodePublicKey } from './utils/p256';
 import { getGaslessPaymasterInput } from './utils/paymaster';
 import { ethTransfer, prepareBatchTx, prepareTeeTx } from './utils/transaction';
 
@@ -40,13 +40,15 @@ beforeEach(async () => {
         cacheTimeout: -1,
     });
     richWallet = getWallet(hre, LOCAL_RICH_WALLETS[0].privateKey);
-    keyPair = genKey();
-    const publicKey = encodePublicKey(keyPair);
+
+    keyPair = genKeyK1();
+    const publicKey = encodePublicKeyK1(keyPair);
+
     batchCaller = await deployContract(hre, 'BatchCaller', undefined, {
         wallet: richWallet,
         silent: true,
     });
-    mockValidator = await deployContract(hre, 'MockValidator', undefined, {
+    mockValidator = await deployContract(hre, 'EOAValidator', undefined, {
         wallet: richWallet,
         silent: true,
     });
@@ -100,11 +102,11 @@ beforeEach(async () => {
 
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     const initializer =
-        '0x77ba2e75' +
+        '0xb4e581f5' +
         abiCoder
             .encode(
                 [
-                    'bytes',
+                    'address',
                     'address',
                     'bytes[]',
                     'tuple(address target,bool allowFailure,uint256 value,bytes calldata)',
@@ -143,10 +145,10 @@ describe('Account no module no hook TEE validator', function () {
                 parseEther('100'),
             );
 
-            const expectedR1Validators = [await mockValidator.getAddress()];
-            const expectedK1Validators: Array<ethers.BytesLike> = [];
-            const expectedR1Owners = [encodePublicKey(keyPair)];
-            const expectedK1Owners: Array<ethers.BytesLike> = [];
+            const expectedR1Validators: Array<ethers.BytesLike> = [];
+            const expectedK1Validators = [await mockValidator.getAddress()];
+            const expectedR1Owners: Array<ethers.BytesLike> = [];
+            const expectedK1Owners = [encodePublicKeyK1(keyPair)];
             const expectedModules: Array<ethers.BytesLike> = [];
             const expectedHooks: Array<ethers.BytesLike> = [];
             const expectedImplementation = await implementation.getAddress();
