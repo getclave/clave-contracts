@@ -8,4 +8,6 @@ interface IInitable {
     function init(bytes calldata initData) external;
 
     function disable() external;
+
+    function isInited(address account) external view returns (bool);
 }

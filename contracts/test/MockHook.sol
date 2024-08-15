@@ -40,6 +40,10 @@ contract MockValidationHook is IValidationHook {
         return IClave(account).getHookData(hook, key);
     }
 
+    function isInited(address account) external view returns (bool) {
+        return true;
+    }
+
     function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
         return
             interfaceId == type(IValidationHook).interfaceId ||
@@ -75,6 +79,10 @@ contract MockExecutionHook is IExecutionHook {
         bytes32 key
     ) external view returns (bytes memory) {
         return IClave(account).getHookData(hook, key);
+    }
+
+    function isInited(address account) external view returns (bool) {
+        return true;
     }
 
     function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
