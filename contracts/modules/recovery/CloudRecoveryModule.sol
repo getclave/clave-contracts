@@ -158,7 +158,6 @@ contract CloudRecoveryModule is BaseRecovery {
         return cloudGuardian[account];
     }
 
-    /// @inheritdoc BaseRecovery
     function isInited(address account) public view override returns (bool) {
         return cloudGuardian[account] != address(0);
     }
