@@ -234,7 +234,6 @@ contract SocialRecoveryModule is BaseRecovery {
         return recoveryConfigs[account].guardians;
     }
 
-    /// @inheritdoc BaseRecovery
     function isInited(address account) public view override returns (bool) {
         return recoveryConfigs[account].timelock != 0;
     }
