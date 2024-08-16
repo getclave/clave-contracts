@@ -39,6 +39,7 @@
   "scripts": {
     "lint": "npx prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "lint-check": "npx prettier --list-different --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
-    "test": "TEST=true npx hardhat test --network hardhat"
+    "test": "TEST=true npx hardhat test --network hardhat",
+    "test:create2": "TEST=true npx hardhat test --network hardhat test/create2address.test.ts"
   }
 }

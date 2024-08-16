@@ -37,6 +37,8 @@ const inMemoryNode: NetworkUserConfig = {
     ethNetwork: '', // in-memory node doesn't support eth node; removing this line will cause an error
     zksync: true,
     chainId: 260,
+    // gas: 90000000,
+    // blockGasLimit: 90000000,
 };
 
 const dockerizedNode: NetworkUserConfig = {
