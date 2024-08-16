@@ -4,7 +4,7 @@
  * Proprietary and confidential
  */
 import elliptic from 'elliptic';
-import { keccak256 } from 'ethers';
+import { keccak256, ethers } from 'ethers';
 
 export function genKey(): elliptic.ec.KeyPair {
     const ec = new elliptic.ec('p256');
@@ -38,9 +38,24 @@ export function encodePublicKeyK1(key: elliptic.ec.KeyPair): string {
 }
 
 export function sign(msg: string, key: elliptic.ec.KeyPair): string {
+    // Determine the curve type
+    const curveType = key.ec.curve.type;
+
     const buffer = Buffer.from(msg.slice(2), 'hex');
-    const signature = key.sign(buffer);
-    const r = signature.r.toString('hex').padStart(64, '0');
-    const s = signature.s.toString('hex').padStart(64, '0');
-    return '0x' + r + s;
+    let signature: elliptic.ec.Signature;
+
+    if (curveType === 'short' && key.ec.curve.p.toString(16) === 'fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f') {
+        // This is secp256k1
+        signature = key.sign(buffer, { canonical: true });
+        const r = signature.r.toString('hex').padStart(64, '0');
+        const s = signature.s.toString('hex').padStart(64, '0');
+        const v = (signature.recoveryParam! + 27).toString(16).padStart(2, '0'); // Ensure v is two characters
+        return '0x' + r + s + v;
+    } else {
+        // Assume this is P-256 (secp256r1) or another curve
+        signature = key.sign(buffer);
+        const r = signature.r.toString('hex').padStart(64, '0');
+        const s = signature.s.toString('hex').padStart(64, '0');
+        return '0x' + r + s;
+    }
 }
