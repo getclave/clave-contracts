@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.17;
 
-import {ERC165Checker} from '@openzeppelin/contracts/utils/introspection/ERC165Checker.sol';
+import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
-import {Auth} from '../auth/Auth.sol';
-import {Errors} from '../libraries/Errors.sol';
-import {ClaveStorage} from '../libraries/ClaveStorage.sol';
-import {AddressLinkedList} from '../libraries/LinkedList.sol';
-import {IR1Validator, IK1Validator} from '../interfaces/IValidator.sol';
-import {IValidatorManager} from '../interfaces/IValidatorManager.sol';
+import {Auth} from "../auth/Auth.sol";
+import {Errors} from "../libraries/Errors.sol";
+import {ClaveStorage} from "../libraries/ClaveStorage.sol";
+import {AddressLinkedList} from "../libraries/LinkedList.sol";
+import {IR1Validator, IK1Validator} from "../interfaces/IValidator.sol";
+import {IValidatorManager} from "../interfaces/IValidatorManager.sol";
 
 /**
  * @title Manager contract for validators
@@ -23,42 +23,64 @@ abstract contract ValidatorManager is IValidatorManager, Auth {
     using ERC165Checker for address;
 
     /// @inheritdoc IValidatorManager
-    function r1AddValidator(address validator) external override onlySelfOrModule {
+    function r1AddValidator(
+        address validator
+    ) external override onlySelfOrModule {
         _r1AddValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function k1AddValidator(address validator) external override onlySelfOrModule {
+    function k1AddValidator(
+        address validator
+    ) external override onlySelfOrModule {
         _k1AddValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function r1RemoveValidator(address validator) external override onlySelfOrModule {
+    function r1RemoveValidator(
+        address validator
+    ) external override onlySelfOrModule {
         _r1RemoveValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function k1RemoveValidator(address validator) external override onlySelfOrModule {
+    function k1RemoveValidator(
+        address validator
+    ) external override onlySelfOrModule {
         _k1RemoveValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function r1IsValidator(address validator) external view override returns (bool) {
+    function r1IsValidator(
+        address validator
+    ) external view override returns (bool) {
         return _r1IsValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function k1IsValidator(address validator) external view override returns (bool) {
+    function k1IsValidator(
+        address validator
+    ) external view override returns (bool) {
         return _k1IsValidator(validator);
     }
 
     /// @inheritdoc IValidatorManager
-    function r1ListValidators() external view override returns (address[] memory validatorList) {
+    function r1ListValidators()
+        external
+        view
+        override
+        returns (address[] memory validatorList)
+    {
         validatorList = _r1ValidatorsLinkedList().list();
     }
 
     /// @inheritdoc IValidatorManager
-    function k1ListValidators() external view override returns (address[] memory validatorList) {
+    function k1ListValidators()
+        external
+        view
+        override
+        returns (address[] memory validatorList)
+    {
         validatorList = _k1ValidatorsLinkedList().list();
     }
 
@@ -85,8 +107,12 @@ abstract contract ValidatorManager is IValidatorManager, Auth {
     function _r1RemoveValidator(address validator) internal {
         _r1ValidatorsLinkedList().remove(validator);
 
-        if (_r1ValidatorsLinkedList().isEmpty()) {
-            revert Errors.EMPTY_R1_VALIDATORS();
+        // At least one validator must be present
+        if (
+            _r1ValidatorsLinkedList().isEmpty() &&
+            _k1ValidatorsLinkedList().isEmpty()
+        ) {
+            revert Errors.EMPTY_VALIDATORS();
         }
 
         emit R1RemoveValidator(validator);
@@ -94,6 +120,14 @@ abstract contract ValidatorManager is IValidatorManager, Auth {
 
     function _k1RemoveValidator(address validator) internal {
         _k1ValidatorsLinkedList().remove(validator);
+
+        // At least one validator must be present
+        if (
+            _r1ValidatorsLinkedList().isEmpty() &&
+            _k1ValidatorsLinkedList().isEmpty()
+        ) {
+            revert Errors.EMPTY_VALIDATORS();
+        }
 
         emit K1RemoveValidator(validator);
     }

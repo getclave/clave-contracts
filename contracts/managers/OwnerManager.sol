@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.17;
 
-import {ClaveStorage} from '../libraries/ClaveStorage.sol';
-import {BytesLinkedList, AddressLinkedList} from '../libraries/LinkedList.sol';
-import {Errors} from '../libraries/Errors.sol';
-import {Auth} from '../auth/Auth.sol';
-import {IClaveAccount} from '../interfaces/IClave.sol';
-import {IOwnerManager} from '../interfaces/IOwnerManager.sol';
+import {ClaveStorage} from "../libraries/ClaveStorage.sol";
+import {BytesLinkedList, AddressLinkedList} from "../libraries/LinkedList.sol";
+import {Errors} from "../libraries/Errors.sol";
+import {Auth} from "../auth/Auth.sol";
+import {IClaveAccount} from "../interfaces/IClave.sol";
+import {IOwnerManager} from "../interfaces/IOwnerManager.sol";
 
 /**
  * @title Manager contract for owners
@@ -23,7 +23,9 @@ abstract contract OwnerManager is IOwnerManager, Auth {
     using AddressLinkedList for mapping(address => address);
 
     /// @inheritdoc IOwnerManager
-    function r1AddOwner(bytes calldata pubKey) external override onlySelfOrModule {
+    function r1AddOwner(
+        bytes calldata pubKey
+    ) external override onlySelfOrModule {
         _r1AddOwner(pubKey);
     }
 
@@ -33,7 +35,9 @@ abstract contract OwnerManager is IOwnerManager, Auth {
     }
 
     /// @inheritdoc IOwnerManager
-    function r1RemoveOwner(bytes calldata pubKey) external override onlySelfOrModule {
+    function r1RemoveOwner(
+        bytes calldata pubKey
+    ) external override onlySelfOrModule {
         _r1RemoveOwner(pubKey);
     }
 
@@ -43,7 +47,9 @@ abstract contract OwnerManager is IOwnerManager, Auth {
     }
 
     /// @inheritdoc IOwnerManager
-    function resetOwners(bytes calldata pubKey) external override onlySelfOrModule {
+    function resetOwners(
+        bytes calldata pubKey
+    ) external override onlySelfOrModule {
         _r1ClearOwners();
         _k1ClearOwners();
 
@@ -53,7 +59,9 @@ abstract contract OwnerManager is IOwnerManager, Auth {
     }
 
     /// @inheritdoc IOwnerManager
-    function r1IsOwner(bytes calldata pubKey) external view override returns (bool) {
+    function r1IsOwner(
+        bytes calldata pubKey
+    ) external view override returns (bool) {
         return _r1IsOwner(pubKey);
     }
 
@@ -63,12 +71,22 @@ abstract contract OwnerManager is IOwnerManager, Auth {
     }
 
     /// @inheritdoc IOwnerManager
-    function r1ListOwners() external view override returns (bytes[] memory r1OwnerList) {
+    function r1ListOwners()
+        external
+        view
+        override
+        returns (bytes[] memory r1OwnerList)
+    {
         r1OwnerList = _r1OwnersLinkedList().list();
     }
 
     /// @inheritdoc IOwnerManager
-    function k1ListOwners() external view override returns (address[] memory k1OwnerList) {
+    function k1ListOwners()
+        external
+        view
+        override
+        returns (address[] memory k1OwnerList)
+    {
         k1OwnerList = _k1OwnersLinkedList().list();
     }
 
@@ -91,8 +109,11 @@ abstract contract OwnerManager is IOwnerManager, Auth {
     function _r1RemoveOwner(bytes calldata pubKey) internal {
         _r1OwnersLinkedList().remove(pubKey);
 
-        if (_r1OwnersLinkedList().isEmpty()) {
-            revert Errors.EMPTY_R1_OWNERS();
+        // The wallet should have at least one owner
+        if (
+            _k1OwnersLinkedList().isEmpty() && _r1OwnersLinkedList().isEmpty()
+        ) {
+            revert Errors.EMPTY_OWNERS();
         }
 
         emit R1RemoveOwner(pubKey);
@@ -100,6 +121,13 @@ abstract contract OwnerManager is IOwnerManager, Auth {
 
     function _k1RemoveOwner(address addr) internal {
         _k1OwnersLinkedList().remove(addr);
+
+        // The wallet should have at least one owner
+        if (
+            _k1OwnersLinkedList().isEmpty() && _r1OwnersLinkedList().isEmpty()
+        ) {
+            revert Errors.EMPTY_OWNERS();
+        }
 
         emit K1RemoveOwner(addr);
     }

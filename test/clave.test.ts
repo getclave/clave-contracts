@@ -300,7 +300,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 expect(await account.r1IsOwner(newPublicKey)).to.be.true;
 
-                const expectedOwners = [newPublicKey, encodePublicKey(keyPair)];
+                const expectedOwners = [newPublicKey];
 
                 expect(await account.r1ListOwners()).to.deep.eq(expectedOwners);
             });
@@ -348,7 +348,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 expect(await account.r1IsOwner(newPublicKey)).to.be.false;
 
-                const expectedOwners = [encodePublicKey(keyPair)];
+                const expectedOwners: Array<string> = [];
 
                 expect(await account.r1ListOwners()).to.deep.eq(expectedOwners);
             });
@@ -377,7 +377,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 expect(await account.k1IsOwner(newAddress)).to.be.true;
 
-                const expectedOwners = [newAddress];
+                const expectedOwners = [newAddress, encodePublicKeyK1(keyPair)];
 
                 expect(await account.k1ListOwners()).to.deep.eq(expectedOwners);
             });
@@ -422,7 +422,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 expect(await account.k1IsOwner(newAddress)).to.be.false;
 
-                const expectedOwners: Array<string> = [];
+                const expectedOwners: Array<string> = [encodePublicKeyK1(keyPair)];
 
                 expect(await account.k1ListOwners()).to.deep.eq(expectedOwners);
             });
@@ -616,7 +616,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
                 //     account,
-                //     'EMPTY_R1_OWNERS',
+                //     'EMPTY_OWNERS',
                 // );
 
                 try {
@@ -748,10 +748,7 @@ describe('Account no module no hook TEE validator', function () {
                     ),
                 ).to.be.true;
 
-                const expectedValidators = [
-                    await newR1Validator.getAddress(),
-                    await mockValidator.getAddress(),
-                ];
+                const expectedValidators = [await newR1Validator.getAddress()];
 
                 expect(await account.r1ListValidators()).to.deep.eq(
                     expectedValidators,
@@ -795,7 +792,10 @@ describe('Account no module no hook TEE validator', function () {
                     await account.k1IsValidator(await k1Validator.getAddress()),
                 ).to.be.true;
 
-                const expectedValidators = [await k1Validator.getAddress()];
+                const expectedValidators = [
+                    await k1Validator.getAddress(),
+                    await mockValidator.getAddress()
+                ];
 
                 expect(await account.k1ListValidators()).to.deep.eq(
                     expectedValidators,
@@ -861,7 +861,7 @@ describe('Account no module no hook TEE validator', function () {
                     ),
                 ).to.be.false;
 
-                const expectedValidators = [await mockValidator.getAddress()];
+                const expectedValidators: Array<string> = [];
 
                 expect(await account.r1ListValidators()).to.deep.eq(
                     expectedValidators,
@@ -923,7 +923,9 @@ describe('Account no module no hook TEE validator', function () {
                     await account.k1IsValidator(await k1Validator.getAddress()),
                 ).to.be.false;
 
-                const expectedValidators: Array<string> = [];
+                const expectedValidators: Array<string> = [
+                    await mockValidator.getAddress()
+                ];
 
                 expect(await account.k1ListValidators()).to.deep.eq(
                     expectedValidators,
@@ -1086,7 +1088,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
                 //     account,
-                //     'EMPTY_R1_VALIDATORS',
+                //     'EMPTY_VALIDATORS',
                 // );
 
                 try {
