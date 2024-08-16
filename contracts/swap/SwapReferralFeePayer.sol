@@ -7,23 +7,29 @@ import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 contract SwapReferralFeePayer {
     using SafeERC20 for IERC20;
 
-    event ReferralFee(address indexed receiver, address indexed token, uint256 fee);
+    event ReferralFee(address indexed referrer, address indexed token, uint256 fee);
+    event Cashback(address indexed referred, address indexed token, uint256 fee);
 
     function payFee(
         address referrer,
         address token,
-        uint256 feeReferrer,
-        uint256 feeReferred
+        uint256 fee,
+        uint256 cashback
     ) external payable {
-        if (token == address(0)) {
-            (bool success, ) = payable(referrer).call{value: fee}('');
-            require(success, 'ReferralFeePayer: failed to pay referral fee');
-        } else {
-            IERC20 erc20 = IERC20(token);
-            erc20.safeTransferFrom(msg.sender, referrer, feeReferrer);
+        if (referrer != address(0)) {
+            if (token == address(0)) {
+                (bool success, ) = payable(referrer).call{value: fee}('');
+                require(success, 'ReferralFeePayer: failed to pay referral fee');
+            } else {
+                IERC20 erc20 = IERC20(token);
+                erc20.safeTransferFrom(msg.sender, referrer, fee);
+            }
+
+            emit ReferralFee(referrer, token, fee);
         }
 
-        emit ReferralFee(referrer, token, feeReferrer);
-        emit ReferralFee(msg.sender, token, feeReferred);
+        if (cashback != 0) {
+            emit Cashback(msg.sender, token, cashback);
+        }
     }
 }
