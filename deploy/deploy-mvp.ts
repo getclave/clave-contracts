@@ -23,13 +23,25 @@ import { deployContract } from './utils';
 // Do not push modifications to this file
 // Just modify, interact then revert changes
 export default async function (): Promise<void> {
+    const deploymentConfig = {
+        PAYMASTER_USER_LIMIT: 50,
+        DEPLOYER_ADDRESS: '',
+    };
+
     const batchCaller = await deployBatchCaller();
     const implementation = await deployImplementation(batchCaller);
     const registry = await deployRegistry();
-    const gaslessPaymaster = await deployPaymaster(registry);
+    const gaslessPaymaster = await deployPaymaster(
+        registry,
+        deploymentConfig.PAYMASTER_USER_LIMIT,
+    );
     const claveProxy = await deployClaveProxy(implementation);
     const passkeyValidator = await deployPasskeyValidator();
-    const accountFactory = await deployFactory(implementation, registry);
+    const accountFactory = await deployFactory(
+        implementation,
+        registry,
+        deploymentConfig.DEPLOYER_ADDRESS,
+    );
 
     console.log({
         batchCaller,
@@ -64,12 +76,14 @@ const deployRegistry = async (): Promise<string> => {
     return await result.getAddress();
 };
 
-const deployPaymaster = async (registryAddress: string): Promise<string> => {
+const deployPaymaster = async (
+    registryAddress: string,
+    limit: number,
+): Promise<string> => {
     const contractArtifactName = 'GaslessPaymaster';
-    const USER_LIMIT = 50;
     const result = await deployContract(hre, contractArtifactName, [
         registryAddress,
-        USER_LIMIT,
+        limit,
     ]);
     return await result.getAddress();
 };
@@ -93,11 +107,11 @@ const deployPasskeyValidator = async (): Promise<string> => {
 const deployFactory = async (
     implementationAddress: string,
     registryAddress: string,
+    deployer: string,
 ): Promise<string> => {
     const proxyArtifact = await hre.artifacts.readArtifact('ClaveProxy');
     const bytecode = proxyArtifact.bytecode;
     const bytecodeHash = hre.ethers.keccak256(bytecode);
-    const deployer = '0xc1ECfC78959484df5472b20Cb7D43dC8c57C767A';
 
     const contractArtifactName = 'AccountFactory';
     const result = await deployContract(hre, contractArtifactName, [
