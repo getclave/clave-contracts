@@ -18,10 +18,6 @@ import { deployContract } from './utils';
  * PasskeyValidator
  * AccountFactory
  */
-
-// An example of a basic deploy script
-// Do not push modifications to this file
-// Just modify, interact then revert changes
 export default async function (): Promise<void> {
     const deploymentConfig = {
         PAYMASTER_USER_LIMIT: 50,
