@@ -24,7 +24,8 @@ import {Call} from './batch/BatchCaller.sol';
 import {IClaveAccount} from './interfaces/IClave.sol';
 
 /**
- * @title Main account contract for the Clave wallet infrastructure in zkSync Era
+ * @title Main account contract for the Clave wallet infrastructure, forked for Abstract
+ * @dev The Abstract fork uses a K1 signer and validator initially
  * @author https://getclave.io
  */
 contract ClaveImplementation is
@@ -52,19 +53,19 @@ contract ClaveImplementation is
 
     /**
      * @notice Initializer function for the account contract
-     * @param initialR1Owner bytes calldata - The initial r1 owner of the account
-     * @param initialR1Validator address    - The initial r1 validator of the account
+     * @param initialK1Owner bytes address - The initial k1 owner of the account
+     * @param initialK1Validator address    - The initial k1 validator of the account
      * @param modules bytes[] calldata      - The list of modules to enable for the account
      * @param initCall Call calldata         - The initial call to be executed after the account is created
      */
     function initialize(
-        bytes calldata initialR1Owner,
-        address initialR1Validator,
+        address initialK1Owner,
+        address initialK1Validator,
         bytes[] calldata modules,
         Call calldata initCall
     ) external initializer {
-        _r1AddOwner(initialR1Owner);
-        _r1AddValidator(initialR1Validator);
+        _k1AddOwner(initialK1Owner);
+        _k1AddValidator(initialK1Validator);
 
         for (uint256 i = 0; i < modules.length; ) {
             _addModule(modules[i]);

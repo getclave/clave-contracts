@@ -20,7 +20,7 @@ import { Contract, Provider, Wallet, utils } from 'zksync-ethers';
 
 import { LOCAL_RICH_WALLETS, deployContract, getWallet } from '../deploy/utils';
 import type { CallStruct } from '../typechain-types/contracts/batch/BatchCaller';
-import { encodePublicKey, genKey } from './utils/p256';
+import { genKey, genKeyK1, encodePublicKeyK1, encodePublicKey } from './utils/p256';
 import { getGaslessPaymasterInput } from './utils/paymaster';
 import { ethTransfer, prepareBatchTx, prepareTeeTx } from './utils/transaction';
 
@@ -40,13 +40,15 @@ beforeEach(async () => {
         cacheTimeout: -1,
     });
     richWallet = getWallet(hre, LOCAL_RICH_WALLETS[0].privateKey);
-    keyPair = genKey();
-    const publicKey = encodePublicKey(keyPair);
+
+    keyPair = genKeyK1();
+    const publicKey = encodePublicKeyK1(keyPair);
+
     batchCaller = await deployContract(hre, 'BatchCaller', undefined, {
         wallet: richWallet,
         silent: true,
     });
-    mockValidator = await deployContract(hre, 'MockValidator', undefined, {
+    mockValidator = await deployContract(hre, 'EOAValidator', undefined, {
         wallet: richWallet,
         silent: true,
     });
@@ -100,11 +102,11 @@ beforeEach(async () => {
 
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     const initializer =
-        '0x77ba2e75' +
+        '0xb4e581f5' +
         abiCoder
             .encode(
                 [
-                    'bytes',
+                    'address',
                     'address',
                     'bytes[]',
                     'tuple(address target,bool allowFailure,uint256 value,bytes calldata)',
@@ -143,10 +145,10 @@ describe('Account no module no hook TEE validator', function () {
                 parseEther('100'),
             );
 
-            const expectedR1Validators = [await mockValidator.getAddress()];
-            const expectedK1Validators: Array<ethers.BytesLike> = [];
-            const expectedR1Owners = [encodePublicKey(keyPair)];
-            const expectedK1Owners: Array<ethers.BytesLike> = [];
+            const expectedR1Validators: Array<ethers.BytesLike> = [];
+            const expectedK1Validators = [await mockValidator.getAddress()];
+            const expectedR1Owners: Array<ethers.BytesLike> = [];
+            const expectedK1Owners = [encodePublicKeyK1(keyPair)];
             const expectedModules: Array<ethers.BytesLike> = [];
             const expectedHooks: Array<ethers.BytesLike> = [];
             const expectedImplementation = await implementation.getAddress();
@@ -298,7 +300,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 expect(await account.r1IsOwner(newPublicKey)).to.be.true;
 
-                const expectedOwners = [newPublicKey, encodePublicKey(keyPair)];
+                const expectedOwners = [newPublicKey];
 
                 expect(await account.r1ListOwners()).to.deep.eq(expectedOwners);
             });
@@ -346,7 +348,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 expect(await account.r1IsOwner(newPublicKey)).to.be.false;
 
-                const expectedOwners = [encodePublicKey(keyPair)];
+                const expectedOwners: Array<string> = [];
 
                 expect(await account.r1ListOwners()).to.deep.eq(expectedOwners);
             });
@@ -375,7 +377,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 expect(await account.k1IsOwner(newAddress)).to.be.true;
 
-                const expectedOwners = [newAddress];
+                const expectedOwners = [newAddress, encodePublicKeyK1(keyPair)];
 
                 expect(await account.k1ListOwners()).to.deep.eq(expectedOwners);
             });
@@ -420,7 +422,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 expect(await account.k1IsOwner(newAddress)).to.be.false;
 
-                const expectedOwners: Array<string> = [];
+                const expectedOwners: Array<string> = [encodePublicKeyK1(keyPair)];
 
                 expect(await account.k1ListOwners()).to.deep.eq(expectedOwners);
             });
@@ -594,10 +596,10 @@ describe('Account no module no hook TEE validator', function () {
                 );
             });
 
-            it('Removes last r1 owner', async function () {
+            it('Removes last k1 owner', async function () {
                 const removeOwnerTx =
-                    await account.r1RemoveOwner.populateTransaction(
-                        encodePublicKey(keyPair),
+                    await account.k1RemoveOwner.populateTransaction(
+                        encodePublicKeyK1(keyPair),
                     );
 
                 const tx = await prepareTeeTx(
@@ -614,7 +616,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
                 //     account,
-                //     'EMPTY_R1_OWNERS',
+                //     'EMPTY_OWNERS',
                 // );
 
                 try {
@@ -746,10 +748,7 @@ describe('Account no module no hook TEE validator', function () {
                     ),
                 ).to.be.true;
 
-                const expectedValidators = [
-                    await newR1Validator.getAddress(),
-                    await mockValidator.getAddress(),
-                ];
+                const expectedValidators = [await newR1Validator.getAddress()];
 
                 expect(await account.r1ListValidators()).to.deep.eq(
                     expectedValidators,
@@ -793,7 +792,10 @@ describe('Account no module no hook TEE validator', function () {
                     await account.k1IsValidator(await k1Validator.getAddress()),
                 ).to.be.true;
 
-                const expectedValidators = [await k1Validator.getAddress()];
+                const expectedValidators = [
+                    await k1Validator.getAddress(),
+                    await mockValidator.getAddress()
+                ];
 
                 expect(await account.k1ListValidators()).to.deep.eq(
                     expectedValidators,
@@ -859,7 +861,7 @@ describe('Account no module no hook TEE validator', function () {
                     ),
                 ).to.be.false;
 
-                const expectedValidators = [await mockValidator.getAddress()];
+                const expectedValidators: Array<string> = [];
 
                 expect(await account.r1ListValidators()).to.deep.eq(
                     expectedValidators,
@@ -921,7 +923,9 @@ describe('Account no module no hook TEE validator', function () {
                     await account.k1IsValidator(await k1Validator.getAddress()),
                 ).to.be.false;
 
-                const expectedValidators: Array<string> = [];
+                const expectedValidators: Array<string> = [
+                    await mockValidator.getAddress()
+                ];
 
                 expect(await account.k1ListValidators()).to.deep.eq(
                     expectedValidators,
@@ -1064,9 +1068,9 @@ describe('Account no module no hook TEE validator', function () {
                 );
             });
 
-            it('Removes last r1 validator', async function () {
+            it('Removes last k1 validator', async function () {
                 const removeValidatorTx =
-                    await account.r1RemoveValidator.populateTransaction(
+                    await account.k1RemoveValidator.populateTransaction(
                         await mockValidator.getAddress(),
                     );
 
@@ -1084,7 +1088,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 // await expect(txReceipt.wait()).to.be.revertedWithCustomError(
                 //     account,
-                //     'EMPTY_R1_VALIDATORS',
+                //     'EMPTY_VALIDATORS',
                 // );
 
                 try {
