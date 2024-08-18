@@ -27,8 +27,8 @@ contract ZtaKeV2 is Ownable {
     IERC20Metadata public rewardToken;
     IClaveRegistry public registry;
 
-    uint8 private immutable stakeTokenDecimals;
-    uint8 private immutable rewardTokenDecimals;
+    uint256 private immutable stakeTokenDecimals;
+    uint256 private immutable rewardTokenDecimals;
 
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
@@ -52,8 +52,8 @@ contract ZtaKeV2 is Ownable {
         rewardToken = IERC20Metadata(_rewardToken);
         registry = IClaveRegistry(_registry);
 
-        stakeTokenDecimals = stakeToken.decimals();
-        rewardTokenDecimals = rewardToken.decimals();
+        stakeTokenDecimals = 10 ** uint256(stakeToken.decimals());
+        rewardTokenDecimals = 10 ** uint256(rewardToken.decimals());
     }
 
     modifier onlyClave() {
