@@ -159,6 +159,8 @@ type ClaveAccount @entity {
   activeDays: [DayAccount!]! @derivedFrom(field: "account")
   activeWeeks: [WeekAccount!]! @derivedFrom(field: "account")
   activeMonths: [MonthAccount!]! @derivedFrom(field: "account")
+  cashbacks: [Cashback!]! @derivedFrom(field: "account")
+  referralFees: [ReferralFee!]! @derivedFrom(field: "account")
 }
 
 type Cashback @entity {
