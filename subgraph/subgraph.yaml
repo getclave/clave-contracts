@@ -32,6 +32,29 @@ dataSources:
           handler: handleClaim
       file: ./src/koi-pair.ts
   - kind: ethereum
+    name: SwapReferralFeePayer
+    network: zksync-era
+    source:
+      address: tbd
+      abi: SwapReferralFeePayer
+      startBlock: tbd
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Cashback
+        - Referral
+      abis:
+        - name: SwapReferralFeePayer
+          file: ./abis/SwapReferralFeePayer.json
+      eventHandlers:
+        - event: ReferralFee(indexed address,indexed address,uint256)
+          handler: handleReferralFee
+        - event: Cashback(indexed address,indexed address,uint256)
+          handler: handleCashback
+      file: ./src/referral.ts
+  - kind: ethereum
     name: OdosRouter
     network: zksync-era
     source:
