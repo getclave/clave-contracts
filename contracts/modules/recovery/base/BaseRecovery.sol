@@ -121,13 +121,6 @@ abstract contract BaseRecovery is IModule, EIP712 {
         return recoveryStates[account].timelockExpiry != 0;
     }
 
-    /**
-     * @notice Returns if the given account is inited
-     * @param account Account to check for
-     * @return Yes if the account is inited, No otherwise
-     */
-    function isInited(address account) public view virtual returns (bool);
-
     function _stopRecovery() internal {
         if (isRecovering(msg.sender)) {
             delete recoveryStates[msg.sender];
