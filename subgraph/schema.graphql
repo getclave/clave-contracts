@@ -161,6 +161,23 @@ type ClaveAccount @entity {
   activeMonths: [MonthAccount!]! @derivedFrom(field: "account")
 }
 
+type Cashback @entity {
+  "account.id.concat(erc20).concat('0xcb')"
+  id: Bytes!
+  account: ClaveAccount!
+  erc20: Bytes!
+  amount: BigInt!
+}
+
+type ReferralFee @entity {
+  "account.id.refferred.id.concat(erc20)"
+  id: Bytes!
+  account: ClaveAccount!
+  referred: ClaveAccount!
+  erc20: Bytes!
+  amount: BigInt!
+}
+
 enum Paymaster {
   None
   ERC20
