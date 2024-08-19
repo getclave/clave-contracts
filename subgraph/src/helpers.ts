@@ -13,6 +13,7 @@ import { Bytes } from '@graphprotocol/graph-ts';
 import { BigInt } from '@graphprotocol/graph-ts';
 
 import {
+    Cashback,
     ClaveAccount,
     DailyEarnFlow,
     Day,
@@ -21,6 +22,7 @@ import {
     Month,
     MonthAccount,
     MonthlyEarnFlow,
+    ReferralFee,
     Total,
     Week,
     WeekAccount,
@@ -272,4 +274,47 @@ export function getOrCreateMonthlyEarnFlow(
     monthlyEarnFlow.claimedGain = ZERO;
 
     return monthlyEarnFlow;
+}
+
+export function getOrCreateCashback(
+    account: ClaveAccount,
+    token: Bytes,
+): Cashback {
+    let cashbackId = account.id
+        .concat(token)
+        .concat(Bytes.fromHexString('0xcb'));
+    let cashback = Cashback.load(cashbackId);
+
+    if (cashback !== null) {
+        return cashback;
+    }
+
+    cashback = new Cashback(cashbackId);
+    cashback.account = account.id;
+    cashback.erc20 = token;
+    cashback.amount = ZERO;
+
+    return cashback;
+}
+
+export function getOrCreateReferralFee(
+    referrer: ClaveAccount,
+    referred: ClaveAccount,
+    token: Bytes,
+): ReferralFee {
+    let referralFeeId = referrer.id.concat(referred.id).concat(token);
+
+    let referralFee = ReferralFee.load(referralFeeId);
+
+    if (referralFee !== null) {
+        return referralFee;
+    }
+
+    referralFee = new ReferralFee(referralFeeId);
+    referralFee.account = referrer.id;
+    referralFee.referred = referred.id;
+    referralFee.erc20 = token;
+    referralFee.amount = ZERO;
+
+    return referralFee;
 }
