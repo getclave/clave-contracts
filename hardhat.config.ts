@@ -71,7 +71,7 @@ const config: HardhatUserConfig = {
                 }
         },
     },
-    defaultNetwork: 'zkSyncSepolia',
+    defaultNetwork: 'abstractTestnet',
     networks: {
         hardhat: {
             zksync: true,
