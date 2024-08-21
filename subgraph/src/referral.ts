@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/consistent-type-imports */
+
 /**
  * Copyright Clave - All Rights Reserved
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-import type {
+import {
     Cashback as CashbackEvent,
     ReferralFee as ReferralFeeEvent,
 } from '../generated/SwapReferralFeePayer/SwapReferralFeePayer';

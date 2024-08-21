@@ -1,6 +1,6 @@
 specVersion: 1.0.0
 indexerHints:
-  prune: auto
+  prune: 86400
 schema:
   file: ./schema.graphql
 dataSources:
@@ -35,9 +35,9 @@ dataSources:
     name: SwapReferralFeePayer
     network: zksync-era
     source:
-      address: tbd
+      address: '0x007966D09BF27c206c75B7048319dbf3a0852Df8'
       abi: SwapReferralFeePayer
-      startBlock: tbd
+      startBlock: 42221017
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
