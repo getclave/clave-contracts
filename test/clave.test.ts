@@ -164,7 +164,7 @@ describe('Account no module no hook TEE validator', function () {
             expect(await account.listModules()).to.deep.eq(expectedModules);
             expect(await account.listHooks(false)).to.deep.eq(expectedHooks);
             expect(await account.listHooks(true)).to.deep.eq(expectedHooks);
-            expect(await account.implementation()).to.eq(
+            expect(await account.implementationAddress()).to.eq(
                 expectedImplementation,
             );
         });
@@ -1604,7 +1604,7 @@ describe('Account no module no hook TEE validator', function () {
 
                 await txReceipt.wait();
 
-                expect(await account.implementation()).to.eq(
+                expect(await account.implementationAddress()).to.eq(
                     await mockImplementation.getAddress(),
                 );
             });

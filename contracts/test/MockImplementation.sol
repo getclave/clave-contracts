@@ -26,7 +26,7 @@ contract MockImplementation {
         validatorList = _r1ValidatorsLinkedList().list();
     }
 
-    function implementation() external view returns (address) {
+    function implementationAddress() external view returns (address) {
         address impl;
         assembly {
             impl := and(sload(_IMPLEMENTATION_SLOT), 0xffffffffffffffffffffffffffffffffffffffff)

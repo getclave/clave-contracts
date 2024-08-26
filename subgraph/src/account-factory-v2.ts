@@ -67,7 +67,7 @@ export function handleClaveAccountDeployed(
         account.realizedGain = ZERO;
     }
 
-    account.implementation = Bytes.fromHexString(
+    account.implementationAddress = Bytes.fromHexString(
         '0xf5bEDd0304ee359844541262aC349a6016A50bc6',
     );
     account.deployDate = event.block.timestamp;

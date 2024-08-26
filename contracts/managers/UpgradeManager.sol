@@ -36,7 +36,7 @@ abstract contract UpgradeManager is IUpgradeManager, Auth {
     }
 
     /// @inheritdoc IUpgradeManager
-    function implementation() external view override returns (address) {
+    function implementationAddress() external view override returns (address) {
         address impl;
         assembly {
             impl := and(sload(_IMPLEMENTATION_SLOT), 0xffffffffffffffffffffffffffffffffffffffff)

@@ -24,5 +24,5 @@ interface IUpgradeManager {
      * @notice Returns the current implementation address
      * @return address - Address of the current implementation contract
      */
-    function implementation() external view returns (address);
+    function implementationAddress() external view returns (address);
 }

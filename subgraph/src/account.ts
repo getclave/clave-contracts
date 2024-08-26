@@ -62,6 +62,6 @@ export function handleUpgraded(event: UpgradedEvent): void {
     if (account == null) {
         return;
     }
-    account.implementation = event.params.newImplementation;
+    account.implementationAddress = event.params.newImplementation;
     account.save();
 }
