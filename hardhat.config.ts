@@ -57,10 +57,10 @@ const config: HardhatUserConfig = {
                   }
                 : undefined,
             libraries: {
-                  "contracts/libraries/StringUtils.sol": {
-                    "StringUtils": "0x7e390c46302Fb6D7f6C7b4e36937287eB678FBC0"
-                  }
-                }
+                'contracts/libraries/StringUtils.sol': {
+                    StringUtils: '0x7e390c46302Fb6D7f6C7b4e36937287eB678FBC0',
+                },
+            },
         },
     },
     defaultNetwork: 'zkSyncSepolia',
