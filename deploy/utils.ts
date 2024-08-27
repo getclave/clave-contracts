@@ -8,7 +8,7 @@ import '@matterlabs/hardhat-zksync-node/dist/type-extensions';
 import '@matterlabs/hardhat-zksync-verify/dist/src/type-extensions';
 import { ethers } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { Provider, Wallet } from 'zksync-ethers';
+import { Provider, Wallet, utils } from 'zksync-ethers';
 
 export const getProvider = (hre: HardhatRuntimeEnvironment): Provider => {
     const rpcUrl = hre.network.config.url;
@@ -156,6 +156,10 @@ export const deployContract = async (
     }
 
     return contract;
+};
+
+export const getContractBytecodeHash = (bytecode: string): string => {
+    return '0x' + Buffer.from(utils.hashBytecode(bytecode)).toString('hex');
 };
 
 /**
