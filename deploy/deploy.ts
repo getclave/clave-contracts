@@ -42,12 +42,12 @@ export default async function (): Promise<void> {
 
     batchCaller = await deployContract(hre, 'BatchCaller', undefined, {
         wallet: fundingWallet,
-        silent: true,
+        silent: false,
     });
 
     eoaValidator = await deployContract(hre, 'EOAValidator', undefined, {
         wallet: fundingWallet,
-        silent: true,
+        silent: false,
     });
 
     implementation = await deployContract(
@@ -56,22 +56,22 @@ export default async function (): Promise<void> {
         [await batchCaller.getAddress()],
         {
             wallet: fundingWallet,
-            silent: true,
+            silent: false,
         },
     );
 
     registry = await deployContract(hre, 'ClaveRegistry', undefined, {
         wallet: fundingWallet,
-        silent: true,
+        silent: false,
     });
 
-    // //TODO: WHY DOES THIS HELP
-    // await deployContract(
-    //     hre,
-    //     'ClaveProxy',
-    //     [await implementation.getAddress()],
-    //     { wallet: fundingWallet, silent: true },
-    // );
+    // Need this so the ClaveProxy artifact is valid
+    await deployContract(
+        hre,
+        'ClaveProxy',
+        [await implementation.getAddress()],
+        { wallet: fundingWallet, silent: true, noVerify: true },
+    );
 
     const accountProxyArtifact = await hre.zksyncEthers.loadArtifact('ClaveProxy');
     const bytecodeHash = utils.hashBytecode(accountProxyArtifact.bytecode);
@@ -86,7 +86,7 @@ export default async function (): Promise<void> {
         ],
         {
             wallet: fundingWallet,
-            silent: true,
+            silent: false,
         },
     );
     await registry.setFactory(await factory.getAddress());

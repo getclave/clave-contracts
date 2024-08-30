@@ -39,27 +39,34 @@ export function encodePublicKeyK1(key: elliptic.ec.KeyPair): string {
     return address;
 }
 
-export function sign(msg: string, key: elliptic.ec.KeyPair): string {
+export async function sign(msg: string, key: elliptic.ec.KeyPair, chainId: bigint, validatorAddress: string): Promise<string> {
     if (isSecp256k1(key.ec.curve)) {
-        // For secp256k1, use ethers.js for EIP-191 signing
         const privateKey = padToHex(key.getPrivate().toString(16), 64);
         const wallet = new ethers.Wallet(privateKey);
         
-        // Remove '0x' prefix if present
-        const cleanMsg = msg.startsWith('0x') ? msg.slice(2) : msg;
+        const signedTxHash = msg.startsWith('0x') ? msg : '0x' + msg;
         
-        // Sign the message using ethers.js v6 (this applies EIP-191 automatically)
-        const signature = wallet.signMessageSync(ethers.getBytes('0x' + cleanMsg));
+        const domain = {
+            name: 'zkSync',
+            version: '2',
+            chainId: chainId.toString(),
+            verifyingContract: validatorAddress,
+        };
         
-        // Split the signature
-        const { r, s, v } = ethers.Signature.from(signature);
+        const types = {
+            SignMessage: [
+                { name: 'details', type: 'string' },
+                { name: 'hash', type: 'bytes32' }
+            ]
+        };
         
-        // Format the signature parts
-        const rHex = padToHex(r.slice(2), 64);  // remove '0x' and pad
-        const sHex = padToHex(s.slice(2), 64);  // remove '0x' and pad
-        const vHex = padToHex(v.toString(16), 2);
+        const value = {
+            details: "You are signing a hash of your transaction",
+            hash: signedTxHash
+        };
         
-        return `0x${rHex}${sHex}${vHex}`;
+        // Sign the typed data
+        return await wallet.signTypedData(domain, types, value);
     } else {
         // For non-secp256k1, directly sign the message
         const signatureBuffer = Buffer.from(msg.slice(2), 'hex');
