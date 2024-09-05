@@ -67,14 +67,13 @@ export async function prepareTeeTx(
         tx.value = parseEther('0');
     }
 
-    const chainId = (await provider.getNetwork()).chainId;
     tx = {
         ...tx,
         from: await account.getAddress(),
         nonce: await provider.getTransactionCount(await account.getAddress()),
         gasLimit: 30_000_000,
         gasPrice: await provider.getGasPrice(),
-        chainId: chainId,
+        chainId: (await provider.getNetwork()).chainId,
         type: 113,
         customData: {
             gasPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
@@ -84,9 +83,9 @@ export async function prepareTeeTx(
 
     const signedTxHash = EIP712Signer.getSignedDigest(tx);
 
-    let signature = await sign(signedTxHash.toString(), keyPair, chainId, validatorAddress);
-
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+    let signature = sign(signedTxHash.toString(), keyPair);
+
     signature = abiCoder.encode(
         ['bytes', 'address', 'bytes[]'],
         [signature, validatorAddress, hookData],
@@ -122,7 +121,6 @@ export async function prepareBatchTx(
             )
             .slice(2);
 
-    const chainId = (await provider.getNetwork()).chainId;
     const tx = {
         to: BatchCallerAddress,
         from: await account.getAddress(),
@@ -131,7 +129,7 @@ export async function prepareBatchTx(
         gasPrice: await provider.getGasPrice(),
         data,
         value: parseEther('0'),
-        chainId: chainId,
+        chainId: (await provider.getNetwork()).chainId,
         type: 113,
         customData: {
             gasPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
@@ -141,7 +139,7 @@ export async function prepareBatchTx(
 
     const signedTxHash = EIP712Signer.getSignedDigest(tx);
 
-    let signature = await sign(signedTxHash.toString(), keyPair, chainId, validatorAddress);
+    let signature = sign(signedTxHash.toString(), keyPair);
 
     signature = abiCoder.encode(
         ['bytes', 'address', 'bytes[]'],
