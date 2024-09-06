@@ -4,41 +4,24 @@ pragma solidity ^0.8.17;
 import {IK1Validator, IERC165} from "../interfaces/IValidator.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+/**
+ * @title secp256k1 ec keys' signature validator contract implementing its interface
+ * @author https://getclave.io
+ */
 contract EOAValidator is IK1Validator {
+    // ECDSA library to make verifications
     using ECDSA for bytes32;
 
-    bytes32 private constant EIP712DOMAIN_TYPEHASH =
-        keccak256(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-        );
-
-    bytes32 private constant SIGN_MESSAGE_TYPEHASH =
-        keccak256("SignMessage(string details,bytes32 hash)");
-
+    /// @inheritdoc IK1Validator
     function validateSignature(
-        bytes32 signedTxHash,
+        bytes32 eip712Hash,
         bytes calldata signature
-    ) external view returns (address signer) {
-        bytes32 domainSeparator = keccak256(
-            abi.encode(
-                EIP712DOMAIN_TYPEHASH,
-                keccak256(bytes("zkSync")),
-                keccak256(bytes("2")),
-                block.chainid,
-                address(this)
-            )
+    ) external pure override returns (address signer) {
+        bytes32 ethSignedMessageHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", eip712Hash)
         );
-        bytes32 structHash = keccak256(
-            abi.encode(
-                SIGN_MESSAGE_TYPEHASH,
-                keccak256(bytes("You are signing a hash of your transaction")),
-                signedTxHash
-            )
-        );
-        bytes32 messageHash = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
-        signer = ECDSA.recover(messageHash, signature);
+        // Recover the signer
+        signer = ethSignedMessageHash.recover(signature);
     }
 
     /// @inheritdoc IERC165
