@@ -1,3 +1,8 @@
+/**
+ * Copyright Clave - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ */
 import { expect } from 'chai';
 import type { ec } from 'elliptic';
 import type { BytesLike } from 'ethers';
@@ -10,12 +15,6 @@ import { LOCAL_RICH_WALLETS, getWallet } from '../deploy/utils';
 import { ClaveDeployer } from './utils/deployer';
 import { VALIDATORS } from './utils/names';
 import { encodePublicKey, genKey } from './utils/p256';
-
-/**
- * Copyright Clave - All Rights Reserved
- * Unauthorized copying of this file, via any medium is strictly prohibited
- * Proprietary and confidential
- */
 
 describe('Clave Contracts - Deployer class tests', () => {
     let deployer: ClaveDeployer;
@@ -51,18 +50,12 @@ describe('Clave Contracts - Deployer class tests', () => {
 
     describe('Contracts', () => {
         it('should deploy the contracts', async () => {
-            const batchCallerAddress = await batchCaller.getAddress();
-            expect(batchCallerAddress).not.to.be.undefined;
-            const registryAddress = await registry.getAddress();
-            expect(registryAddress).not.to.be.undefined;
-            const implementationAddress = await implementation.getAddress();
-            expect(implementationAddress).not.to.be.undefined;
-            const factoryAddress = await factory.getAddress();
-            expect(factoryAddress).not.to.be.undefined;
-            const mockValidatorAddress = await mockValidator.getAddress();
-            expect(mockValidatorAddress).not.to.be.undefined;
-            const accountAddress = await account.getAddress();
-            expect(accountAddress).not.to.be.undefined;
+            expect(await batchCaller.getAddress()).not.to.be.undefined;
+            expect(await registry.getAddress()).not.to.be.undefined;
+            expect(await implementation.getAddress()).not.to.be.undefined;
+            expect(await factory.getAddress()).not.to.be.undefined;
+            expect(await mockValidator.getAddress()).not.to.be.undefined;
+            expect(await account.getAddress()).not.to.be.undefined;
         });
     });
 
