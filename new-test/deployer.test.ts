@@ -13,8 +13,8 @@ import { Provider } from 'zksync-ethers';
 
 import { LOCAL_RICH_WALLETS, getWallet } from '../deploy/utils';
 import { ClaveDeployer } from './utils/deployer';
-import { VALIDATORS } from './utils/names';
-import { encodePublicKey, genKey } from './utils/p256';
+import { fixture } from './utils/fixture';
+import { encodePublicKey } from './utils/p256';
 
 describe('Clave Contracts - Deployer class tests', () => {
     let deployer: ClaveDeployer;
@@ -31,19 +31,19 @@ describe('Clave Contracts - Deployer class tests', () => {
     before(async () => {
         richWallet = getWallet(hre, LOCAL_RICH_WALLETS[0].privateKey);
         deployer = new ClaveDeployer(hre, richWallet);
-
         provider = new Provider(hre.network.config.url, undefined, {
             cacheTimeout: -1,
         });
 
-        batchCaller = await deployer.batchCaller();
-        registry = await deployer.registry();
-        implementation = await deployer.implementation(batchCaller);
-        factory = await deployer.factory(implementation, registry);
-        mockValidator = await deployer.validator(VALIDATORS.MOCK);
-
-        keyPair = genKey();
-        account = await deployer.account(keyPair, factory, mockValidator);
+        [
+            batchCaller,
+            registry,
+            implementation,
+            factory,
+            mockValidator,
+            account,
+            keyPair,
+        ] = await fixture(deployer);
 
         await deployer.fund(100, await account.getAddress());
     });
