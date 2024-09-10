@@ -1,0 +1,113 @@
+import { expect } from 'chai';
+import type { ec } from 'elliptic';
+import type { BytesLike } from 'ethers';
+import { parseEther } from 'ethers';
+import * as hre from 'hardhat';
+import type { Contract, Wallet } from 'zksync-ethers';
+import { Provider } from 'zksync-ethers';
+
+import { LOCAL_RICH_WALLETS, getWallet } from '../deploy/utils';
+import { ClaveDeployer } from './utils/deployer';
+import { VALIDATORS } from './utils/names';
+import { encodePublicKey, genKey } from './utils/p256';
+
+/**
+ * Copyright Clave - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ */
+
+describe('Clave Contracts - Deployer class tests', () => {
+    let deployer: ClaveDeployer;
+    let provider: Provider;
+    let richWallet: Wallet;
+    let batchCaller: Contract;
+    let registry: Contract;
+    let implementation: Contract;
+    let factory: Contract;
+    let mockValidator: Contract;
+    let account: Contract;
+    let keyPair: ec.KeyPair;
+
+    before(async () => {
+        richWallet = getWallet(hre, LOCAL_RICH_WALLETS[0].privateKey);
+        deployer = new ClaveDeployer(hre, richWallet);
+
+        provider = new Provider(hre.network.config.url, undefined, {
+            cacheTimeout: -1,
+        });
+
+        batchCaller = await deployer.batchCaller();
+        registry = await deployer.registry();
+        implementation = await deployer.implementation(batchCaller);
+        factory = await deployer.factory(implementation, registry);
+        mockValidator = await deployer.validator(VALIDATORS.MOCK);
+
+        keyPair = genKey();
+        account = await deployer.account(keyPair, factory, mockValidator);
+
+        await deployer.fund(100, await account.getAddress());
+    });
+
+    describe('Contracts', () => {
+        it('should deploy the contracts', async () => {
+            const batchCallerAddress = await batchCaller.getAddress();
+            expect(batchCallerAddress).not.to.be.undefined;
+            const registryAddress = await registry.getAddress();
+            expect(registryAddress).not.to.be.undefined;
+            const implementationAddress = await implementation.getAddress();
+            expect(implementationAddress).not.to.be.undefined;
+            const factoryAddress = await factory.getAddress();
+            expect(factoryAddress).not.to.be.undefined;
+            const mockValidatorAddress = await mockValidator.getAddress();
+            expect(mockValidatorAddress).not.to.be.undefined;
+            const accountAddress = await account.getAddress();
+            expect(accountAddress).not.to.be.undefined;
+        });
+    });
+
+    describe('States', () => {
+        it('should fund the account', async () => {
+            const balance = await provider.getBalance(
+                await account.getAddress(),
+            );
+            expect(balance).to.eq(parseEther('100'));
+        });
+
+        it('account keeps correct states', async () => {
+            const validatorAddress = await mockValidator.getAddress();
+            const implementationAddress = await implementation.getAddress();
+
+            const expectedR1Validators = [validatorAddress];
+            const expectedK1Validators: Array<BytesLike> = [];
+            const expectedR1Owners = [encodePublicKey(keyPair)];
+            const expectedK1Owners: Array<BytesLike> = [];
+            const expectedModules: Array<BytesLike> = [];
+            const expectedHooks: Array<BytesLike> = [];
+            const expectedImplementation = implementationAddress;
+
+            expect(await account.r1ListValidators()).to.deep.eq(
+                expectedR1Validators,
+            );
+            expect(await account.k1ListValidators()).to.deep.eq(
+                expectedK1Validators,
+            );
+            expect(await account.r1ListOwners()).to.deep.eq(expectedR1Owners);
+            expect(await account.k1ListOwners()).to.deep.eq(expectedK1Owners);
+            expect(await account.listModules()).to.deep.eq(expectedModules);
+            expect(await account.listHooks(false)).to.deep.eq(expectedHooks);
+            expect(await account.listHooks(true)).to.deep.eq(expectedHooks);
+            expect(await account.implementation()).to.eq(
+                expectedImplementation,
+            );
+        });
+
+        it('registry is deployed and states are expected', async function () {
+            const accountAddress = await account.getAddress();
+            const factoryAddress = await factory.getAddress();
+
+            expect(await registry.isClave(accountAddress)).to.be.true;
+            expect(await registry.isClave(factoryAddress)).not.to.be.true;
+        });
+    });
+});
