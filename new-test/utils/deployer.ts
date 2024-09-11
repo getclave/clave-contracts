@@ -207,4 +207,14 @@ export class ClaveDeployer {
             })
         ).wait();
     }
+
+    public async deployCustomContract(
+        name: string,
+        constructorArgs: Array<unknown>,
+    ): Promise<Contract> {
+        return await deployContract(this.hre, name, constructorArgs, {
+            wallet: this.deployerWallet,
+            silent: true,
+        });
+    }
 }
