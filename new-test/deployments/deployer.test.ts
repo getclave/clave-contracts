@@ -11,10 +11,10 @@ import * as hre from 'hardhat';
 import type { Contract, Wallet } from 'zksync-ethers';
 import { Provider } from 'zksync-ethers';
 
-import { LOCAL_RICH_WALLETS, getWallet } from '../deploy/utils';
-import { ClaveDeployer } from './utils/deployer';
-import { fixture } from './utils/fixture';
-import { encodePublicKey } from './utils/p256';
+import { LOCAL_RICH_WALLETS, getWallet } from '../../deploy/utils';
+import { ClaveDeployer } from '../utils/deployer';
+import { fixture } from '../utils/fixture';
+import { encodePublicKey } from '../utils/p256';
 
 describe('Clave Contracts - Deployer class tests', () => {
     let deployer: ClaveDeployer;
