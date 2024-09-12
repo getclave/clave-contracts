@@ -71,6 +71,7 @@ const config: HardhatUserConfig = {
     networks: {
         hardhat: {
             zksync: true,
+            enableRip7212: true,
         },
         zkSyncSepolia,
         zkSyncMainnet,
