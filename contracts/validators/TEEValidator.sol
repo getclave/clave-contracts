@@ -10,8 +10,8 @@ import {VerifierCaller} from '../helpers/VerifierCaller.sol';
  * @author https://getclave.io
  */
 contract TEEValidator is IR1Validator, VerifierCaller {
-    //dummy value
-    address constant P256_VERIFIER = 0x4323cffC1Fda2da9928cB5A5A9dA45DC8Ee38a2f;
+    // RIP-7212 enabled
+    address constant P256_VERIFIER = 0x0000000000000000000000000000000000000100;
 
     /// @inheritdoc IR1Validator
     function validateSignature(
