@@ -15,7 +15,7 @@ export type fixtureTypes = [
     registry: Contract,
     implementation: Contract,
     factory: Contract,
-    mockValidator: Contract,
+    validator: Contract,
     account: Contract,
     keyPair: ec.KeyPair,
 ];

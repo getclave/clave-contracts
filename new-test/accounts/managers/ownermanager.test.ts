@@ -5,7 +5,6 @@
  */
 import { expect } from 'chai';
 import type { ec } from 'elliptic';
-import { parseEther } from 'ethers';
 import * as hre from 'hardhat';
 import type { Contract, Wallet } from 'zksync-ethers';
 import { Provider, utils } from 'zksync-ethers';
@@ -13,7 +12,6 @@ import { Provider, utils } from 'zksync-ethers';
 import { LOCAL_RICH_WALLETS, getWallet } from '../../../deploy/utils';
 import { ClaveDeployer } from '../../utils/deployer';
 import { fixture } from '../../utils/fixture';
-import { VALIDATORS } from '../../utils/names';
 import { encodePublicKey, genKey } from '../../utils/p256';
 import { prepareTeeTx } from '../../utils/transactions';
 
@@ -21,11 +19,9 @@ describe('Clave Contracts - Manager tests', () => {
     let deployer: ClaveDeployer;
     let provider: Provider;
     let richWallet: Wallet;
-    let validator: Contract;
+    let mockValidator: Contract;
     let account: Contract;
     let keyPair: ec.KeyPair;
-
-    let erc20: Contract;
 
     before(async () => {
         richWallet = getWallet(hre, LOCAL_RICH_WALLETS[0].privateKey);
@@ -34,17 +30,11 @@ describe('Clave Contracts - Manager tests', () => {
             cacheTimeout: -1,
         });
 
-        [, , , , validator, account, keyPair] = await fixture(
-            deployer,
-            // VALIDATORS.TEE, // FIXME: non-Mock validators not working
-        );
+        [, , , , mockValidator, account, keyPair] = await fixture(deployer);
 
         const accountAddress = await account.getAddress();
 
         await deployer.fund(10000, accountAddress);
-
-        erc20 = await deployer.deployCustomContract('MockStable', []);
-        await erc20.mint(accountAddress, parseEther('100000'));
     });
 
     describe('Owner Manager', () => {
@@ -70,7 +60,7 @@ describe('Clave Contracts - Manager tests', () => {
                 provider,
                 account,
                 addOwnerTx,
-                await validator.getAddress(),
+                await mockValidator.getAddress(),
                 keyPair,
             );
 
@@ -96,7 +86,7 @@ describe('Clave Contracts - Manager tests', () => {
                 provider,
                 account,
                 removeOwnerTxData,
-                await validator.getAddress(),
+                await mockValidator.getAddress(),
                 keyPair,
             );
 
