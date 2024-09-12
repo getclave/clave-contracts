@@ -3,12 +3,6 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-
-/**
- * Copyright Clave - All Rights Reserved
- * Unauthorized copying of this file, via any medium is strictly prohibited
- * Proprietary and confidential
- */
 import { expect } from 'chai';
 import * as hre from 'hardhat';
 import { Provider } from 'zksync-ethers';
