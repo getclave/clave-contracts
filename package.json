@@ -9,7 +9,8 @@
     "@openzeppelin/contracts-upgradeable": "4.6.0",
     "ts-morph": "^19.0.0",
     "@zk-email/ether-email-auth-contracts-zksync": "0.0.2-preview",
-    "@zk-email/email-recovery": "0.0.5"
+    "@zk-email/email-recovery": "0.0.6",
+    "solidity-stringutils": "github:Arachnid/solidity-stringutils"
   },
   "devDependencies": {
     "@getclave/constants": "1.0.0",
