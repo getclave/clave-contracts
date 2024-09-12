@@ -35,17 +35,16 @@ contract EmailRecoveryModule is
         address dkimRegistry,
         address emailAuthImpl,
         address commandHandler,
-        bytes32 _proxyBytecodeHash
+        address factroyAddr
     )
-        EmailRecoveryManager(
+        EmailRecoveryManagerZkSync(
             verifier,
             dkimRegistry,
             emailAuthImpl,
-            commandHandler
+            commandHandler,
+            factroyAddr
         )
-    {
-        proxyBytecodeHash = _proxyBytecodeHash;
-    }
+    {}
 
     function init(bytes calldata initData) external override {
         if (isInited(msg.sender)) {
