@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IModule} from '../../interfaces/IModule.sol';
-import {IEmailRecoveryModule} from '../../interfaces/IEmailRecoveryModule.sol';
-import {IClaveAccount} from '../../interfaces/IClave.sol';
-import {Errors} from '../../libraries/Errors.sol';
-import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
-import {EmailRecoveryManager, GuardianManager} from '../../EmailRecoveryManager.sol';
+import {IModule} from "../../interfaces/IModule.sol";
+import {IEmailRecoveryModule} from "@zk-email/email-recovery/src/interfaces/IEmailRecoveryModule.sol";
+import {IClaveAccount} from "../../interfaces/IClave.sol";
+import {Errors} from "../../libraries/Errors.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {EmailRecoveryManagerZkSync} from "@zk-email/email-recovery/src/EmailRecoveryManagerZkSync.sol";
+import {GuardianManager} from "@zk-email/email-recovery/src/GuardianManager.sol";
 
-contract EmailRecoveryModule is EmailRecoveryManager, IModule, IEmailRecoveryModule {
+contract EmailRecoveryModule is
+    EmailRecoveryManagerZkSync,
+    IModule,
+    IEmailRecoveryModule
+{
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
@@ -29,9 +34,16 @@ contract EmailRecoveryModule is EmailRecoveryManager, IModule, IEmailRecoveryMod
         address verifier,
         address dkimRegistry,
         address emailAuthImpl,
-        address subjectHandler,
+        address commandHandler,
         bytes32 _proxyBytecodeHash
-    ) EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, subjectHandler) {
+    )
+        EmailRecoveryManager(
+            verifier,
+            dkimRegistry,
+            emailAuthImpl,
+            commandHandler
+        )
+    {
         proxyBytecodeHash = _proxyBytecodeHash;
     }
 
@@ -50,7 +62,10 @@ contract EmailRecoveryModule is EmailRecoveryManager, IModule, IEmailRecoveryMod
             uint256 threshold,
             uint256 delay,
             uint256 expiry
-        ) = abi.decode(initData, (address[], uint256[], uint256, uint256, uint256));
+        ) = abi.decode(
+                initData,
+                (address[], uint256[], uint256, uint256, uint256)
+            );
 
         inited[msg.sender] = true;
 
@@ -71,20 +86,29 @@ contract EmailRecoveryModule is EmailRecoveryManager, IModule, IEmailRecoveryMod
         return inited[account];
     }
 
-    function canStartRecoveryRequest(address account) external view returns (bool) {
+    function canStartRecoveryRequest(
+        address account
+    ) external view returns (bool) {
         GuardianConfig memory guardianConfig = getGuardianConfig(account);
 
         return guardianConfig.acceptedWeight >= guardianConfig.threshold;
     }
 
-    function recover(address account, bytes calldata newOwner) internal override {
+    function recover(
+        address account,
+        bytes calldata newOwner
+    ) internal override {
         IClaveAccount(account).resetOwners(newOwner);
 
         emit RecoveryExecuted(account, newOwner);
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
-        return interfaceId == type(IModule).interfaceId || interfaceId == type(IERC165).interfaceId;
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external pure override returns (bool) {
+        return
+            interfaceId == type(IModule).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }

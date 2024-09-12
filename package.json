@@ -7,7 +7,9 @@
     "@nomad-xyz/excessively-safe-call": "github:nomad-xyz/ExcessivelySafeCall",
     "@openzeppelin/contracts": "4.6.0",
     "@openzeppelin/contracts-upgradeable": "4.6.0",
-    "ts-morph": "^19.0.0"
+    "ts-morph": "^19.0.0",
+    "@zk-email/ether-email-auth-contracts-zksync": "0.0.2-preview",
+    "@zk-email/email-recovery": "0.0.5"
   },
   "devDependencies": {
     "@getclave/constants": "1.0.0",
