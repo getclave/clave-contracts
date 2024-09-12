@@ -22,6 +22,7 @@ export type fixtureTypes = [
 
 export const fixture = async (
     deployer: ClaveDeployer,
+    validatorOption: VALIDATORS = VALIDATORS.MOCK,
 ): Promise<fixtureTypes> => {
     const keyPair = genKey();
 
@@ -29,15 +30,15 @@ export const fixture = async (
     const registry = await deployer.registry();
     const implementation = await deployer.implementation(batchCaller);
     const factory = await deployer.factory(implementation, registry);
-    const mockValidator = await deployer.validator(VALIDATORS.MOCK);
-    const account = await deployer.account(keyPair, factory, mockValidator);
+    const validator = await deployer.validator(validatorOption);
+    const account = await deployer.account(keyPair, factory, validator);
 
     return [
         batchCaller,
         registry,
         implementation,
         factory,
-        mockValidator,
+        validator,
         account,
         keyPair,
     ];

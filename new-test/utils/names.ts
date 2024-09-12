@@ -15,7 +15,7 @@ export const CONTRACT_NAMES = {
 
 export enum VALIDATORS {
     MOCK = 'MockValidator',
-    TEE = 'TeeValidator',
+    TEE = 'TEEValidator',
     EOA = 'EOAValidator',
     PASSKEY = 'PasskeyValidator',
 }
