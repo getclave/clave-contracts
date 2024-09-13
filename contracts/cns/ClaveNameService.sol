@@ -187,7 +187,8 @@ contract ClaveNameService is IClaveNameService, ERC721, ERC721Burnable, AccessCo
 
     /// @inheritdoc ERC721
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        if (!_exists(tokenId)) return '';
+        // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cae60c595b37b1e7ed7dd50ad0257387ec07c0cf/CHANGELOG.md?plain=1#L208
+        if (_ownerOf(tokenId) == address(0)) return '';
 
         return
             bytes(baseTokenURI).length > 0 ? string.concat(baseTokenURI, tokenId.toString()) : '';
@@ -234,6 +235,7 @@ contract ClaveNameService is IClaveNameService, ERC721, ERC721Burnable, AccessCo
      * @inheritdoc ERC721
      * @dev Transfers to addresses already have assets are restricted
      */
+    // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cae60c595b37b1e7ed7dd50ad0257387ec07c0cf/CHANGELOG.md?plain=1#L142
     function _beforeTokenTransfer(address from, address to, uint256) internal view override {
         require(
             from == address(0) || to == address(0),
