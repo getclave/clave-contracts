@@ -9,7 +9,7 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {EmailRecoveryManagerZkSync} from "@zk-email/email-recovery/src/EmailRecoveryManagerZkSync.sol";
 import {GuardianManager} from "@zk-email/email-recovery/src/GuardianManager.sol";
 
-abstract contract EmailRecoveryModule is
+contract EmailRecoveryModule is
     EmailRecoveryManagerZkSync,
     IModule,
     IEmailRecoveryModule
@@ -31,18 +31,18 @@ abstract contract EmailRecoveryModule is
     event RecoveryExecuted(address indexed account, bytes newOwner);
 
     constructor(
-        address verifier,
-        address dkimRegistry,
-        address emailAuthImpl,
-        address commandHandler,
-        address factroyAddr
+        address _verifier,
+        address _dkimRegistry,
+        address _emailAuthImpl,
+        address _commandHandler,
+        address _factoryAddr
     )
         EmailRecoveryManagerZkSync(
-            verifier,
-            dkimRegistry,
-            emailAuthImpl,
-            commandHandler,
-            factroyAddr
+            _verifier,
+            _dkimRegistry,
+            _emailAuthImpl,
+            _commandHandler,
+            _factoryAddr
         )
     {}
 
@@ -95,8 +95,14 @@ abstract contract EmailRecoveryModule is
 
     function recover(
         address account,
-        bytes calldata newOwner
+        bytes calldata recoveryData
     ) internal override {
+        (, bytes memory recoveryCalldata) = abi.decode(
+            recoveryData,
+            (address, bytes)
+        );
+        (, address newOwner) = abi.decode(recoveryCalldata, (address, address));
+
         IClaveAccount(account).resetOwners(newOwner);
 
         emit RecoveryExecuted(account, newOwner);

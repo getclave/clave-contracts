@@ -9,7 +9,7 @@ import {StringUtils} from "@zk-email/email-recovery/src/libraries/StringUtils.so
  * Handler contract that defines command templates and how to validate them
  * This is the default command handler that will work with any validator.
  */
-abstract contract EmailRecoveryCommandHandler is IEmailRecoveryCommandHandler {
+contract EmailRecoveryCommandHandler is IEmailRecoveryCommandHandler {
     error InvalidCommandParams();
     error InvalidAccount();
     error InvalidRecoveryModule();
@@ -87,14 +87,16 @@ abstract contract EmailRecoveryCommandHandler is IEmailRecoveryCommandHandler {
 
     /**
      * @notice Validates the command params for an acceptance email
+     * @param templateIdx The index of the template used for the acceptance email
      * @param commandParams The command parameters of the recovery email.
      * @return accountInEmail The account address in the acceptance email
      */
     function validateAcceptanceCommand(
-        uint256 /* templateIdx */,
+        uint256 templateIdx,
         bytes[] calldata commandParams
     ) external pure returns (address) {
-        if (commandParams.length != 1) revert InvalidCommandParams();
+        if (templateIdx != 0 || commandParams.length != 1)
+            revert InvalidCommandParams();
 
         // The GuardianStatus check in acceptGuardian implicitly
         // validates the account, so no need to re-validate here
@@ -105,46 +107,55 @@ abstract contract EmailRecoveryCommandHandler is IEmailRecoveryCommandHandler {
 
     /**
      * @notice Validates the command params for an acceptance email
+     * @param templateIdx The index of the template used for the recovery email
      * @param commandParams The command parameters of the recovery email.
-     * @param recoveryManager The recovery manager address. Used to help with validation
      * @return accountInEmail The account address in the acceptance email
-     * @return calldataHash The keccak256 hash of the recovery calldata. Verified against later when
-     * recovery is executed
      */
     function validateRecoveryCommand(
-        uint256 /* templateIdx */,
-        bytes[] calldata commandParams,
-        address recoveryManager
-    ) public view returns (address, bytes32) {
-        if (commandParams.length != 3) {
+        uint256 templateIdx,
+        bytes[] calldata commandParams
+    ) public view returns (address) {
+        if (templateIdx != 0 || commandParams.length != 3) {
             revert InvalidCommandParams();
         }
 
         address accountInEmail = abi.decode(commandParams[0], (address));
         address recoveryModuleInEmail = abi.decode(commandParams[1], (address));
-        string memory newOwnerHashInEmail = abi.decode(
-            commandParams[2],
-            (string)
-        );
-        bytes32 calldataHash = StringUtils.hexToBytes32(newOwnerHashInEmail);
 
         if (accountInEmail == address(0)) {
             revert InvalidAccount();
         }
 
-        // Even though someone could use a malicious contract as the recoveryManager argument, it
-        // does not matter in this case as this is only used as part of the recovery flow in the
-        // recovery manager. Passing the recovery manager in the constructor here would result
-        // in a circular dependency
-        address expectedRecoveryModule = IEmailRecoveryManager(recoveryManager)
-            .emailRecoveryModule();
-        if (
-            recoveryModuleInEmail == address(0) ||
-            recoveryModuleInEmail != expectedRecoveryModule
-        ) {
+        address expectedRecoveryModule = address(this);
+        if (recoveryModuleInEmail != expectedRecoveryModule) {
             revert InvalidRecoveryModule();
         }
 
-        return (accountInEmail, calldataHash);
+        return accountInEmail;
+    }
+
+    /**
+     * @notice parses the recovery data hash from the command params. The data hash is
+     * verified against later when recovery is executed
+     * @dev recoveryDataHash = abi.encode(validator, recoveryFunctionCalldata)
+     * @param templateIdx The index of the template used for the recovery request
+     * @param commandParams The command parameters of the recovery email
+     * @return recoveryDataHash The keccak256 hash of the recovery data
+     */
+    function parseRecoveryDataHash(
+        uint256 templateIdx,
+        bytes[] memory commandParams
+    ) external view returns (bytes32) {
+        if (templateIdx != 0 || commandParams.length != 3) {
+            revert InvalidCommandParams();
+        }
+        address accountInEmail = abi.decode(commandParams[0], (address));
+        address moduleInEmail = abi.decode(commandParams[1], (address));
+        address newOwnerInEmail = abi.decode(commandParams[2], (address));
+        bytes memory recoveryCalldata = abi.encode(
+            moduleInEmail,
+            newOwnerInEmail
+        );
+        return keccak256(abi.encode(accountInEmail, recoveryCalldata));
     }
 }

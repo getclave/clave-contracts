@@ -7,9 +7,8 @@
     "@nomad-xyz/excessively-safe-call": "github:nomad-xyz/ExcessivelySafeCall",
     "@openzeppelin/contracts": "4.6.0",
     "@openzeppelin/contracts-upgradeable": "4.6.0",
-    "@zk-email/email-recovery": "0.0.6",
+    "@zk-email/email-recovery": "0.0.7",
     "@zk-email/ether-email-auth-contracts-zksync": "0.0.2-preview",
-    "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils",
     "ts-morph": "^19.0.0"
   },
   "devDependencies": {
