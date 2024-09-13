@@ -2503,10 +2503,10 @@
     "@openzeppelin/contracts" "^5.0.0"
     dotenv "^16.3.1"
 
-"@zk-email/email-recovery@0.0.6":
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/@zk-email/email-recovery/-/email-recovery-0.0.6.tgz#d9181decf36cc119c4b846dd073795fe99c6b0f3"
-  integrity sha512-tbC2JyrtrJkcoaaYvtdQnni0xrJYpj5Sn6GBdG9CW6WaMP18aPxxp0gkAmPWTG+jjz7FvYjwLRfyXQPBhsBXAw==
+"@zk-email/email-recovery@0.0.7":
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/@zk-email/email-recovery/-/email-recovery-0.0.7.tgz#5f970e99656bd0d3fce65f429d2c2b0a0ed76884"
+  integrity sha512-hk7AUvmh3qV1uu9GUbxn5SjQ5S61Qg2MRtnbUoGuP/6dGz9Jti9RYL/G64BBEWVa5vP+dUXGfIgLNFetYr8maA==
   dependencies:
     "@matterlabs/era-contracts" "github:matter-labs/era-contracts"
     "@openzeppelin/contracts-upgradeable" "5.0.1"
@@ -2515,7 +2515,7 @@
     "@zk-email/ether-email-auth-contracts" "0.0.2-preview"
     email-wallet-sdk "github:zkemail/email-wallet-sdk"
     erc7579-implementation "github:erc7579/erc7579-implementation"
-    solidity-stringutils "github:Arachnid/solidity-stringutils"
+    solidity-stringutils "github:LayerZero-Labs/solidity-stringutils"
 
 "@zk-email/ether-email-auth-contracts-zksync@0.0.2-preview":
   version "0.0.2-preview"
@@ -3735,9 +3735,9 @@ eastasianwidth@^0.2.0:
   integrity sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==
 
 electron-to-chromium@^1.5.4:
-  version "1.5.21"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.5.21.tgz#f331794ee99045f2b2d73bc1d2dc654a13c462ee"
-  integrity sha512-+rBAerCpQvFSPyAO677i5gJuWGO2WFsoujENdcMzsrpP7Ebcc3pmpERgU8CV4fFF10a5haP4ivnFQ/AmLICBVg==
+  version "1.5.22"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.5.22.tgz#5ae58990a35391bad7605742e52855a0f281ef82"
+  integrity sha512-tKYm5YHPU1djz0O+CGJ+oJIvimtsCcwR2Z9w7Skh08lUdyzXY5djods3q+z2JkWdb7tCcmM//eVavSRAiaPRNg==
 
 elliptic@6.5.4:
   version "6.5.4"
@@ -7059,10 +7059,6 @@ solidity-coverage@^0.8.2, solidity-coverage@^0.8.4:
     semver "^7.3.4"
     shelljs "^0.8.3"
     web3-utils "^1.3.6"
-
-"solidity-stringutils@github:Arachnid/solidity-stringutils":
-  version "0.0.0"
-  resolved "https://codeload.github.com/Arachnid/solidity-stringutils/tar.gz/4b2fcc43fa0426e19ce88b1f1ec16f5903a2e461"
 
 "solidity-stringutils@github:LayerZero-Labs/solidity-stringutils":
   version "0.0.1"
