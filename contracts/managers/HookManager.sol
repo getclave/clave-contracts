@@ -2,12 +2,12 @@
 pragma solidity ^0.8.17;
 
 import {ERC165Checker} from '@openzeppelin/contracts/utils/introspection/ERC165Checker.sol';
-import {Transaction} from '@matterlabs/zksync-contracts/l2/system-contracts/libraries/TransactionHelper.sol';
 import {ExcessivelySafeCall} from '@nomad-xyz/excessively-safe-call/src/ExcessivelySafeCall.sol';
 
 import {Auth} from '../auth/Auth.sol';
 import {ClaveStorage} from '../libraries/ClaveStorage.sol';
 import {AddressLinkedList} from '../libraries/LinkedList.sol';
+import {Transaction} from '../libraries/TransactionHelper.sol';
 import {Errors} from '../libraries/Errors.sol';
 import {IExecutionHook, IValidationHook} from '../interfaces/IHook.sol';
 import {IInitable} from '../interfaces/IInitable.sol';

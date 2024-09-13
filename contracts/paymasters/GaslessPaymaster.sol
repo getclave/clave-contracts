@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.17;
-import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from '@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymaster.sol';
-import {IPaymasterFlow} from '@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymasterFlow.sol';
-import {Transaction} from '@matterlabs/zksync-contracts/l2/system-contracts/libraries/TransactionHelper.sol';
-import {BOOTLOADER_FORMAL_ADDRESS} from '@matterlabs/zksync-contracts/l2/system-contracts/Constants.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
-import {Errors} from '../libraries/Errors.sol';
-import {IClaveRegistry} from '../interfaces/IClaveRegistry.sol';
-import {BootloaderAuth} from '../auth/BootloaderAuth.sol';
+import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from "../interfaces/IPaymaster.sol";
+import {IPaymasterFlow} from "@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymasterFlow.sol";
+import {BOOTLOADER_FORMAL_ADDRESS} from "@matterlabs/zksync-contracts/l2/system-contracts/Constants.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Transaction} from "../libraries/TransactionHelper.sol";
+import {Errors} from "../libraries/Errors.sol";
+import {IClaveRegistry} from "../interfaces/IClaveRegistry.sol";
+import {BootloaderAuth} from "../auth/BootloaderAuth.sol";
 
 /**
  * @title GaslessPaymaster to pay for limited number of transactions' fees, also limitless tx for specified addresses
@@ -50,15 +50,23 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
         bytes32 /**_txHash*/,
         bytes32 /**_suggestedSignedHash*/,
         Transaction calldata _transaction
-    ) external payable onlyBootloader returns (bytes4 magic, bytes memory context) {
+    )
+        external
+        payable
+        onlyBootloader
+        returns (bytes4 magic, bytes memory context)
+    {
         // By default we consider the transaction as accepted.
         magic = PAYMASTER_VALIDATION_SUCCESS_MAGIC;
 
         // Revert if standart paymaster input is shorter than 4 bytes
-        if (_transaction.paymasterInput.length < 4) revert Errors.SHORT_PAYMASTER_INPUT();
+        if (_transaction.paymasterInput.length < 4)
+            revert Errors.SHORT_PAYMASTER_INPUT();
 
         // Check the paymaster input selector to detect flow
-        bytes4 paymasterInputSelector = bytes4(_transaction.paymasterInput[0:4]);
+        bytes4 paymasterInputSelector = bytes4(
+            _transaction.paymasterInput[0:4]
+        );
         if (paymasterInputSelector != IPaymasterFlow.general.selector)
             revert Errors.UNSUPPORTED_FLOW();
 
@@ -84,10 +92,13 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
         uint256 requiredETH = _transaction.gasLimit * _transaction.maxFeePerGas;
 
         // Check if the required ETH is less than the maximum sponsored ETH
-        if (requiredETH > maxSponsoredEth) revert Errors.EXCEEDS_MAX_SPONSORED_ETH();
+        if (requiredETH > maxSponsoredEth)
+            revert Errors.EXCEEDS_MAX_SPONSORED_ETH();
 
         // Transfer fees to the bootloader
-        (bool success, ) = payable(BOOTLOADER_FORMAL_ADDRESS).call{value: requiredETH}('');
+        (bool success, ) = payable(BOOTLOADER_FORMAL_ADDRESS).call{
+            value: requiredETH
+        }("");
         if (!success) revert Errors.FAILED_FEE_TRANSFER();
     }
 
@@ -110,7 +121,9 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @param userAddress address - User address
      * @return uint256 - Remaining user tx limit
      */
-    function getRemainingUserLimit(address userAddress) external view returns (uint256) {
+    function getRemainingUserLimit(
+        address userAddress
+    ) external view returns (uint256) {
         uint256 limit;
         uint256 sponsored = userSponsored[userAddress];
 
@@ -127,7 +140,7 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
      */
     function withdraw(address to, uint256 amount) external onlyOwner {
         // Send paymaster funds to the owner
-        (bool success, ) = payable(to).call{value: amount}('');
+        (bool success, ) = payable(to).call{value: amount}("");
         if (!success) revert Errors.UNAUTHORIZED_WITHDRAW();
 
         emit BalanceWithdrawn(to, amount);
@@ -148,7 +161,9 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @param newMaxSponsoredEth uint256 - New maximum sponsored ETH
      * @dev Only owner address can call this method
      */
-    function updateMaxSponsoredEth(uint256 newMaxSponsoredEth) external onlyOwner {
+    function updateMaxSponsoredEth(
+        uint256 newMaxSponsoredEth
+    ) external onlyOwner {
         maxSponsoredEth = newMaxSponsoredEth;
     }
 
@@ -158,7 +173,9 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @dev Only owner address can call this method
      * @dev Given addresses should not be included in the list
      */
-    function addLimitlessAddresses(address[] calldata addresses) external onlyOwner {
+    function addLimitlessAddresses(
+        address[] calldata addresses
+    ) external onlyOwner {
         for (uint i = 0; i < addresses.length; i++) {
             address addr = addresses[i];
             require(addr != address(0) && !limitlessAddresses[addr]);
@@ -173,7 +190,9 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @dev Only owner address can call this method
      * @dev Given addresses should be included in the list
      */
-    function removeLimitlessAddresses(address[] calldata addresses) external onlyOwner {
+    function removeLimitlessAddresses(
+        address[] calldata addresses
+    ) external onlyOwner {
         for (uint i = 0; i < addresses.length; i++) {
             address addr = addresses[i];
             require(limitlessAddresses[addr]);

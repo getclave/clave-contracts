@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {IR1Validator, IERC165} from '../interfaces/IValidator.sol';
-import {Transaction} from '@matterlabs/zksync-contracts/l2/system-contracts/libraries/TransactionHelper.sol';
+import {Transaction} from '../libraries/TransactionHelper.sol';
 
 /**
  * @title Mock validator contract implementing r1validator interface

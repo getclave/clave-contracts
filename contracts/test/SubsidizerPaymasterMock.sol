@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.17;
 
-import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from '@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymaster.sol';
-import {IPaymasterFlow} from '@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymasterFlow.sol';
-import {Transaction} from '@matterlabs/zksync-contracts/l2/system-contracts/libraries/TransactionHelper.sol';
-import {BOOTLOADER_FORMAL_ADDRESS} from '@matterlabs/zksync-contracts/l2/system-contracts/Constants.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
-import {PrimaryProdDataServiceConsumerBase} from '@redstone-finance/evm-connector/contracts/data-services/PrimaryProdDataServiceConsumerBase.sol';
-import {Errors} from '../libraries/Errors.sol';
-import {IERC20, SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {BootloaderAuth} from '../auth/BootloaderAuth.sol';
-import {IClaveRegistry} from '../interfaces/IClaveRegistry.sol';
+import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from "../interfaces/IPaymaster.sol";
+import {IPaymasterFlow} from "@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymasterFlow.sol";
+import {BOOTLOADER_FORMAL_ADDRESS} from "@matterlabs/zksync-contracts/l2/system-contracts/Constants.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {PrimaryProdDataServiceConsumerBase} from "@redstone-finance/evm-connector/contracts/data-services/PrimaryProdDataServiceConsumerBase.sol";
+import {Transaction} from "../libraries/TransactionHelper.sol";
+import {Errors} from "../libraries/Errors.sol";
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {BootloaderAuth} from "../auth/BootloaderAuth.sol";
+import {IClaveRegistry} from "../interfaces/IClaveRegistry.sol";
 
 // Allowed ERC-20 tokens data struct input
 struct TokenInput {
@@ -72,14 +72,20 @@ contract SubsidizerPaymasterMock is
     constructor(TokenInput[] memory tokens, address registry) {
         for (uint256 i = 0; i < tokens.length; i++) {
             // Decline zero-addresses
-            if (tokens[i].tokenAddress == address(0)) revert Errors.INVALID_TOKEN();
+            if (tokens[i].tokenAddress == address(0))
+                revert Errors.INVALID_TOKEN();
 
             // Decline false markup values
             if (tokens[i].priceMarkup < 5000 || tokens[i].priceMarkup >= 100000)
                 revert Errors.INVALID_TOKEN();
-            uint192 priceMarkup = uint192(tokens[i].priceMarkup * (MARKUP_NOMINATOR / 1e4));
+            uint192 priceMarkup = uint192(
+                tokens[i].priceMarkup * (MARKUP_NOMINATOR / 1e4)
+            );
 
-            allowedTokens[tokens[i].tokenAddress] = TokenData(tokens[i].decimals, priceMarkup);
+            allowedTokens[tokens[i].tokenAddress] = TokenData(
+                tokens[i].decimals,
+                priceMarkup
+            );
         }
 
         claveRegistry = registry;
@@ -94,7 +100,12 @@ contract SubsidizerPaymasterMock is
         bytes32 /**_txHash*/,
         bytes32 /**_suggestedSignedHash*/,
         Transaction calldata _transaction
-    ) external payable onlyBootloader returns (bytes4 magic, bytes memory context) {
+    )
+        external
+        payable
+        onlyBootloader
+        returns (bytes4 magic, bytes memory context)
+    {
         // By default we consider the transaction as accepted.
         magic = PAYMASTER_VALIDATION_SUCCESS_MAGIC;
 
@@ -102,13 +113,17 @@ contract SubsidizerPaymasterMock is
         address userAddress = address(uint160(_transaction.from));
 
         // Check if the account is a Clave account
-        if (!IClaveRegistry(claveRegistry).isClave(userAddress)) revert Errors.NOT_CLAVE_ACCOUNT();
+        if (!IClaveRegistry(claveRegistry).isClave(userAddress))
+            revert Errors.NOT_CLAVE_ACCOUNT();
 
         // Revert if standart paymaster input is shorter than 4 bytes
-        if (_transaction.paymasterInput.length < 4) revert Errors.SHORT_PAYMASTER_INPUT();
+        if (_transaction.paymasterInput.length < 4)
+            revert Errors.SHORT_PAYMASTER_INPUT();
 
         // Check the paymaster input selector to detect flow
-        bytes4 paymasterInputSelector = bytes4(_transaction.paymasterInput[0:4]);
+        bytes4 paymasterInputSelector = bytes4(
+            _transaction.paymasterInput[0:4]
+        );
         if (paymasterInputSelector != IPaymasterFlow.approvalBased.selector)
             revert Errors.UNSUPPORTED_FLOW();
 
@@ -117,10 +132,14 @@ contract SubsidizerPaymasterMock is
             _transaction.paymasterInput[4:],
             (address, uint256, bytes)
         );
-        if (allowedTokens[token].decimals == uint32(0)) revert Errors.UNSUPPORTED_TOKEN();
+        if (allowedTokens[token].decimals == uint32(0))
+            revert Errors.UNSUPPORTED_TOKEN();
 
         address thisAddress = address(this);
-        uint256 providedAllowance = IERC20(token).allowance(userAddress, thisAddress);
+        uint256 providedAllowance = IERC20(token).allowance(
+            userAddress,
+            thisAddress
+        );
 
         // Required ETH to pay fees
         uint256 requiredETH = _transaction.gasLimit * _transaction.maxFeePerGas;
@@ -141,17 +160,25 @@ contract SubsidizerPaymasterMock is
         if (userToPayETH > 0) {
             rate = getPairPrice(token, oracleCalldata);
             // Calculated fee amount as token
-            uint256 requiredToken = (userToPayETH * rate) / PRICE_PAIR_NOMINATOR;
+            uint256 requiredToken = (userToPayETH * rate) /
+                PRICE_PAIR_NOMINATOR;
 
             // Check token allowance for the fee
-            if (providedAllowance < requiredToken) revert Errors.LESS_ALLOWANCE_FOR_PAYMASTER();
+            if (providedAllowance < requiredToken)
+                revert Errors.LESS_ALLOWANCE_FOR_PAYMASTER();
 
             // Transfer token to the fee collector
-            IERC20(token).safeTransferFrom(userAddress, address(this), requiredToken);
+            IERC20(token).safeTransferFrom(
+                userAddress,
+                address(this),
+                requiredToken
+            );
         }
 
         // Transfer fees to the bootloader
-        (bool feeSuccess, ) = payable(BOOTLOADER_FORMAL_ADDRESS).call{value: requiredETH}('');
+        (bool feeSuccess, ) = payable(BOOTLOADER_FORMAL_ADDRESS).call{
+            value: requiredETH
+        }("");
         if (!feeSuccess) revert Errors.FAILED_FEE_TRANSFER();
 
         // Use fee token address as context
@@ -167,7 +194,10 @@ contract SubsidizerPaymasterMock is
         ExecutionResult /**_txResult*/,
         uint256 _maxRefundedGas
     ) external payable onlyBootloader {
-        (address tokenAddress, uint256 rate) = abi.decode(_context, (address, uint256));
+        (address tokenAddress, uint256 rate) = abi.decode(
+            _context,
+            (address, uint256)
+        );
         address fromAddress = address(uint160(_transaction.from));
 
         uint256 refundAmount = calcRefundAmount(
@@ -177,7 +207,8 @@ contract SubsidizerPaymasterMock is
             rate
         );
 
-        if (refundAmount > 0) IERC20(tokenAddress).safeTransfer(fromAddress, refundAmount);
+        if (refundAmount > 0)
+            IERC20(tokenAddress).safeTransfer(fromAddress, refundAmount);
 
         // Emit user address with fee payer token
         emit SubsidizerPaymasterUsed(fromAddress, tokenAddress);
@@ -196,10 +227,16 @@ contract SubsidizerPaymasterMock is
         }
 
         // Skip false markup values
-        if (token.priceMarkup < 5000 || token.priceMarkup >= 100000) revert Errors.INVALID_MARKUP();
-        uint192 priceMarkup = uint192(token.priceMarkup * (MARKUP_NOMINATOR / 1e4));
+        if (token.priceMarkup < 5000 || token.priceMarkup >= 100000)
+            revert Errors.INVALID_MARKUP();
+        uint192 priceMarkup = uint192(
+            token.priceMarkup * (MARKUP_NOMINATOR / 1e4)
+        );
 
-        allowedTokens[token.tokenAddress] = TokenData(token.decimals, uint192(priceMarkup));
+        allowedTokens[token.tokenAddress] = TokenData(
+            token.decimals,
+            uint192(priceMarkup)
+        );
         emit ERC20TokenAllowed(token.tokenAddress);
     }
 
@@ -221,7 +258,7 @@ contract SubsidizerPaymasterMock is
      */
     function withdraw(address to, uint256 amount) external onlyOwner {
         // Send paymaster funds to the given address
-        (bool success, ) = payable(to).call{value: amount}('');
+        (bool success, ) = payable(to).call{value: amount}("");
         if (!success) revert Errors.UNAUTHORIZED_WITHDRAW();
 
         emit BalanceWithdrawn(to, amount);
@@ -234,7 +271,11 @@ contract SubsidizerPaymasterMock is
      * @param amount uint256 - Amount to be withdrawn
      * @dev Only owner address can call this method
      */
-    function withdrawToken(address token, address to, uint256 amount) external onlyOwner {
+    function withdrawToken(
+        address token,
+        address to,
+        uint256 amount
+    ) external onlyOwner {
         // Send paymaster funds to the given address
         IERC20(token).safeTransfer(to, amount);
     }
@@ -298,9 +339,13 @@ contract SubsidizerPaymasterMock is
             // If, gasUsed is less than we want to pay, compensate user
             // Else, we can pay (userPaidGas - (gasUsed - MAX_FEE_TO_SUBSIDIZE)) at best, which can
             // be simplified to _maxRefundedGas
-            uint256 refundGas = MAX_GAS_TO_SUBSIDIZE > gasUsed ? userPaidGas : gasRefunded;
+            uint256 refundGas = MAX_GAS_TO_SUBSIDIZE > gasUsed
+                ? userPaidGas
+                : gasRefunded;
 
-            refundTokenAmount = (refundGas * maxFeePerGas * rate) / PRICE_PAIR_NOMINATOR;
+            refundTokenAmount =
+                (refundGas * maxFeePerGas * rate) /
+                PRICE_PAIR_NOMINATOR;
         }
     }
 }
