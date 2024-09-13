@@ -3,9 +3,10 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
+import { Contract } from 'ethers';
 import * as hre from 'hardhat';
 
-import { deployContract } from './utils';
+import { deployContract, getContractBytecodeHash, getWallet } from './utils';
 
 /*
  * This is an MVP deploy script that handles deplopyment of the following modules:
@@ -19,9 +20,11 @@ import { deployContract } from './utils';
  * AccountFactory
  */
 export default async function (): Promise<void> {
+    const wallet = getWallet(hre);
+
     const deploymentConfig = {
         PAYMASTER_USER_LIMIT: 50,
-        DEPLOYER_ADDRESS: '',
+        DEPLOYER_ADDRESS: wallet.address,
     };
 
     const batchCaller = await deployBatchCaller();
@@ -107,7 +110,7 @@ const deployFactory = async (
 ): Promise<string> => {
     const proxyArtifact = await hre.artifacts.readArtifact('ClaveProxy');
     const bytecode = proxyArtifact.bytecode;
-    const bytecodeHash = hre.ethers.keccak256(bytecode);
+    const bytecodeHash = getContractBytecodeHash(bytecode);
 
     const contractArtifactName = 'AccountFactory';
     const result = await deployContract(hre, contractArtifactName, [
@@ -117,5 +120,19 @@ const deployFactory = async (
         deployer,
     ]);
 
-    return await result.getAddress();
+    const registryArtifact = await hre.artifacts.readArtifact('ClaveRegistry');
+
+    const registryContract = new Contract(
+        registryAddress,
+        registryArtifact.abi,
+        getWallet(hre),
+    );
+
+    const accountFactoryAddress = await result.getAddress();
+
+    console.log(`Setting factory address to ${accountFactoryAddress}`);
+    await registryContract.setFactory(accountFactoryAddress);
+    console.log('Successfully set factory address in registry contract');
+
+    return accountFactoryAddress;
 };
