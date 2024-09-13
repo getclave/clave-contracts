@@ -400,6 +400,33 @@ dataSources:
           handler: handleRewardPaid
       file: ./src/clave-zk-stake.ts
   - kind: ethereum
+    name: ClaveAPPAStake
+    network: zksync-era
+    source:
+      address: '0x20999BD9fA71175e4A430CDB7950a66916E6F4d1'
+      abi: ZtakeV2
+      startBlock: 41763539
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: ZtakeV2
+          file: ./abis/ZtakeV2.json
+      eventHandlers:
+        - event: Staked(indexed address,indexed address,uint256)
+          handler: handleStaked
+        - event: Withdrawn(indexed address,indexed address,uint256)
+          handler: handleWithdrawn
+        - event: RewardPaid(indexed address,indexed address,uint256)
+          handler: handleRewardPaid
+      file: ./src/clave-appa-stake.ts
+  - kind: ethereum
     name: MeowStake
     network: zksync-era
     source:
