@@ -44,7 +44,7 @@ contract ZtaKeV2 is Ownable {
         address _stakeToken,
         address _rewardToken,
         address _registry
-    ) Ownable() {
+    ) Ownable(msg.sender) {
         limitPerUser = _limitPerUser;
         totalLimit = _totalLimit;
 

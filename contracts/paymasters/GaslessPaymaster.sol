@@ -40,7 +40,7 @@ contract GaslessPaymaster is IPaymaster, Ownable, BootloaderAuth {
      * @param registry address - Clave registry address
      * @param limit uint256    - User sponsorship limit
      */
-    constructor(address registry, uint256 limit) {
+    constructor(address registry, uint256 limit) Ownable(msg.sender) {
         claveRegistry = registry;
         userLimit = limit;
     }

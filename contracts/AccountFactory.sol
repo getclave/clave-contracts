@@ -64,7 +64,7 @@ contract AccountFactory is Ownable {
         address _registry,
         bytes32 _proxyBytecodeHash,
         address deployer
-    ) Ownable() {
+    ) Ownable(msg.sender) {
         implementation = _implementation;
         registry = _registry;
         proxyBytecodeHash = _proxyBytecodeHash;

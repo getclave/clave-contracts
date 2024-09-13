@@ -63,7 +63,7 @@ contract ERC20PaymasterMock is
      * @dev Use markup by adding percentage amount to 100, e.g. 10% markup will be 11000
      * @dev Make sure to use true decimal values for the tokens, otherwise the conversions will be incorrect
      */
-    constructor(TokenInput[] memory tokens) {
+    constructor(TokenInput[] memory tokens) Ownable(msg.sender) {
         for (uint256 i = 0; i < tokens.length; i++) {
             // Decline zero-addresses
             if (tokens[i].tokenAddress == address(0)) revert Errors.INVALID_TOKEN();

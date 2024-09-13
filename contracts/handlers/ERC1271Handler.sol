@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.17;
 
-import {IERC1271Upgradeable} from '@openzeppelin/contracts-upgradeable/interfaces/IERC1271Upgradeable.sol';
+import {IERC1271} from '@openzeppelin/contracts/interfaces/IERC1271.sol';
 
 import {SignatureDecoder} from '../libraries/SignatureDecoder.sol';
 import {ValidationHandler} from './ValidationHandler.sol';
@@ -13,7 +13,7 @@ import {EIP712} from '../helpers/EIP712.sol';
  * @author https://getclave.io
  */
 abstract contract ERC1271Handler is
-    IERC1271Upgradeable,
+    IERC1271,
     EIP712('Clave1271', '1.0.0'),
     ValidationHandler
 {

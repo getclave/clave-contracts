@@ -24,7 +24,7 @@ contract ClaveRegistry is Ownable, IClaveRegistry {
     event FactoryUnset(address indexed factory);
 
     // Constructor function of the contracts
-    constructor() Ownable() {}
+    constructor() Ownable(msg.sender) {}
 
     /**
      * @notice Registers an account as a Clave account
