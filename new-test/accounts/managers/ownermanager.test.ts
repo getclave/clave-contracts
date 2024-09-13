@@ -12,6 +12,7 @@ import { Provider, utils } from 'zksync-ethers';
 import { LOCAL_RICH_WALLETS, getWallet } from '../../../deploy/utils';
 import { ClaveDeployer } from '../../utils/deployer';
 import { fixture } from '../../utils/fixture';
+import { VALIDATORS } from '../../utils/names';
 import { encodePublicKey, genKey } from '../../utils/p256';
 import { prepareTeeTx } from '../../utils/transactions';
 
@@ -30,7 +31,10 @@ describe('Clave Contracts - Manager tests', () => {
             cacheTimeout: -1,
         });
 
-        [, , , , mockValidator, account, keyPair] = await fixture(deployer);
+        [, , , , mockValidator, account, keyPair] = await fixture(
+            deployer,
+            VALIDATORS.TEE,
+        );
 
         const accountAddress = await account.getAddress();
 
@@ -76,6 +80,10 @@ describe('Clave Contracts - Manager tests', () => {
             expect(await account.r1ListOwners()).to.deep.eq(expectedOwners);
         });
 
+        // it('should send a tx with the new key', async () => {
+        //     const amount = parseEther('1');
+        // });
+
         it('should remove an r1 key', async () => {
             expect(await account.r1IsOwner(newPublicKey)).to.be.true;
 
@@ -101,5 +109,7 @@ describe('Clave Contracts - Manager tests', () => {
 
             expect(await account.r1ListOwners()).to.deep.eq(expectedOwners);
         });
+
+        // it('should not send any tx with the removed key', async () => {});
     });
 });

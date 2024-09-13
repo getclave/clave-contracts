@@ -40,7 +40,7 @@ export async function prepareMockTx(
         ...tx,
         from: await account.getAddress(),
         nonce: await provider.getTransactionCount(await account.getAddress()),
-        gasLimit: 10_000_000,
+        gasLimit: 30_000_000,
         gasPrice: await provider.getGasPrice(),
         chainId: (await provider.getNetwork()).chainId,
         type: 113,
