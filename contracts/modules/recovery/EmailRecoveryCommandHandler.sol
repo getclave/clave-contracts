@@ -9,7 +9,7 @@ import {StringUtils} from "@zk-email/email-recovery/src/libraries/StringUtils.so
  * Handler contract that defines command templates and how to validate them
  * This is the default command handler that will work with any validator.
  */
-contract EmailRecoveryCommandHandler is IEmailRecoveryCommandHandler {
+abstract contract EmailRecoveryCommandHandler is IEmailRecoveryCommandHandler {
     error InvalidCommandParams();
     error InvalidAccount();
     error InvalidRecoveryModule();

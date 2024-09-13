@@ -9,7 +9,7 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {EmailRecoveryManagerZkSync} from "@zk-email/email-recovery/src/EmailRecoveryManagerZkSync.sol";
 import {GuardianManager} from "@zk-email/email-recovery/src/GuardianManager.sol";
 
-contract EmailRecoveryModule is
+abstract contract EmailRecoveryModule is
     EmailRecoveryManagerZkSync,
     IModule,
     IEmailRecoveryModule
