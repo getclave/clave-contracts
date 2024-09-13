@@ -5,7 +5,7 @@
  */
 import type { ec } from 'elliptic';
 import type { BigNumberish } from 'ethers';
-import { ethers, parseEther } from 'ethers';
+import { ethers, parseEther, sha256 } from 'ethers';
 import type { Contract, Provider, types } from 'zksync-ethers';
 import { EIP712Signer, utils } from 'zksync-ethers';
 
@@ -140,7 +140,7 @@ export async function prepareTeeTx(
     const signedTxHash = EIP712Signer.getSignedDigest(tx);
 
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-    let signature = sign(signedTxHash.toString(), keyPair);
+    let signature = sign(sha256(signedTxHash.toString()), keyPair);
 
     signature = abiCoder.encode(
         ['bytes', 'address', 'bytes[]'],
@@ -200,7 +200,7 @@ export async function prepareBatchTx(
 
     const signedTxHash = EIP712Signer.getSignedDigest(tx);
 
-    let signature = sign(signedTxHash.toString(), keyPair);
+    let signature = sign(sha256(signedTxHash.toString()), keyPair);
 
     signature = abiCoder.encode(
         ['bytes', 'address', 'bytes[]'],
