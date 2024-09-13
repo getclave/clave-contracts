@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {SafeERC20, IERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {SafeApprove} from '../libraries/SafeApprove.sol';
 
 interface IWETH {
     function withdraw(uint256 amount) external;
@@ -72,7 +73,8 @@ interface ISyncPair is IERC20 {
 /// @dev Deployed with SyncEarnRouter name
 contract SyncEarnRouterV2 is ISyncEarnRouter {
     using SafeERC20 for IERC20;
-
+    using SafeApprove for IERC20;
+    
     uint256 private constant PRECISION = 1e24;
 
     ISyncRouter private syncRouter;

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {SafeERC20, IERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {SafeApprove} from '../libraries/SafeApprove.sol';
 
 interface IKoiRouter {
     function swapExactTokensForTokens(
@@ -104,7 +105,9 @@ interface IKoiPair is IERC20 {
  */
 contract KoiEarnRouter is IKoiEarnRouter {
     using SafeERC20 for IERC20;
+    using SafeApprove for IERC20;
     using SafeERC20 for IKoiPair;
+    using SafeApprove for IKoiPair;
 
     IKoiRouter private koiRouter;
 
@@ -308,7 +311,7 @@ contract KoiEarnRouter is IKoiEarnRouter {
         }
 
         tokenA.safeTransfer(msg.sender, desiredA - amountA);
-        tokenA.safeApprove(address(koiRouter), 0);
+        tokenA.approve(address(koiRouter), 0);
 
         emit Deposit(
             msg.sender,
