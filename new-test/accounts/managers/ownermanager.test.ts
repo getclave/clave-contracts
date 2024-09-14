@@ -29,7 +29,7 @@ describe('Clave Contracts - Manager tests', () => {
     let deployer: ClaveDeployer;
     let provider: Provider;
     let richWallet: Wallet;
-    let mockValidator: Contract;
+    let teeValidator: Contract;
     let account: Contract;
     let keyPair: ec.KeyPair;
 
@@ -40,7 +40,7 @@ describe('Clave Contracts - Manager tests', () => {
             cacheTimeout: -1,
         });
 
-        [, , , , mockValidator, account, keyPair] = await fixture(
+        [, , , , teeValidator, account, keyPair] = await fixture(
             deployer,
             VALIDATORS.TEE,
         );
@@ -69,7 +69,7 @@ describe('Clave Contracts - Manager tests', () => {
                 await addR1Key(
                     provider,
                     account,
-                    mockValidator,
+                    teeValidator,
                     newPublicKey,
                     keyPair,
                 );
@@ -92,7 +92,7 @@ describe('Clave Contracts - Manager tests', () => {
                     provider,
                     account,
                     txData,
-                    await mockValidator.getAddress(),
+                    await teeValidator.getAddress(),
                     newKeyPair,
                 );
                 const txReceipt = await provider.broadcastTransaction(
@@ -112,7 +112,7 @@ describe('Clave Contracts - Manager tests', () => {
                 await removeR1Key(
                     provider,
                     account,
-                    mockValidator,
+                    teeValidator,
                     newPublicKey,
                     keyPair,
                 );
@@ -138,7 +138,7 @@ describe('Clave Contracts - Manager tests', () => {
                     provider,
                     account,
                     txData,
-                    await mockValidator.getAddress(),
+                    await teeValidator.getAddress(),
                     newKeyPair,
                 );
                 await expect(
@@ -157,7 +157,7 @@ describe('Clave Contracts - Manager tests', () => {
                 await addK1Key(
                     provider,
                     account,
-                    mockValidator,
+                    teeValidator,
                     newK1Address,
                     keyPair,
                 );
@@ -174,7 +174,7 @@ describe('Clave Contracts - Manager tests', () => {
                 await removeK1Key(
                     provider,
                     account,
-                    mockValidator,
+                    teeValidator,
                     newK1Address,
                     keyPair,
                 );
@@ -194,7 +194,7 @@ describe('Clave Contracts - Manager tests', () => {
                 await addR1Key(
                     provider,
                     account,
-                    mockValidator,
+                    teeValidator,
                     newPublicKey,
                     keyPair,
                 );
@@ -203,7 +203,7 @@ describe('Clave Contracts - Manager tests', () => {
                 await addK1Key(
                     provider,
                     account,
-                    mockValidator,
+                    teeValidator,
                     newK1Address,
                     keyPair,
                 );
@@ -224,7 +224,7 @@ describe('Clave Contracts - Manager tests', () => {
                 await resetOwners(
                     provider,
                     account,
-                    mockValidator,
+                    teeValidator,
                     newPublicKey,
                     keyPair,
                 );
@@ -251,7 +251,7 @@ describe('Clave Contracts - Manager tests', () => {
                     await addR1Key(
                         provider,
                         account,
-                        mockValidator,
+                        teeValidator,
                         invalidPubkey,
                         replacedKeyPair,
                     );
@@ -287,7 +287,7 @@ describe('Clave Contracts - Manager tests', () => {
                 await addR1Key(
                     provider,
                     account,
-                    mockValidator,
+                    teeValidator,
                     newPublicKey,
                     replacedKeyPair,
                 );
@@ -306,7 +306,7 @@ describe('Clave Contracts - Manager tests', () => {
                 await addK1Key(
                     provider,
                     account,
-                    mockValidator,
+                    teeValidator,
                     newAddress,
                     replacedKeyPair,
                 );
@@ -325,7 +325,7 @@ describe('Clave Contracts - Manager tests', () => {
                 await resetOwners(
                     provider,
                     account,
-                    mockValidator,
+                    teeValidator,
                     encodePublicKey(replacedKeyPair),
                     replacedKeyPair,
                 );
@@ -353,7 +353,7 @@ describe('Clave Contracts - Manager tests', () => {
                     await addK1Key(
                         provider,
                         account,
-                        mockValidator,
+                        teeValidator,
                         ZeroAddress,
                         replacedKeyPair,
                     );
@@ -366,7 +366,7 @@ describe('Clave Contracts - Manager tests', () => {
                     await removeR1Key(
                         provider,
                         account,
-                        mockValidator,
+                        teeValidator,
                         encodePublicKey(replacedKeyPair),
                         replacedKeyPair,
                     );
@@ -384,7 +384,7 @@ describe('Clave Contracts - Manager tests', () => {
                     await removeR1Key(
                         provider,
                         account,
-                        mockValidator,
+                        teeValidator,
                         invalidPubkey,
                         replacedKeyPair,
                     );
