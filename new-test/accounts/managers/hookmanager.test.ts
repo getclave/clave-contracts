@@ -41,7 +41,7 @@ describe('Clave Contracts - Manager tests', () => {
     });
 
     describe('Hook Manager', () => {
-        it('should check existing modules', async () => {
+        it('should check existing hooks', async () => {
             expect(await account.listHooks(HOOKS.VALIDATION)).to.deep.eq([]);
             expect(await account.listHooks(HOOKS.EXECUTION)).to.deep.eq([]);
         });
@@ -49,11 +49,14 @@ describe('Clave Contracts - Manager tests', () => {
         describe('Validation hooks', async () => {
             let validationHook: Contract;
 
-            it('should add a validation hook', async () => {
+            before(async () => {
                 validationHook = await deployer.deployCustomContract(
                     'MockValidationHook',
                     [],
                 );
+            });
+
+            it('should add a validation hook', async () => {
                 expect(await account.isHook(await validationHook.getAddress()))
                     .to.be.false;
 
@@ -99,11 +102,14 @@ describe('Clave Contracts - Manager tests', () => {
         describe('Execution hooks', async () => {
             let executionHook: Contract;
 
-            it('should add a execution hook', async () => {
+            before(async () => {
                 executionHook = await deployer.deployCustomContract(
                     'MockExecutionHook',
                     [],
                 );
+            });
+
+            it('should add a execution hook', async () => {
                 expect(await account.isHook(await executionHook.getAddress()))
                     .to.be.false;
 
