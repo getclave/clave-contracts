@@ -7,8 +7,7 @@ import { assert, expect } from 'chai';
 import type { ec } from 'elliptic';
 import { parseEther } from 'ethers';
 import * as hre from 'hardhat';
-import { Contract } from 'zksync-ethers';
-import { Provider, Wallet, utils } from 'zksync-ethers';
+import { Contract, Provider, Wallet, utils } from 'zksync-ethers';
 
 import { LOCAL_RICH_WALLETS, getWallet } from '../../../deploy/utils';
 import { ClaveDeployer } from '../../utils/deployer';

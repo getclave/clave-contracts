@@ -5,8 +5,8 @@
  */
 import { assert, expect } from 'chai';
 import type { ec } from 'elliptic';
-import { ZeroAddress, parseEther } from 'ethers';
 import type { BytesLike } from 'ethers';
+import { ZeroAddress, parseEther } from 'ethers';
 import * as hre from 'hardhat';
 import type { Contract } from 'zksync-ethers';
 import { Provider, Wallet, utils } from 'zksync-ethers';
