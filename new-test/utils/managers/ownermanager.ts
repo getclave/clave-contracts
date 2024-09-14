@@ -4,9 +4,8 @@
  * Proprietary and confidential
  */
 import type { ec } from 'elliptic';
-import type { Provider } from 'zksync-ethers';
+import type { Contract, Provider } from 'zksync-ethers';
 import { utils } from 'zksync-ethers';
-import type { Contract } from 'zksync-ethers';
 
 import { prepareTeeTx } from '../transactions';
 
