@@ -3,9 +3,10 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import type { ec } from 'elliptic';
-import { parseEther } from 'ethers';
+import { ZeroAddress, parseEther } from 'ethers';
+import type { BytesLike } from 'ethers';
 import * as hre from 'hardhat';
 import type { Contract } from 'zksync-ethers';
 import { Provider, Wallet, utils } from 'zksync-ethers';
@@ -13,6 +14,13 @@ import { Provider, Wallet, utils } from 'zksync-ethers';
 import { LOCAL_RICH_WALLETS, getWallet } from '../../../deploy/utils';
 import { ClaveDeployer } from '../../utils/deployer';
 import { fixture } from '../../utils/fixture';
+import {
+    addK1Key,
+    addR1Key,
+    removeK1Key,
+    removeR1Key,
+    resetOwners,
+} from '../../utils/managers/ownermanager';
 import { VALIDATORS } from '../../utils/names';
 import { encodePublicKey, genKey } from '../../utils/p256';
 import { ethTransfer, prepareTeeTx } from '../../utils/transactions';
@@ -58,27 +66,17 @@ describe('Clave Contracts - Manager tests', () => {
 
                 expect(await account.r1IsOwner(newPublicKey)).to.be.false;
 
-                const addOwnerTx = await account.r1AddOwner.populateTransaction(
-                    newPublicKey,
-                );
-
-                const tx = await prepareTeeTx(
+                await addR1Key(
                     provider,
                     account,
-                    addOwnerTx,
-                    await mockValidator.getAddress(),
+                    mockValidator,
+                    newPublicKey,
                     keyPair,
                 );
-
-                const txReceipt = await provider.broadcastTransaction(
-                    utils.serializeEip712(tx),
-                );
-                await txReceipt.wait();
 
                 expect(await account.r1IsOwner(newPublicKey)).to.be.true;
 
                 const expectedOwners = [newPublicKey, encodePublicKey(keyPair)];
-
                 expect(await account.r1ListOwners()).to.deep.eq(expectedOwners);
             });
 
@@ -111,23 +109,13 @@ describe('Clave Contracts - Manager tests', () => {
             it('should remove an r1 key', async () => {
                 expect(await account.r1IsOwner(newPublicKey)).to.be.true;
 
-                const removeOwnerTxData =
-                    await account.r1RemoveOwner.populateTransaction(
-                        newPublicKey,
-                    );
-
-                const tx = await prepareTeeTx(
+                await removeR1Key(
                     provider,
                     account,
-                    removeOwnerTxData,
-                    await mockValidator.getAddress(),
+                    mockValidator,
+                    newPublicKey,
                     keyPair,
                 );
-
-                const txReceipt = await provider.broadcastTransaction(
-                    utils.serializeEip712(tx),
-                );
-                await txReceipt.wait();
 
                 expect(await account.r1IsOwner(newPublicKey)).to.be.false;
 
@@ -166,20 +154,13 @@ describe('Clave Contracts - Manager tests', () => {
 
                 expect(await account.k1IsOwner(newK1Address)).to.be.false;
 
-                const addOwnerTx = await account.k1AddOwner.populateTransaction(
-                    newK1Address,
-                );
-                const tx = await prepareTeeTx(
+                await addK1Key(
                     provider,
                     account,
-                    addOwnerTx,
-                    await mockValidator.getAddress(),
+                    mockValidator,
+                    newK1Address,
                     keyPair,
                 );
-                const txReceipt = await provider.broadcastTransaction(
-                    utils.serializeEip712(tx),
-                );
-                await txReceipt.wait();
 
                 expect(await account.k1IsOwner(newK1Address)).to.be.true;
 
@@ -190,25 +171,225 @@ describe('Clave Contracts - Manager tests', () => {
             it('should remove the new k1 key', async () => {
                 expect(await account.k1IsOwner(newK1Address)).to.be.true;
 
-                const removeOwnerTx =
-                    await account.k1RemoveOwner.populateTransaction(
-                        newK1Address,
-                    );
-                const tx = await prepareTeeTx(
+                await removeK1Key(
                     provider,
                     account,
-                    removeOwnerTx,
-                    await mockValidator.getAddress(),
+                    mockValidator,
+                    newK1Address,
                     keyPair,
                 );
-                const txReceipt = await provider.broadcastTransaction(
-                    utils.serializeEip712(tx),
-                );
-                await txReceipt.wait();
 
                 expect(await account.k1IsOwner(newK1Address)).to.be.false;
                 const expectedOwners: Array<string> = [];
                 expect(await account.k1ListOwners()).to.deep.eq(expectedOwners);
+            });
+        });
+
+        describe('Additinal tests for r1 and k1 keys', () => {
+            let replacedKeyPair: ec.KeyPair;
+
+            it('Should reset owners', async () => {
+                const newKeyPair = genKey();
+                const newPublicKey = encodePublicKey(newKeyPair);
+                await addR1Key(
+                    provider,
+                    account,
+                    mockValidator,
+                    newPublicKey,
+                    keyPair,
+                );
+
+                const newK1Address = await Wallet.createRandom().getAddress();
+                await addK1Key(
+                    provider,
+                    account,
+                    mockValidator,
+                    newK1Address,
+                    keyPair,
+                );
+
+                const expectedR1Owners = [
+                    newPublicKey,
+                    encodePublicKey(keyPair),
+                ];
+                expect(await account.r1ListOwners()).to.deep.eq(
+                    expectedR1Owners,
+                );
+
+                const expectedK1Owners = [newK1Address];
+                expect(await account.k1ListOwners()).to.deep.eq(
+                    expectedK1Owners,
+                );
+
+                await resetOwners(
+                    provider,
+                    account,
+                    mockValidator,
+                    newPublicKey,
+                    keyPair,
+                );
+                replacedKeyPair = newKeyPair;
+
+                const expectedNewR1Owners = [encodePublicKey(replacedKeyPair)];
+                const expectedNewK1Owners: Array<BytesLike> = [];
+
+                expect(await account.r1ListOwners()).to.deep.eq(
+                    expectedNewR1Owners,
+                );
+                expect(await account.k1ListOwners()).to.deep.eq(
+                    expectedNewK1Owners,
+                );
+            });
+
+            it('Should revert the r1 owner with invalid length', async () => {
+                let invalidLength = Math.ceil(Math.random() * 200) * 2;
+                invalidLength = invalidLength === 128 ? 130 : invalidLength;
+
+                const invalidPubkey = '0x' + 'C'.repeat(invalidLength);
+
+                try {
+                    await addR1Key(
+                        provider,
+                        account,
+                        mockValidator,
+                        invalidPubkey,
+                        replacedKeyPair,
+                    );
+                    assert(false, 'Should revert');
+                } catch (err) {}
+            });
+
+            it('Should revert adding new r1 or k1 owner with unauthorized msg.sender', async function () {
+                const newKeyPair = genKey();
+                const newPublicKey = encodePublicKey(newKeyPair);
+
+                await expect(
+                    account.r1AddOwner(newPublicKey),
+                ).to.be.revertedWithCustomError(
+                    account,
+                    'NOT_FROM_SELF_OR_MODULE',
+                );
+
+                const randomWallet = Wallet.createRandom().connect(provider);
+
+                await expect(
+                    account.k1AddOwner(await randomWallet.getAddress()),
+                ).to.be.revertedWithCustomError(
+                    account,
+                    'NOT_FROM_SELF_OR_MODULE',
+                );
+            });
+
+            it('Should revert removing r1 or k1 owners and resetting owners with unauthorized msg.sender, then should reset owners to the initial', async function () {
+                const newKeyPair = genKey();
+                const newPublicKey = encodePublicKey(newKeyPair);
+
+                await addR1Key(
+                    provider,
+                    account,
+                    mockValidator,
+                    newPublicKey,
+                    replacedKeyPair,
+                );
+
+                expect(await account.r1IsOwner(newPublicKey)).to.be.true;
+
+                await expect(
+                    account.r1RemoveOwner(newPublicKey),
+                ).to.be.revertedWithCustomError(
+                    account,
+                    'NOT_FROM_SELF_OR_MODULE',
+                );
+
+                const newAddress = await Wallet.createRandom().getAddress();
+
+                await addK1Key(
+                    provider,
+                    account,
+                    mockValidator,
+                    newAddress,
+                    replacedKeyPair,
+                );
+
+                expect(await account.k1IsOwner(newAddress)).to.be.true;
+
+                const randomWallet = Wallet.createRandom().connect(provider);
+
+                await expect(
+                    account.k1RemoveOwner(await randomWallet.getAddress()),
+                ).to.be.revertedWithCustomError(
+                    account,
+                    'NOT_FROM_SELF_OR_MODULE',
+                );
+
+                await resetOwners(
+                    provider,
+                    account,
+                    mockValidator,
+                    encodePublicKey(replacedKeyPair),
+                    replacedKeyPair,
+                );
+
+                const expectedNewR1Owners = [encodePublicKey(replacedKeyPair)];
+                const expectedNewK1Owners: Array<BytesLike> = [];
+
+                expect(await account.r1ListOwners()).to.deep.eq(
+                    expectedNewR1Owners,
+                );
+                expect(await account.k1ListOwners()).to.deep.eq(
+                    expectedNewK1Owners,
+                );
+
+                await expect(
+                    account.resetOwners(newPublicKey),
+                ).to.be.revertedWithCustomError(
+                    account,
+                    'NOT_FROM_SELF_OR_MODULE',
+                );
+            });
+
+            it('Should revert adding zero address as k1 owner', async function () {
+                try {
+                    await addK1Key(
+                        provider,
+                        account,
+                        mockValidator,
+                        ZeroAddress,
+                        replacedKeyPair,
+                    );
+                    assert(false, 'Should revert');
+                } catch (err) {}
+            });
+
+            it('Should revert removing the last r1 owner', async function () {
+                try {
+                    await removeR1Key(
+                        provider,
+                        account,
+                        mockValidator,
+                        encodePublicKey(replacedKeyPair),
+                        replacedKeyPair,
+                    );
+                    assert(false, 'Should revert');
+                } catch (err) {}
+            });
+
+            it('Should revert resetting owners while new r1 owner has invalid length', async function () {
+                let invalidLength = Math.ceil(Math.random() * 200) * 2;
+                invalidLength = invalidLength === 128 ? 130 : invalidLength;
+
+                const invalidPubkey = '0x' + 'C'.repeat(invalidLength);
+
+                try {
+                    await removeR1Key(
+                        provider,
+                        account,
+                        mockValidator,
+                        invalidPubkey,
+                        replacedKeyPair,
+                    );
+                    assert(false, 'Should revert');
+                } catch (err) {}
             });
         });
     });
