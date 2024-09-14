@@ -19,3 +19,8 @@ export enum VALIDATORS {
     EOA = 'EOAValidator',
     PASSKEY = 'PasskeyValidator',
 }
+
+export enum HOOKS {
+    VALIDATION = 1,
+    EXECUTION = 0,
+}
