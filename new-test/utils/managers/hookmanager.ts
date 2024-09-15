@@ -4,6 +4,7 @@
  * Proprietary and confidential
  */
 import type { ec } from 'elliptic';
+import type { BytesLike } from 'ethers';
 import type { Contract, Provider } from 'zksync-ethers';
 import { utils } from 'zksync-ethers';
 
@@ -17,6 +18,7 @@ export async function addHook(
     hook: Contract,
     isValidation: HOOKS,
     keyPair: ec.KeyPair,
+    hookData: Array<BytesLike> = [],
 ): Promise<void> {
     const addHookTx = await account.addHook.populateTransaction(
         await hook.getAddress(),
@@ -28,6 +30,7 @@ export async function addHook(
         addHookTx,
         await validator.getAddress(),
         keyPair,
+        hookData,
     );
     const txReceipt = await provider.broadcastTransaction(
         utils.serializeEip712(tx),
@@ -42,6 +45,7 @@ export async function removeHook(
     hook: Contract,
     isValidation: HOOKS,
     keyPair: ec.KeyPair,
+    hookData: Array<BytesLike> = [],
 ): Promise<void> {
     const removeHookTx = await account.removeHook.populateTransaction(
         await hook.getAddress(),
@@ -53,6 +57,7 @@ export async function removeHook(
         removeHookTx,
         await validator.getAddress(),
         keyPair,
+        hookData,
     );
     const txReceipt = await provider.broadcastTransaction(
         utils.serializeEip712(tx),
