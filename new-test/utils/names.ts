@@ -24,3 +24,9 @@ export enum HOOKS {
     VALIDATION = 1,
     EXECUTION = 0,
 }
+
+export enum PAYMASTERS {
+    GASLESS = 'GaslessPaymaster',
+    ERC20 = 'ERC20Paymaster',
+    ERC20_MOCK = 'ERC20PaymasterMock',
+}

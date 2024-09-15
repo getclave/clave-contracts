@@ -11,7 +11,7 @@ import { Contract, utils } from 'zksync-ethers';
 
 import { deployContract, getWallet } from '../../deploy/utils';
 import type { CallStruct } from '../../typechain-types/contracts/batch/BatchCaller';
-import { CONTRACT_NAMES, type VALIDATORS } from './names';
+import { CONTRACT_NAMES, PAYMASTERS, type VALIDATORS } from './names';
 import { encodePublicKey } from './p256';
 
 // This class helps deploy Clave contracts for the tests
@@ -194,6 +194,36 @@ export class ClaveDeployer {
         );
 
         return account;
+    }
+
+    public async paymaster(
+        name: PAYMASTERS,
+        config: {
+            gasless?: [registryAddress: string, limit: number];
+            erc20?: Array<{
+                tokenAddress: string;
+                decimals: number;
+                priceMarkup: number;
+            }>;
+        },
+    ): Promise<Contract> {
+        if (
+            (name === PAYMASTERS.GASLESS && !config.gasless) ||
+            (name === PAYMASTERS.ERC20 && !config.erc20) ||
+            (name === PAYMASTERS.ERC20_MOCK && !config.erc20)
+        ) {
+            throw new Error('Config mismatch.');
+        }
+
+        return await deployContract(
+            this.hre,
+            name,
+            name == PAYMASTERS.GASLESS ? config.gasless : [config.erc20],
+            {
+                wallet: this.deployerWallet,
+                silent: true,
+            },
+        );
     }
 
     public async fund(
