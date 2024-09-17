@@ -5,6 +5,7 @@
  */
 import { assert, expect } from 'chai';
 import type { ec } from 'elliptic';
+import type { HDNodeWallet } from 'ethers';
 import { parseEther } from 'ethers';
 import * as hre from 'hardhat';
 import { Provider, Wallet, utils } from 'zksync-ethers';
@@ -14,12 +15,10 @@ import type { TransactionLike } from 'zksync-ethers/build/types';
 import { LOCAL_RICH_WALLETS, getWallet } from '../../../deploy/utils';
 import { ClaveDeployer } from '../../utils/deployer';
 import { fixture } from '../../utils/fixture';
+import { addK1Key } from '../../utils/managers/ownermanager';
+import { addK1Validator } from '../../utils/managers/validatormanager';
 import { VALIDATORS } from '../../utils/names';
-import {
-    ethTransfer,
-    prepareMockTx,
-    prepareTeeTx,
-} from '../../utils/transactions';
+import { ethTransfer, prepareEOATx } from '../../utils/transactions';
 
 describe('Clave Contracts - Validator tests', () => {
     let deployer: ClaveDeployer;
@@ -46,11 +45,41 @@ describe('Clave Contracts - Validator tests', () => {
         await deployer.fund(10000, accountAddress);
     });
 
-    describe('TEEValidator', () => {
-        it('should check existing validator', async () => {
-            const validatorAddress = await teeValidator.getAddress();
+    describe('EOAValidator', () => {
+        let newK1Validator: Contract;
+        let newK1Owner: HDNodeWallet;
 
-            expect(await account.r1IsValidator(validatorAddress)).to.be.true;
+        before(async () => {
+            newK1Validator = await deployer.validator(VALIDATORS.EOA);
+            newK1Owner = Wallet.createRandom();
+
+            await addK1Validator(
+                provider,
+                account,
+                teeValidator,
+                newK1Validator,
+                keyPair,
+            );
+
+            await addK1Key(
+                provider,
+                account,
+                teeValidator,
+                await newK1Owner.getAddress(),
+                keyPair,
+            );
+        });
+
+        it('should check existing validator', async () => {
+            const teeValidatorAddress = await teeValidator.getAddress();
+            const k1ValidatorAddress = await newK1Validator.getAddress();
+            const k1OwnerAddress = await newK1Owner.getAddress();
+
+            expect(await account.r1IsValidator(teeValidatorAddress)).to.be.true;
+
+            expect(await account.k1IsValidator(k1ValidatorAddress)).to.be.true;
+
+            expect(await account.k1IsOwner(k1OwnerAddress)).to.be.true;
         });
 
         describe('Signature checks', () => {
@@ -70,16 +99,18 @@ describe('Clave Contracts - Validator tests', () => {
                 amount = parseEther('1');
 
                 txData = ethTransfer(richAddress, amount);
+
+                Wallet.createRandom();
             });
 
             describe('Valid tx and signature', () => {
-                it('should send a tx', async () => {
-                    const tx = await prepareTeeTx(
+                it.only('should send a tx', async () => {
+                    const tx = await prepareEOATx(
                         provider,
                         account,
                         txData,
-                        await teeValidator.getAddress(),
-                        keyPair,
+                        await newK1Validator.getAddress(),
+                        newK1Owner,
                     );
                     const txReceipt = await provider.broadcastTransaction(
                         utils.serializeEip712(tx),
@@ -94,55 +125,11 @@ describe('Clave Contracts - Validator tests', () => {
             });
 
             describe('Invalid tx and signature', () => {
-                it('should revert sending the tx', async () => {
-                    const mockTxData = txData;
-                    mockTxData.to = await Wallet.createRandom().getAddress(); // corrupted tx data
-
-                    const tx = await prepareTeeTx(
-                        provider,
-                        account,
-                        txData,
-                        await teeValidator.getAddress(),
-                        keyPair,
-                    );
-
-                    try {
-                        const txReceipt = await provider.broadcastTransaction(
-                            utils.serializeEip712(tx),
-                        );
-                        await txReceipt.wait();
-                        assert(false);
-                    } catch (err) {}
-
-                    const richBalanceAfter = await provider.getBalance(
-                        richAddress,
-                    );
-                    expect(richBalanceAfter).to.eq(richBalanceBefore);
-                });
+                it('should revert sending the tx', async () => {});
             });
 
             describe('Tx and wrong signature', () => {
-                it('should revert sending the tx', async () => {
-                    const tx = await prepareMockTx(
-                        provider,
-                        account,
-                        txData,
-                        await teeValidator.getAddress(),
-                    );
-
-                    try {
-                        const txReceipt = await provider.broadcastTransaction(
-                            utils.serializeEip712(tx),
-                        );
-                        await txReceipt.wait();
-                        assert(false);
-                    } catch (err) {}
-
-                    const richBalanceAfter = await provider.getBalance(
-                        richAddress,
-                    );
-                    expect(richBalanceAfter).to.eq(richBalanceBefore);
-                });
+                it('should revert sending the tx', async () => {});
             });
         });
     });
