@@ -182,10 +182,10 @@ export class ClaveDeployer {
 
         const accountAddress = deployPromise[1];
         const implementationInterface = (
-            await this.hre.zksyncEthers.getContractFactory(
+            await this.hre.zksyncEthers.loadArtifact(
                 CONTRACT_NAMES.IMPLEMENTATION,
             )
-        ).interface;
+        ).abi;
 
         const account = new Contract(
             accountAddress,
