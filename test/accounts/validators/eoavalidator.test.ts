@@ -18,7 +18,11 @@ import { fixture } from '../../utils/fixture';
 import { addK1Key } from '../../utils/managers/ownermanager';
 import { addK1Validator } from '../../utils/managers/validatormanager';
 import { VALIDATORS } from '../../utils/names';
-import { ethTransfer, prepareEOATx } from '../../utils/transactions';
+import {
+    ethTransfer,
+    prepareEOATx,
+    prepareMockTx,
+} from '../../utils/transactions';
 
 describe('Clave Contracts - Validator tests', () => {
     let deployer: ClaveDeployer;
@@ -102,7 +106,7 @@ describe('Clave Contracts - Validator tests', () => {
             });
 
             describe('Valid tx and signature', () => {
-                it.only('should send a tx', async () => {
+                it('should send a tx', async () => {
                     const tx = await prepareEOATx(
                         provider,
                         account,
@@ -123,11 +127,55 @@ describe('Clave Contracts - Validator tests', () => {
             });
 
             describe('Invalid tx and signature', () => {
-                it('should revert sending the tx', async () => {});
+                it('should revert sending the tx', async () => {
+                    const mockTxData = txData;
+                    mockTxData.to = await Wallet.createRandom().getAddress(); // corrupted tx data
+
+                    const tx = await prepareEOATx(
+                        provider,
+                        account,
+                        txData,
+                        await newK1Validator.getAddress(),
+                        newK1Owner,
+                    );
+
+                    try {
+                        const txReceipt = await provider.broadcastTransaction(
+                            utils.serializeEip712(tx),
+                        );
+                        await txReceipt.wait();
+                        assert(false);
+                    } catch (err) {}
+
+                    const richBalanceAfter = await provider.getBalance(
+                        richAddress,
+                    );
+                    expect(richBalanceAfter).to.eq(richBalanceBefore);
+                });
             });
 
             describe('Tx and wrong signature', () => {
-                it('should revert sending the tx', async () => {});
+                it('should revert sending the tx', async () => {
+                    const tx = await prepareMockTx(
+                        provider,
+                        account,
+                        txData,
+                        await newK1Validator.getAddress(),
+                    );
+
+                    try {
+                        const txReceipt = await provider.broadcastTransaction(
+                            utils.serializeEip712(tx),
+                        );
+                        await txReceipt.wait();
+                        assert(false);
+                    } catch (err) {}
+
+                    const richBalanceAfter = await provider.getBalance(
+                        richAddress,
+                    );
+                    expect(richBalanceAfter).to.eq(richBalanceBefore);
+                });
             });
         });
     });
