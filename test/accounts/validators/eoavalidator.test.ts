@@ -99,8 +99,6 @@ describe('Clave Contracts - Validator tests', () => {
                 amount = parseEther('1');
 
                 txData = ethTransfer(richAddress, amount);
-
-                Wallet.createRandom();
             });
 
             describe('Valid tx and signature', () => {
