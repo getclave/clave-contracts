@@ -259,3 +259,15 @@ export async function prepareEOATx(
 
     return tx;
 }
+
+export async function preparePasskeyTx(
+    provider: Provider,
+    account: Contract,
+    tx: types.TransactionLike,
+    validatorAddress: string,
+    keyPair: ec.KeyPair,
+    hookData: Array<ethers.BytesLike> = [],
+    paymasterParams?: types.PaymasterParams,
+): Promise<types.TransactionLike> {
+    throw new Error('Not implemented');
+}
