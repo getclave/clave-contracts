@@ -245,7 +245,7 @@ export async function prepareEOATx(
     const signedTxHash = EIP712Signer.getSignedDigest(tx);
 
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-    let signature = wallet.signMessageSync(signedTxHash);
+    let signature = wallet.signingKey.sign(signedTxHash).serialized;
 
     signature = abiCoder.encode(
         ['bytes', 'address', 'bytes[]'],
