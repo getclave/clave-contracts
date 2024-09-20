@@ -1,3 +1,8 @@
+/**
+ * Copyright Clave - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ */
 export function bufferFromBase64url(base64url: string): Buffer {
     return Buffer.from(toBase64(base64url), 'base64');
 }
