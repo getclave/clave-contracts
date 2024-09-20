@@ -292,6 +292,25 @@ export async function preparePasskeyTx(
 
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     let signature = sign(getSignedData(signedTxHash.toString()), keyPair);
+    // Perform malleability check and invert 's' if it's too large
+    const rs = signature.slice(2);
+    const r = '0x' + rs.slice(0, 64);
+    let s = BigInt('0x' + rs.slice(64, 128));
+
+    // Maximum allowed value for 's' in secp256r1
+    const lowSmax = BigInt(
+        '0x7fffffff800000007fffffffffffffffde737d56d38bcf4279dce5617e3192a8',
+    );
+
+    if (s > lowSmax) {
+        // If 's' is too large, invert it
+        s =
+            BigInt(
+                '0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551',
+            ) - s;
+        // Reconstruct the signature with inverted 's'
+        signature = r + s.toString(16).padStart(64, '0');
+    }
     signature = '0x01' + signature.slice(2);
 
     // Perform malleability check and invert 's' if it's too large
