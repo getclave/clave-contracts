@@ -4,7 +4,8 @@
  * Proprietary and confidential
  */
 import type { ethers } from 'ethers';
-import { type types, utils } from 'zksync-ethers';
+import { utils } from 'zksync-ethers';
+import type { Contract, types } from 'zksync-ethers';
 
 export function getGaslessPaymasterInput(
     paymasterAddress: types.Address,
@@ -27,4 +28,11 @@ export function getERC20PaymasterInput(
         minimalAllowance,
         innerInput: oraclePayload,
     });
+}
+
+export async function getOraclePayload(
+    paymasterContract: Contract,
+): Promise<string> {
+    paymasterContract;
+    return '0x';
 }
