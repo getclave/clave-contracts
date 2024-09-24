@@ -20,6 +20,7 @@ type StartRecoveryParams = {
 };
 
 async function signRecoveryEIP712Hash(
+    account: Contract,
     params: StartRecoveryParams,
     recoveryContract: Contract,
     validator: Contract,
@@ -35,7 +36,7 @@ async function signRecoveryEIP712Hash(
             'Clave1271',
             '1.0.0',
             numberChainId,
-            params.recoveringAddress,
+            await account.getAddress(),
         ),
         { ClaveMessage: [{ name: 'signedHash', type: 'bytes32' }] },
         {
@@ -61,7 +62,7 @@ export async function startRecovery(
     validator: Contract,
     newOwner: string,
 ): Promise<void> {
-    const recoveringAddress = await account.getAddress();
+    const recoveringAddress = await module.getAddress();
     const recoveryNonce = await module.recoveryNonces(recoveringAddress);
 
     const params: StartRecoveryParams = {
@@ -71,6 +72,7 @@ export async function startRecovery(
     };
 
     const signature = await signRecoveryEIP712Hash(
+        account,
         params,
         module,
         validator,
