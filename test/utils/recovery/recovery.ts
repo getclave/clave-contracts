@@ -32,10 +32,10 @@ async function signRecoveryEIP712Hash(
 
     const eip1271Hash = TypedDataEncoder.hash(
         recoveryEIP712Domain(
-            'TEST',
-            '0',
+            'Clave1271',
+            '1.0.0',
             numberChainId,
-            await recoveryContract.getAddress(),
+            params.recoveringAddress,
         ),
         { ClaveMessage: [{ name: 'signedHash', type: 'bytes32' }] },
         {
