@@ -31,6 +31,8 @@ describe('Clave Contracts - Manager tests', () => {
     let account: Contract;
     let keyPair: ec.KeyPair;
 
+    let cloudRecoveryModule: Contract;
+
     before(async () => {
         richWallet = getWallet(hre, LOCAL_RICH_WALLETS[0].privateKey);
         deployer = new ClaveDeployer(hre, richWallet);
@@ -46,10 +48,14 @@ describe('Clave Contracts - Manager tests', () => {
         const accountAddress = await account.getAddress();
 
         await deployer.fund(10000, accountAddress);
+
+        cloudRecoveryModule = await deployer.deployCustomContract(
+            'CloudRecoveryModule',
+            ['TEST', '0', 0],
+        );
     });
 
     describe('Module Tests - Cloud Recovery Module', () => {
-        let cloudRecoveryModule: Contract;
         let cloudGuardian: Wallet;
         let newKeyPair: ec.KeyPair;
 
@@ -68,10 +74,6 @@ describe('Clave Contracts - Manager tests', () => {
             });
 
             it('should add a new module', async () => {
-                cloudRecoveryModule = await deployer.deployCustomContract(
-                    'CloudRecoveryModule',
-                    ['TEST', '0', 0],
-                );
                 expect(
                     await account.isModule(
                         await cloudRecoveryModule.getAddress(),
