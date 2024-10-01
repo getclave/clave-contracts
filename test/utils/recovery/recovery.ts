@@ -3,7 +3,11 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-import { type Contract, type Wallet } from 'zksync-ethers';
+import type { ec } from 'elliptic';
+import type { Contract, Provider, Wallet } from 'zksync-ethers';
+import { utils } from 'zksync-ethers';
+
+import { prepareTeeTx } from '../transactions';
 
 type StartRecoveryParams = {
     recoveringAddress: string;
@@ -12,10 +16,8 @@ type StartRecoveryParams = {
 };
 
 async function signRecoveryEIP712Hash(
-    account: Contract,
     params: StartRecoveryParams,
     recoveryContract: Contract,
-    validator: Contract,
     wallet: Wallet,
 ): Promise<string> {
     const eip712Hash = await recoveryContract.getEip712Hash(params);
@@ -40,13 +42,67 @@ export async function startRecovery(
     };
 
     const signature = await signRecoveryEIP712Hash(
-        account,
         params,
         module,
-        validator,
         cloudGuardian,
     );
 
     const startRecoveryTx = await module.startRecovery(params, signature);
     await startRecoveryTx.wait();
+}
+
+export async function stopRecovery(
+    provider: Provider,
+    account: Contract,
+    module: Contract,
+    validator: Contract,
+    keyPair: ec.KeyPair,
+): Promise<void> {
+    const stopRecoveryTx = await module.stopRecovery.populateTransaction();
+
+    const tx = await prepareTeeTx(
+        provider,
+        account,
+        stopRecoveryTx,
+        await validator.getAddress(),
+        keyPair,
+    );
+
+    const txReceipt = await provider.broadcastTransaction(
+        utils.serializeEip712(tx),
+    );
+    await txReceipt.wait();
+}
+
+export async function updateCloudGuardian(
+    provider: Provider,
+    account: Contract,
+    module: Contract,
+    validator: Contract,
+    newAddress: string,
+    keyPair: ec.KeyPair,
+): Promise<void> {
+    const updateGuardianTx = await module.updateGuardian.populateTransaction(
+        newAddress,
+    );
+    const tx = await prepareTeeTx(
+        provider,
+        account,
+        updateGuardianTx,
+        await validator.getAddress(),
+        keyPair,
+    );
+
+    const txReceipt = await provider.broadcastTransaction(
+        utils.serializeEip712(tx),
+    );
+    await txReceipt.wait();
+}
+
+export async function executeRecovery(
+    account: Contract,
+    module: Contract,
+): Promise<void> {
+    const tx = await module.executeRecovery(await account.getAddress());
+    await tx.wait();
 }
