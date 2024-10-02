@@ -453,6 +453,79 @@ dataSources:
         - event: RewardPaid(indexed address,uint256)
           handler: handleRewardPaid
       file: ./src/meow-staking.ts
+  - kind: ethereum
+    name: VenusUsdt
+    network: zksync-era
+    source:
+      address: '0x69cDA960E3b20DFD480866fFfd377Ebe40bd0A46'
+      abi: VenusToken
+      startBlock: 43552193
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: VenusToken
+          file: ./abis/VenusToken.json
+      eventHandlers:
+        - event: Mint(indexed address,uint256,uint256,uint256)
+          handler: handleMint
+        - event: Redeem(indexed address,uint256,uint256,uint256)
+          handler: handleRedeem
+      file: ./src/venus-pool-usdt.ts
+  - kind: ethereum
+    name: VenusUsdce
+    network: zksync-era
+    source:
+      address: '0x1af23bd57c62a99c59ad48236553d0dd11e49d2d'
+      abi: VenusToken
+      startBlock: 43552199
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: VenusToken
+          file: ./abis/VenusToken.json
+      eventHandlers:
+        - event: Mint(indexed address,uint256,uint256,uint256)
+          handler: handleMint
+        - event: Redeem(indexed address,uint256,uint256,uint256)
+          handler: handleRedeem
+      file: ./src/venus-pool-usdce.ts
+  - kind: ethereum
+    name: VenusReward
+    network: zksync-era
+    source:
+      address: '0x7C7846A74AB38A8d554Bc5f7652eCf8Efb58c894'
+      abi: VenusReward
+      startBlock: 44575350
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: VenusReward
+          file: ./abis/VenusReward.json
+      eventHandlers:
+        - event: DistributedSupplierRewardToken(indexed address,indexed address,uint256,uint256,uint256)
+          handler: handleDistributedSupplierRewardToken
+      file: ./src/venus-reward.ts
 templates:
   - kind: ethereum
     name: Account
