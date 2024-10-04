@@ -45,7 +45,7 @@ describe('Clave Contracts - Manager tests', () => {
 
         socialRecoveryModule = await deployer.deployCustomContract(
             'SocialRecoveryModule',
-            ['TEST', '0', 0, 1],
+            ['TEST', '0', 0, 0],
         );
     });
 
@@ -76,7 +76,7 @@ describe('Clave Contracts - Manager tests', () => {
 
                 const initData = AbiCoder.defaultAbiCoder().encode(
                     ['tuple(uint128, uint128, address[])'],
-                    [[0, 1, [await socialGuardian.getAddress()]]],
+                    [[1, 1, [await socialGuardian.getAddress()]]],
                 );
                 await addModule(
                     provider,
