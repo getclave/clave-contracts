@@ -3,7 +3,7 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
-import { assert, expect } from 'chai';
+import { expect } from 'chai';
 import type { ec } from 'elliptic';
 import { AbiCoder } from 'ethers';
 import * as hre from 'hardhat';
@@ -16,6 +16,7 @@ import { fixture } from '../../utils/fixture';
 import { addModule } from '../../utils/managers/modulemanager';
 import { VALIDATORS } from '../../utils/names';
 import { genKey } from '../../utils/p256';
+import { updateSocialRecoveryConfig } from '../../utils/recovery/recovery';
 
 describe('Clave Contracts - Manager tests', () => {
     let deployer: ClaveDeployer;
@@ -51,11 +52,16 @@ describe('Clave Contracts - Manager tests', () => {
 
     describe('Module Tests - Social Recovery Module', () => {
         let socialGuardian: Wallet;
+        let secondGuardian: Wallet;
         let newKeyPair: ec.KeyPair;
 
         describe('Adding & Initializing module', () => {
             before(async () => {
                 socialGuardian = new Wallet(
+                    Wallet.createRandom().privateKey,
+                    provider,
+                );
+                secondGuardian = new Wallet(
                     Wallet.createRandom().privateKey,
                     provider,
                 );
@@ -111,6 +117,50 @@ describe('Clave Contracts - Manager tests', () => {
                 );
                 expect(guardians).to.deep.eq([
                     await socialGuardian.getAddress(),
+                ]);
+            });
+
+            it('should change the guardian correctly', async () => {
+                await updateSocialRecoveryConfig(
+                    provider,
+                    account,
+                    socialRecoveryModule,
+                    teeValidator,
+                    [1, 1, [await secondGuardian.getAddress()]],
+                    keyPair,
+                );
+
+                const guardians = await socialRecoveryModule.getGuardians(
+                    await account.getAddress(),
+                );
+                expect(guardians).to.deep.eq([
+                    await secondGuardian.getAddress(),
+                ]);
+            });
+
+            it('should add multiple guardians correctly', async () => {
+                await updateSocialRecoveryConfig(
+                    provider,
+                    account,
+                    socialRecoveryModule,
+                    teeValidator,
+                    [
+                        1,
+                        1,
+                        [
+                            await socialGuardian.getAddress(),
+                            await secondGuardian.getAddress(),
+                        ],
+                    ],
+                    keyPair,
+                );
+
+                const guardians = await socialRecoveryModule.getGuardians(
+                    await account.getAddress(),
+                );
+                expect(guardians).to.deep.eq([
+                    await socialGuardian.getAddress(),
+                    await secondGuardian.getAddress(),
                 ]);
             });
         });

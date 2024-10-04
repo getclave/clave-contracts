@@ -99,6 +99,33 @@ export async function updateCloudGuardian(
     await txReceipt.wait();
 }
 
+export async function updateSocialRecoveryConfig(
+    provider: Provider,
+    account: Contract,
+    module: Contract,
+    validator: Contract,
+    config: [number, number, Array<string>],
+    keyPair: ec.KeyPair,
+): Promise<void> {
+    const updateConfigTx = await module.updateConfig.populateTransaction({
+        threshold: config[0],
+        timelock: config[1],
+        guardians: config[2],
+    });
+
+    const tx = await prepareTeeTx(
+        provider,
+        account,
+        updateConfigTx,
+        await validator.getAddress(),
+        keyPair,
+    );
+    const txReceipt = await provider.broadcastTransaction(
+        utils.serializeEip712(tx),
+    );
+    await txReceipt.wait();
+}
+
 export async function executeRecovery(
     account: Contract,
     module: Contract,
