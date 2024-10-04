@@ -75,8 +75,8 @@ describe('Clave Contracts - Manager tests', () => {
                 ).to.be.false;
 
                 const initData = AbiCoder.defaultAbiCoder().encode(
-                    ['uint128', 'uin128', 'address[]'],
-                    [0, 1, []],
+                    ['tuple(uint128, uint128, address[])'],
+                    [[0, 1, [await socialGuardian.getAddress()]]],
                 );
                 await addModule(
                     provider,
