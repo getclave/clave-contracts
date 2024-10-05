@@ -5,22 +5,24 @@
  */
 import { expect } from 'chai';
 import type { ec } from 'elliptic';
-import { AbiCoder } from 'ethers';
+import { AbiCoder, parseEther } from 'ethers';
 import * as hre from 'hardhat';
 import type { Contract } from 'zksync-ethers';
-import { Provider, Wallet } from 'zksync-ethers';
+import { Provider, Wallet, utils } from 'zksync-ethers';
 
 import { LOCAL_RICH_WALLETS, getWallet } from '../../../deploy/utils';
 import { ClaveDeployer } from '../../utils/deployer';
 import { fixture } from '../../utils/fixture';
 import { addModule } from '../../utils/managers/modulemanager';
 import { VALIDATORS } from '../../utils/names';
-import { encodePublicKey, genKey } from '../../utils/p256';
+import { genKey } from '../../utils/p256';
 import {
+    executeRecovery,
     startSocialRecovery,
     stopRecovery,
     updateSocialRecoveryConfig,
 } from '../../utils/recovery/recovery';
+import { ethTransfer, prepareTeeTx } from '../../utils/transactions';
 
 describe('Clave Contracts - Manager tests', () => {
     let deployer: ClaveDeployer;
@@ -191,6 +193,7 @@ describe('Clave Contracts - Manager tests', () => {
 
             it('should decline the social recovery', async () => {
                 const accountAddress = await account.getAddress();
+
                 const isRecoveringBefore =
                     await socialRecoveryModule.isRecovering(accountAddress);
                 expect(isRecoveringBefore).to.be.true;
@@ -208,7 +211,58 @@ describe('Clave Contracts - Manager tests', () => {
                 expect(isRecoveringAfter).to.be.false;
             });
 
-            it('should execute the social recovery', async () => {});
+            it('should execute the social recovery', async () => {
+                const accountAddress = await account.getAddress();
+
+                const isRecoveringBefore =
+                    await socialRecoveryModule.isRecovering(accountAddress);
+                expect(isRecoveringBefore).to.be.false;
+
+                await startSocialRecovery(
+                    socialGuardian,
+                    account,
+                    socialRecoveryModule,
+                    newKeyPair,
+                );
+
+                const isRecoveringAfter =
+                    await socialRecoveryModule.isRecovering(accountAddress);
+                expect(isRecoveringAfter).to.be.true;
+
+                await executeRecovery(account, socialRecoveryModule);
+
+                const isRecoveringAfterExecution =
+                    await socialRecoveryModule.isRecovering(accountAddress);
+                expect(isRecoveringAfterExecution).to.be.false;
+            });
+
+            it('should send tx with new keys after recovery', async () => {
+                const amount = parseEther('1');
+                const richAddress = await richWallet.getAddress();
+
+                const richBalanceBefore = await provider.getBalance(
+                    richAddress,
+                );
+
+                const txData = ethTransfer(richAddress, amount);
+                const tx = await prepareTeeTx(
+                    provider,
+                    account,
+                    txData,
+                    await teeValidator.getAddress(),
+                    newKeyPair,
+                );
+                const txReceipt = await provider.broadcastTransaction(
+                    utils.serializeEip712(tx),
+                );
+                await txReceipt.wait();
+
+                const richBalanceAfter = await provider.getBalance(richAddress);
+
+                expect(richBalanceAfter).to.be.equal(
+                    richBalanceBefore + amount,
+                );
+            });
         });
     });
 });
