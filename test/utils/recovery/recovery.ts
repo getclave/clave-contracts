@@ -7,6 +7,7 @@ import type { ec } from 'elliptic';
 import type { Contract, Provider, Wallet } from 'zksync-ethers';
 import { utils } from 'zksync-ethers';
 
+import { encodePublicKey } from '../p256';
 import { prepareTeeTx } from '../transactions';
 
 type StartRecoveryParams = {
@@ -15,8 +16,14 @@ type StartRecoveryParams = {
     nonce: number;
 };
 
+type RecoveryData = {
+    recoveringAddress: string;
+    newOwner: string;
+    nonce: number;
+};
+
 async function signRecoveryEIP712Hash(
-    params: StartRecoveryParams,
+    params: StartRecoveryParams | RecoveryData,
     recoveryContract: Contract,
     wallet: Wallet,
 ): Promise<string> {
@@ -25,11 +32,10 @@ async function signRecoveryEIP712Hash(
     return signature;
 }
 
-export async function startRecovery(
+export async function startCloudRecovery(
     cloudGuardian: Wallet,
     account: Contract,
     module: Contract,
-    validator: Contract,
     newOwner: string,
 ): Promise<void> {
     const recoveringAddress = await account.getAddress();
@@ -48,6 +54,38 @@ export async function startRecovery(
     );
 
     const startRecoveryTx = await module.startRecovery(params, signature);
+    await startRecoveryTx.wait();
+}
+
+export async function startSocialRecovery(
+    socialGuardian: Wallet,
+    account: Contract,
+    module: Contract,
+    newKeyPair: ec.KeyPair,
+): Promise<void> {
+    const recoveringAddress = await account.getAddress();
+    const recoveryNonce = await module.recoveryNonces(recoveringAddress);
+
+    const recoveryData = {
+        recoveringAddress: await account.getAddress(),
+        newOwner: encodePublicKey(newKeyPair),
+        nonce: recoveryNonce,
+    };
+
+    const signature = await signRecoveryEIP712Hash(
+        recoveryData,
+        module,
+        socialGuardian,
+    );
+
+    const guardianData = {
+        guardian: await socialGuardian.getAddress(),
+        signature: signature,
+    };
+
+    const startRecoveryTx = await module.startRecovery(recoveryData, [
+        guardianData,
+    ]);
     await startRecoveryTx.wait();
 }
 

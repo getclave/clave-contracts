@@ -15,8 +15,12 @@ import { ClaveDeployer } from '../../utils/deployer';
 import { fixture } from '../../utils/fixture';
 import { addModule } from '../../utils/managers/modulemanager';
 import { VALIDATORS } from '../../utils/names';
-import { genKey } from '../../utils/p256';
-import { updateSocialRecoveryConfig } from '../../utils/recovery/recovery';
+import { encodePublicKey, genKey } from '../../utils/p256';
+import {
+    startSocialRecovery,
+    stopRecovery,
+    updateSocialRecoveryConfig,
+} from '../../utils/recovery/recovery';
 
 describe('Clave Contracts - Manager tests', () => {
     let deployer: ClaveDeployer;
@@ -163,6 +167,48 @@ describe('Clave Contracts - Manager tests', () => {
                     await secondGuardian.getAddress(),
                 ]);
             });
+        });
+
+        describe('Recovering account', () => {
+            it('should start the recovery process by guardian', async () => {
+                const accountAddress = await account.getAddress();
+
+                const isRecoveringBefore =
+                    await socialRecoveryModule.isRecovering(accountAddress);
+                expect(isRecoveringBefore).to.be.false;
+
+                await startSocialRecovery(
+                    socialGuardian,
+                    account,
+                    socialRecoveryModule,
+                    newKeyPair,
+                );
+
+                const isRecoveringAfter =
+                    await socialRecoveryModule.isRecovering(accountAddress);
+                expect(isRecoveringAfter).to.be.true;
+            });
+
+            it('should decline the social recovery', async () => {
+                const accountAddress = await account.getAddress();
+                const isRecoveringBefore =
+                    await socialRecoveryModule.isRecovering(accountAddress);
+                expect(isRecoveringBefore).to.be.true;
+
+                await stopRecovery(
+                    provider,
+                    account,
+                    socialRecoveryModule,
+                    teeValidator,
+                    keyPair,
+                );
+
+                const isRecoveringAfter =
+                    await socialRecoveryModule.isRecovering(accountAddress);
+                expect(isRecoveringAfter).to.be.false;
+            });
+
+            it('should execute the social recovery', async () => {});
         });
     });
 });

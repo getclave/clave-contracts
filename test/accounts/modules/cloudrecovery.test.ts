@@ -18,7 +18,7 @@ import { VALIDATORS } from '../../utils/names';
 import { encodePublicKey, genKey } from '../../utils/p256';
 import {
     executeRecovery,
-    startRecovery,
+    startCloudRecovery,
     stopRecovery,
     updateCloudGuardian,
 } from '../../utils/recovery/recovery';
@@ -127,11 +127,10 @@ describe('Clave Contracts - Manager tests', () => {
                     ),
                 ).to.be.false;
 
-                await startRecovery(
+                await startCloudRecovery(
                     cloudGuardian,
                     account,
                     cloudRecoveryModule,
-                    teeValidator,
                     encodePublicKey(newKeyPair),
                 );
 
@@ -173,11 +172,10 @@ describe('Clave Contracts - Manager tests', () => {
                     ),
                 ).to.be.false;
 
-                await startRecovery(
+                await startCloudRecovery(
                     cloudGuardian,
                     account,
                     cloudRecoveryModule,
-                    teeValidator,
                     encodePublicKey(newNewKeyPair),
                 );
 
