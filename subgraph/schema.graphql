@@ -50,6 +50,7 @@ enum EarnProtocol {
   ZeroLend
   Clave
   Meow
+  Venus
 }
 
 type EarnPosition @entity {
