@@ -15,7 +15,7 @@ import { ClaveDeployer } from '../../utils/deployer';
 import { fixture } from '../../utils/fixture';
 import { addModule } from '../../utils/managers/modulemanager';
 import { VALIDATORS } from '../../utils/names';
-import { genKey } from '../../utils/p256';
+import { encodePublicKey, genKey } from '../../utils/p256';
 import {
     executeRecovery,
     startSocialRecovery,
@@ -179,6 +179,10 @@ describe('Clave Contracts - Manager tests', () => {
                     await socialRecoveryModule.isRecovering(accountAddress);
                 expect(isRecoveringBefore).to.be.false;
 
+                expect(await account.r1ListOwners()).to.deep.eq([
+                    encodePublicKey(keyPair),
+                ]);
+
                 await startSocialRecovery(
                     socialGuardian,
                     account,
@@ -229,11 +233,19 @@ describe('Clave Contracts - Manager tests', () => {
                     await socialRecoveryModule.isRecovering(accountAddress);
                 expect(isRecoveringAfter).to.be.true;
 
+                expect(await account.r1ListOwners()).to.deep.eq([
+                    encodePublicKey(keyPair),
+                ]);
+
                 await executeRecovery(account, socialRecoveryModule);
 
                 const isRecoveringAfterExecution =
                     await socialRecoveryModule.isRecovering(accountAddress);
                 expect(isRecoveringAfterExecution).to.be.false;
+
+                expect(await account.r1ListOwners()).to.deep.eq([
+                    encodePublicKey(newKeyPair),
+                ]);
             });
 
             it('should send tx with new keys after recovery', async () => {

@@ -127,6 +127,10 @@ describe('Clave Contracts - Manager tests', () => {
                     ),
                 ).to.be.false;
 
+                expect(await account.r1ListOwners()).to.deep.eq([
+                    encodePublicKey(keyPair),
+                ]);
+
                 await startCloudRecovery(
                     cloudGuardian,
                     account,
@@ -148,6 +152,10 @@ describe('Clave Contracts - Manager tests', () => {
                     ),
                 ).to.be.true;
 
+                expect(await account.r1ListOwners()).to.deep.eq([
+                    encodePublicKey(keyPair),
+                ]);
+
                 await executeRecovery(account, cloudRecoveryModule);
 
                 expect(
@@ -155,6 +163,10 @@ describe('Clave Contracts - Manager tests', () => {
                         await account.getAddress(),
                     ),
                 ).to.be.false;
+
+                expect(await account.r1ListOwners()).to.deep.eq([
+                    encodePublicKey(newKeyPair),
+                ]);
             });
         });
 
