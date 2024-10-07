@@ -22,6 +22,7 @@ const zkSyncMainnet: NetworkUserConfig = {
     verifyURL:
         'https://zksync2-mainnet-explorer.zksync.io/contract_verification',
     chainId: 324,
+    enableRip7212: true,
 };
 
 const zkSyncSepolia: NetworkUserConfig = {
@@ -30,6 +31,7 @@ const zkSyncSepolia: NetworkUserConfig = {
     zksync: true,
     verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification',
     chainId: 300,
+    enableRip7212: true,
 };
 
 const inMemoryNode: NetworkUserConfig = {
@@ -37,6 +39,7 @@ const inMemoryNode: NetworkUserConfig = {
     ethNetwork: '', // in-memory node doesn't support eth node; removing this line will cause an error
     zksync: true,
     chainId: 260,
+    enableRip7212: true,
 };
 
 const dockerizedNode: NetworkUserConfig = {
@@ -44,6 +47,7 @@ const dockerizedNode: NetworkUserConfig = {
     ethNetwork: 'http://localhost:8545',
     zksync: true,
     chainId: 270,
+    enableRip7212: true,
 };
 
 const config: HardhatUserConfig = {
@@ -67,6 +71,7 @@ const config: HardhatUserConfig = {
     networks: {
         hardhat: {
             zksync: true,
+            enableRip7212: true,
         },
         zkSyncSepolia,
         zkSyncMainnet,

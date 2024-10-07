@@ -6,8 +6,18 @@ type Total @entity {
   transactions: Int!
   backedUp: Int!
   gasSponsored: BigInt!
-  invested: BigInt!
-  realizedGain: BigInt!
+}
+
+type Day @entity {
+  "day start timestamp concat 0x0000"
+  id: Bytes!
+  createdAccounts: Int!
+  deployedAccounts: Int!
+  activeAccounts: Int!
+  transactions: Int!
+  gasSponsored: BigInt!
+  investFlow: [DailyEarnFlow!]! @derivedFrom(field: "day")
+  swappedTo: [DailySwappedTo!]! @derivedFrom(field: "day")
 }
 
 type Week @entity {
@@ -18,9 +28,7 @@ type Week @entity {
   activeAccounts: Int!
   transactions: Int!
   gasSponsored: BigInt!
-  investIn: BigInt!
-  investOut: BigInt!
-  realizedGain: BigInt!
+  investFlow: [WeeklyEarnFlow!]! @derivedFrom(field: "week")
   swappedTo: [WeeklySwappedTo!]! @derivedFrom(field: "week")
 }
 
@@ -32,10 +40,70 @@ type Month @entity {
   activeAccounts: Int!
   transactions: Int!
   gasSponsored: BigInt!
-  investIn: BigInt!
-  investOut: BigInt!
-  realizedGain: BigInt!
+  investFlow: [MonthlyEarnFlow!]! @derivedFrom(field: "month")
   swappedTo: [MonthlySwappedTo!]! @derivedFrom(field: "month")
+}
+
+enum EarnProtocol {
+  Koi
+  SyncSwap
+  ZeroLend
+  Clave
+  Meow
+  Venus
+}
+
+type EarnPosition @entity {
+  "account.id.concat(pool).concat(token)"
+  id: Bytes!
+  account: ClaveAccount!
+  pool: Bytes!
+  token: Bytes!
+  protocol: EarnProtocol!
+  invested: BigInt!
+  compoundGain: BigInt!
+  normalGain: BigInt!
+}
+
+type DailyEarnFlow @entity {
+  "day.id.concat(erc20).concat(protocol)"
+  id: Bytes!
+  day: Day!
+  erc20: Bytes!
+  protocol: EarnProtocol!
+  amountIn: BigInt!
+  amountOut: BigInt!
+  claimedGain: BigInt!
+}
+
+type WeeklyEarnFlow @entity {
+  "week.id.concat(erc20).concat(protocol)"
+  id: Bytes!
+  week: Week!
+  erc20: Bytes!
+  protocol: EarnProtocol!
+  amountIn: BigInt!
+  amountOut: BigInt!
+  claimedGain: BigInt!
+}
+
+type MonthlyEarnFlow @entity {
+  "month.id.concat(erc20).concat(protocol)"
+  id: Bytes!
+  month: Month!
+  erc20: Bytes!
+  protocol: EarnProtocol!
+  amountIn: BigInt!
+  amountOut: BigInt!
+  claimedGain: BigInt!
+}
+
+type DailySwappedTo @entity {
+  "day.id.concat(erc20)"
+  id: Bytes!
+  day: Day!
+  erc20: Bytes!
+  amount: BigInt!
 }
 
 type WeeklySwappedTo @entity {
@@ -52,6 +120,13 @@ type MonthlySwappedTo @entity {
   month: Month!
   erc20: Bytes!
   amount: BigInt!
+}
+
+type DayAccount @entity(immutable: true) {
+  "account.id.concat(day.id)"
+  id: Bytes!
+  account: ClaveAccount!
+  day: Day!
 }
 
 type WeekAccount @entity(immutable: true) {
@@ -79,11 +154,31 @@ type ClaveAccount @entity {
   txCount: Int!
   "account implementation address"
   implementation: Bytes
-  invested: BigInt!
-  realizedGain: BigInt!
+  earnPositions: [EarnPosition!]! @derivedFrom(field: "account")
   transactions: [ClaveTransaction!]! @derivedFrom(field: "sender")
   inAppSwaps: [InAppSwap!]! @derivedFrom(field: "account")
+  activeDays: [DayAccount!]! @derivedFrom(field: "account")
   activeWeeks: [WeekAccount!]! @derivedFrom(field: "account")
+  activeMonths: [MonthAccount!]! @derivedFrom(field: "account")
+  cashbacks: [Cashback!]! @derivedFrom(field: "account")
+  referralFees: [ReferralFee!]! @derivedFrom(field: "account")
+}
+
+type Cashback @entity {
+  "account.id.concat(erc20).concat('0xcb')"
+  id: Bytes!
+  account: ClaveAccount!
+  erc20: Bytes!
+  amount: BigInt!
+}
+
+type ReferralFee @entity {
+  "account.id.refferred.id.concat(erc20)"
+  id: Bytes!
+  account: ClaveAccount!
+  referred: ClaveAccount!
+  erc20: Bytes!
+  amount: BigInt!
 }
 
 enum Paymaster {

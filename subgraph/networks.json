@@ -25,6 +25,9 @@
     "SocialRecovery": {
       "address": "0x9eF467CAA8291c6DAdD08EA458D763a8258B347e",
       "startBlock": 24799912
+    },
+    "zeroUsdtPool": {
+      "address": "0x4d9429246EA989C9CeE203B43F6d1C7D83e3B8F8"
     }
   }
 }

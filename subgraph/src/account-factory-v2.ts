@@ -10,10 +10,16 @@ import { Bytes } from '@graphprotocol/graph-ts';
 import {
     ClaveAccountCreated as ClaveAccountCreatedEvent,
     ClaveAccountDeployed as ClaveAccountDeployedEvent,
-} from '../generated/Contract/Contract';
+} from '../generated/AccountFactoryV2/AccountFactoryV2';
 import { ClaveAccount } from '../generated/schema';
 import { Account } from '../generated/templates';
-import { ZERO, getOrCreateMonth, getOrCreateWeek, getTotal } from './helpers';
+import {
+    ZERO,
+    getOrCreateDay,
+    getOrCreateMonth,
+    getOrCreateWeek,
+    getTotal,
+} from './helpers';
 
 export function handleClaveAccountCreated(
     event: ClaveAccountCreatedEvent,
@@ -23,10 +29,12 @@ export function handleClaveAccountCreated(
         return;
     }
     account = new ClaveAccount(event.params.accountAddress);
+    const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
     const total = getTotal();
 
+    day.createdAccounts = day.createdAccounts + 1;
     week.createdAccounts = week.createdAccounts + 1;
     month.createdAccounts = month.createdAccounts + 1;
     total.createdAccounts = total.createdAccounts + 1;
@@ -35,9 +43,8 @@ export function handleClaveAccountCreated(
     account.isRecovering = false;
     account.recoveryCount = 0;
     account.txCount = 0;
-    account.invested = ZERO;
-    account.realizedGain = ZERO;
 
+    day.save();
     week.save();
     month.save();
     total.save();
@@ -49,9 +56,11 @@ export function handleClaveAccountDeployed(
     event: ClaveAccountDeployedEvent,
 ): void {
     let account = ClaveAccount.load(event.params.accountAddress);
+    const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
     const total = getTotal();
+    day.deployedAccounts = day.deployedAccounts + 1;
     week.deployedAccounts = week.deployedAccounts + 1;
     month.deployedAccounts = month.deployedAccounts + 1;
     total.deployedAccounts = total.deployedAccounts + 1;
@@ -63,8 +72,6 @@ export function handleClaveAccountDeployed(
         account.recoveryCount = 0;
         account.txCount = 0;
         account.creationDate = ZERO;
-        account.invested = ZERO;
-        account.realizedGain = ZERO;
     }
 
     account.implementation = Bytes.fromHexString(
@@ -72,6 +79,7 @@ export function handleClaveAccountDeployed(
     );
     account.deployDate = event.block.timestamp;
 
+    day.save();
     week.save();
     month.save();
     total.save();

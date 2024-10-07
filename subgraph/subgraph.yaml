@@ -1,45 +1,25 @@
 specVersion: 1.0.0
 indexerHints:
-  prune: auto
+  prune: 86400
 schema:
   file: ./schema.graphql
 dataSources:
-  # - kind: ethereum
-  #   name: KoiFactory
-  #   network: zksync-era
-  #   source:
-  #     address: '0x40be1cBa6C5B47cDF9da7f963B6F761F4C60627D'
-  #     abi: KoiFactory
-  #     startBlock: 9672
-  #   mapping:
-  #     kind: ethereum/events
-  #     apiVersion: 0.0.7
-  #     language: wasm/assemblyscript
-  #     entities:
-  #       - KoiPair
-  #     abis:
-  #       - name: KoiFactory
-  #         file: ./abis/KoiFactory.json
-  #     eventHandlers:
-  #       - event: PairCreated(address indexed token0, address indexed token1, bool stable, address pair, uint, uint fee)
-  #         handler: handlePairCreated
-  #     file: ./src/koi-factory.ts
   - kind: ethereum
     name: KoiUsdceUsdt
     network: zksync-era
     source:
       address: '0x9d2811b85c1d736427722817b69e4d1e98016bb0'
       abi: KoiPair
-      startBlock: 24799912
+      startBlock: 30099184
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - Total
-        - Week
-        - Month
-        - ClaveAccount
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
       abis:
         - name: KoiPair
           file: ./abis/KoiPair.json
@@ -51,6 +31,29 @@ dataSources:
         - event: Claim(indexed address,indexed address,uint256,uint256)
           handler: handleClaim
       file: ./src/koi-pair.ts
+  - kind: ethereum
+    name: SwapReferralFeePayer
+    network: zksync-era
+    source:
+      address: '0x007966D09BF27c206c75B7048319dbf3a0852Df8'
+      abi: SwapReferralFeePayer
+      startBlock: 42221017
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Cashback
+        - Referral
+      abis:
+        - name: SwapReferralFeePayer
+          file: ./abis/SwapReferralFeePayer.json
+      eventHandlers:
+        - event: ReferralFee(indexed address,indexed address,uint256)
+          handler: handleReferralFee
+        - event: Cashback(indexed address,indexed address,uint256)
+          handler: handleCashback
+      file: ./src/referral.ts
   - kind: ethereum
     name: OdosRouter
     network: zksync-era
@@ -64,6 +67,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - InAppSwap
+        - DailySwappedTo
         - WeeklySwappedTo
         - MonthlySwappedTo
       abis:
@@ -86,6 +90,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveAccount
+        - Day
         - Week
         - Month
         - Total
@@ -113,6 +118,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveAccount
+        - Day
         - Week
         - Month
         - Total
@@ -138,6 +144,8 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveTransaction
+        - Day
+        - DayAccount
         - Week
         - WeekAccount
         - Month
@@ -165,6 +173,8 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveTransaction
+        - Day
+        - DayAccount
         - Week
         - WeekAccount
         - Month
@@ -192,6 +202,8 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveTransaction
+        - Day
+        - DayAccount
         - Week
         - WeekAccount
         - Month
@@ -219,6 +231,8 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - ClaveTransaction
+        - Day
+        - DayAccount
         - Week
         - WeekAccount
         - Month
@@ -262,6 +276,256 @@ dataSources:
         - event: RecoveryStopped(indexed address)
           handler: handleRecoveryStopped
       file: ./src/social-recovery.ts
+  - kind: ethereum
+    name: SyncEthWstethPool
+    network: zksync-era
+    source:
+      address: '0x12e7A9423d9128287E63017eE6d1f20e1C237f15'
+      abi: SyncStablePool
+      startBlock: 30099184
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: SyncStablePool
+          file: ./abis/SyncStablePool.json
+      eventHandlers:
+        - event: Burn(indexed address,uint256,uint256,uint256,indexed address)
+          handler: handleBurn
+        - event: Mint(indexed address,uint256,uint256,uint256,indexed address)
+          handler: handleMint
+      file: ./src/sync-stable-pair.ts
+  - kind: ethereum
+    name: SyncStaking
+    network: zksync-era
+    source:
+      address: '0x2B9a7d5cD64E5c1446b32e034e75A5C93B0C8bB5'
+      abi: SyncStaking
+      startBlock: 30099184
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: SyncStaking
+          file: ./abis/SyncStaking.json
+      eventHandlers:
+        - event: ClaimRewards(indexed address,indexed address,uint256)
+          handler: handleClaimRewards
+      file: ./src/sync-staking.ts
+  - kind: ethereum
+    name: SyncClaveStaking
+    network: zksync-era
+    source:
+      address: '0x6fEbba4a360F43B71560519bCD90B3F45c8F441E'
+      abi: SyncClaveStaking
+      startBlock: 39511808
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: SyncClaveStaking
+          file: ./abis/SyncClaveStaking.json
+      eventHandlers:
+        - event: ClaimRewards(indexed address,indexed address,uint256)
+          handler: handleClaimRewards
+      file: ./src/sync-staking.ts
+  - kind: ethereum
+    name: zeroUsdtPool
+    network: zksync-era
+    source:
+      address: '0x4d9429246EA989C9CeE203B43F6d1C7D83e3B8F8'
+      abi: zeroUsdtPool
+      startBlock: 30099184
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: zeroUsdtPool
+          file: ./abis/zeroUsdtPool.json
+      eventHandlers:
+        - event: Supply(indexed address,address,indexed address,uint256,indexed uint16)
+          handler: handleSupply
+        - event: Withdraw(indexed address,indexed address,indexed address,uint256)
+          handler: handleWithdraw
+      file: ./src/zero-usdt-pool.ts
+  - kind: ethereum
+    name: ClaveZKStake
+    network: zksync-era
+    source:
+      address: '0x9248F1Ee8cBD029F3D22A92EB270333a39846fB2'
+      abi: ClaveZKStake
+      startBlock: 36908411
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: ClaveZKStake
+          file: ./abis/ClaveZKStake.json
+      eventHandlers:
+        - event: Staked(indexed address,uint256)
+          handler: handleStaked
+        - event: Withdrawn(indexed address,uint256)
+          handler: handleWithdrawn
+        - event: RewardPaid(indexed address,uint256)
+          handler: handleRewardPaid
+      file: ./src/clave-zk-stake.ts
+  - kind: ethereum
+    name: ClaveAPPAStake
+    network: zksync-era
+    source:
+      address: '0x20999BD9fA71175e4A430CDB7950a66916E6F4d1'
+      abi: ZtakeV2
+      startBlock: 41763539
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: ZtakeV2
+          file: ./abis/ZtakeV2.json
+      eventHandlers:
+        - event: Staked(indexed address,indexed address,uint256)
+          handler: handleStaked
+        - event: Withdrawn(indexed address,indexed address,uint256)
+          handler: handleWithdrawn
+        - event: RewardPaid(indexed address,indexed address,uint256)
+          handler: handleRewardPaid
+      file: ./src/clave-appa-stake.ts
+  - kind: ethereum
+    name: MeowStake
+    network: zksync-era
+    source:
+      address: '0x0C71c7B6FD654EE0D3137a2Eb790CAd8Ba702540'
+      abi: ClaveZKStake
+      startBlock: 36908411
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: ClaveZKStake
+          file: ./abis/ClaveZKStake.json
+      eventHandlers:
+        - event: Staked(indexed address,uint256)
+          handler: handleStaked
+        - event: Withdrawn(indexed address,uint256)
+          handler: handleWithdrawn
+        - event: RewardPaid(indexed address,uint256)
+          handler: handleRewardPaid
+      file: ./src/meow-staking.ts
+  - kind: ethereum
+    name: VenusUsdt
+    network: zksync-era
+    source:
+      address: '0x69cDA960E3b20DFD480866fFfd377Ebe40bd0A46'
+      abi: VenusToken
+      startBlock: 43552193
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: VenusToken
+          file: ./abis/VenusToken.json
+      eventHandlers:
+        - event: Mint(indexed address,uint256,uint256,uint256)
+          handler: handleMint
+        - event: Redeem(indexed address,uint256,uint256,uint256)
+          handler: handleRedeem
+      file: ./src/venus-pool-usdt.ts
+  - kind: ethereum
+    name: VenusUsdce
+    network: zksync-era
+    source:
+      address: '0x1af23bd57c62a99c59ad48236553d0dd11e49d2d'
+      abi: VenusToken
+      startBlock: 43552199
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: VenusToken
+          file: ./abis/VenusToken.json
+      eventHandlers:
+        - event: Mint(indexed address,uint256,uint256,uint256)
+          handler: handleMint
+        - event: Redeem(indexed address,uint256,uint256,uint256)
+          handler: handleRedeem
+      file: ./src/venus-pool-usdce.ts
+  - kind: ethereum
+    name: VenusReward
+    network: zksync-era
+    source:
+      address: '0x7C7846A74AB38A8d554Bc5f7652eCf8Efb58c894'
+      abi: VenusReward
+      startBlock: 44575350
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - DailyEarnFlow
+        - WeeklyEarnFlow
+        - MonthlyEarnFlow
+        - EarnPosition
+      abis:
+        - name: VenusReward
+          file: ./abis/VenusReward.json
+      eventHandlers:
+        - event: DistributedSupplierRewardToken(indexed address,indexed address,uint256,uint256,uint256)
+          handler: handleDistributedSupplierRewardToken
+      file: ./src/venus-reward.ts
 templates:
   - kind: ethereum
     name: Account
@@ -275,6 +539,8 @@ templates:
       entities:
         - Owner
         - ClaveTransaction
+        - Day
+        - DayAccount
         - Week
         - WeekAccount
         - Month

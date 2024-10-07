@@ -8,10 +8,10 @@
 import { Address } from '@graphprotocol/graph-ts';
 
 import {
-    Burn as BurnEvent,
-    Claim as ClaimEvent,
-    Mint as MintEvent,
-} from '../generated/KoiUsdceUsdt/KoiPair';
+    RewardPaid as RewardPaidEvent,
+    Staked as StakedEvent,
+    Withdrawn as WithdrawnEvent,
+} from '../generated/ClaveZKStake/ClaveZKStake';
 import { ClaveAccount } from '../generated/schema';
 import {
     getOrCreateDailyEarnFlow,
@@ -23,19 +23,22 @@ import {
     getOrCreateWeeklyEarnFlow,
 } from './helpers';
 
-const protocol = 'Koi';
+const protocol = 'Meow';
 const token = Address.fromHexString(
-    '0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4',
+    '0x79db8c67d0c33203da4Efb58F7D325E1e0d4d692',
+);
+const reward = Address.fromHexString(
+    '0x5A7d6b2F92C77FAD6CCaBd7EE0624E64907Eaf3E',
 );
 
-export function handleMint(event: MintEvent): void {
-    const account = ClaveAccount.load(event.transaction.from);
+export function handleStaked(event: StakedEvent): void {
+    const account = ClaveAccount.load(event.params.user);
     if (!account) {
         return;
     }
 
     const pool = event.address;
-    const amount = event.params.amount1.plus(event.params.amount0);
+    const amount = event.params.amount;
 
     const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
@@ -62,14 +65,14 @@ export function handleMint(event: MintEvent): void {
     earnPosition.save();
 }
 
-export function handleBurn(event: BurnEvent): void {
+export function handleWithdrawn(event: WithdrawnEvent): void {
     const account = ClaveAccount.load(event.transaction.from);
     if (!account) {
         return;
     }
 
     const pool = event.address;
-    const amount = event.params.amount1.plus(event.params.amount0);
+    const amount = event.params.amount;
 
     const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
@@ -96,26 +99,26 @@ export function handleBurn(event: BurnEvent): void {
     earnPosition.save();
 }
 
-export function handleClaim(event: ClaimEvent): void {
-    const account = ClaveAccount.load(event.params.sender);
+export function handleRewardPaid(event: RewardPaidEvent): void {
+    const account = ClaveAccount.load(event.params.user);
     if (!account) {
         return;
     }
 
     const pool = event.address;
-    const amount = event.params.amount1.plus(event.params.amount0);
+    const amount = event.params.reward;
 
     const day = getOrCreateDay(event.block.timestamp);
     const week = getOrCreateWeek(event.block.timestamp);
     const month = getOrCreateMonth(event.block.timestamp);
 
-    const dailyEarnFlow = getOrCreateDailyEarnFlow(day, token, protocol);
-    const weeklyEarnFlow = getOrCreateWeeklyEarnFlow(week, token, protocol);
-    const monthlyEarnFlow = getOrCreateMonthlyEarnFlow(month, token, protocol);
+    const dailyEarnFlow = getOrCreateDailyEarnFlow(day, reward, protocol);
+    const weeklyEarnFlow = getOrCreateWeeklyEarnFlow(week, reward, protocol);
+    const monthlyEarnFlow = getOrCreateMonthlyEarnFlow(month, reward, protocol);
     const earnPosition = getOrCreateEarnPosition(
         account,
         pool,
-        token,
+        reward,
         protocol,
     );
 
