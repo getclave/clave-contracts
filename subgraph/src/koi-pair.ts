@@ -123,4 +123,9 @@ export function handleClaim(event: ClaimEvent): void {
     weeklyEarnFlow.claimedGain = weeklyEarnFlow.claimedGain.plus(amount);
     monthlyEarnFlow.claimedGain = monthlyEarnFlow.claimedGain.plus(amount);
     earnPosition.normalGain = earnPosition.normalGain.plus(amount);
+
+    dailyEarnFlow.save();
+    weeklyEarnFlow.save();
+    monthlyEarnFlow.save();
+    earnPosition.save();
 }

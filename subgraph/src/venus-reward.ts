@@ -3,6 +3,7 @@
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  */
+
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import { Address } from '@graphprotocol/graph-ts';
 
